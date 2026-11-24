@@ -597,7 +597,8 @@ let tipT=0; function tip(t,ms=2600){const e=$('tip'); e.innerHTML=t; e.classList
 const cv=$('cv'); let ctx, W=0, H=0, DPR=1;
 const G={W:10800, camX:0, items:[], npcs:[], trees:[], parts:[], motes:[], t:0, paused:false};
 const PL={x:600, d:0.5, vx:0, vd:0, dir:1, phase:0, grow:0, bump:0, munch:0};
-function resize(){DPR=Math.min(window.devicePixelRatio||1,2); W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx=cv.getContext('2d'); ctx.setTransform(DPR,0,0,DPR,0,0); buildBack(); }
+let maxDPR=1.5;
+function resize(){DPR=Math.min(window.devicePixelRatio||1,maxDPR); W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx=cv.getContext('2d'); ctx.setTransform(DPR,0,0,DPR,0,0); buildBack(); }
 const HZ=()=>H*0.40;                         // 地平线
 const gy=d=>HZ()+H*0.10+d*H*0.48;            // 深度 -> 屏幕 y
 const gs=d=>0.62+0.38*d;                     // 深度 -> 远近缩放
@@ -677,7 +678,7 @@ function initWorld(){
   G.curBiome=-1;
 }
 function spawnItem(near){
-  let x=near? PL.x+(Math.random()<0.5?-1:1)*rnd(W*0.6,W*1.3) : rnd(200,G.W-200); x=Math.max(200,Math.min(G.W-200,x));
+  let x=near? PL.x+(Math.random()<0.5?-1:1)*rnd(W*0.6,W*1.3) : rnd(320,G.W-320); x=Math.max(320,Math.min(G.W-320,x));
   let d=rnd(0.05,0.97); for(let k=0;k<6&&inLake(x,d);k++) d=rnd(0.05,0.97); if(inLake(x,d)) d=0.95;
   const st=SV.stage+1, bio=BIOMES[biomeAt(x)];
   const w=FOOD_KEYS.map(k=>{const tr=FOOD[k].tier; let v= tr<=st? (tr===st?3:tr===st-1?2:0.6) : (tr===st+1?1:0.25); return v*(bio.food[k]||1)*(bio.lava&&FOOD[k].kind==='plant'?0.5:1);});
@@ -754,17 +755,19 @@ function pScale(){return U()*STAGE_SIZE[SV.stage]*(0.82+0.18*Math.min(1,SV.xp/NE
 function mouth(){const sp=curSp(), b=bbox(sp), k=pScale(); const mx=PL.x+PL.dir*(b.x+b.w-6)*k; return {x:mx, y:gy(PL.d)+(b.y+b.h*0.25)*k};}
 let input={on:false,sx:0,sy:0,x:0,y:0}, keys={};
 cv.addEventListener('pointerdown',e=>{if(G.paused) return; input={on:true,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY}; const j=$('joy'); j.style.left=e.clientX+'px'; j.style.top=e.clientY+'px'; j.style.display='block'; j.firstElementChild.style.transform=''; cv.setPointerCapture(e.pointerId); if(actx&&actx.state==='suspended') actx.resume();});
-cv.addEventListener('pointermove',e=>{if(!input.on) return; input.x=e.clientX; input.y=e.clientY; let dx=input.x-input.sx, dy=input.y-input.sy; const l=Math.hypot(dx,dy), m=50; if(l>m){dx*=m/l; dy*=m/l;} $('joy').firstElementChild.style.transform=`translate(${dx}px,${dy}px)`;});
+addEventListener('pointermove',e=>{if(!input.on) return; input.x=e.clientX; input.y=e.clientY; let dx=input.x-input.sx, dy=input.y-input.sy; const l=Math.hypot(dx,dy), m=50; if(l>m){dx*=m/l; dy*=m/l;} $('joy').firstElementChild.style.transform=`translate(${dx}px,${dy}px)`;});
 const endIn=()=>{input.on=false; $('joy').style.display='none';};
-cv.addEventListener('pointerup',endIn); cv.addEventListener('pointercancel',endIn);
-addEventListener('keydown',e=>keys[e.key]=true); addEventListener('keyup',e=>keys[e.key]=false);
+addEventListener('pointerup',endIn); addEventListener('pointercancel',endIn);
+const keyName=e=>(e.key||'').length===1?e.key.toLowerCase():e.key;
+addEventListener('keydown',e=>{keys[keyName(e)]=true;}); addEventListener('keyup',e=>{keys[keyName(e)]=false;});
+const clearInput=()=>{keys={}; endIn();}; addEventListener('blur',clearInput); document.addEventListener('visibilitychange',clearInput);
 
 function updatePlayer(dt){
   let ax=0, ad=0;
   if(input.on){const dx=input.x-input.sx, dy=input.y-input.sy, l=Math.hypot(dx,dy); if(l>8){ax=dx/Math.max(l,50); ad=dy/Math.max(l,50);}}
   if(keys.ArrowLeft||keys.a) ax=-1; if(keys.ArrowRight||keys.d) ax=1; if(keys.ArrowUp||keys.w) ad=-1; if(keys.ArrowDown||keys.s) ad=1;
   const sp=curSp(), spd=(150+STAGE_SIZE[SV.stage]*90)*(sp.id==='coelo'||sp.id==='guan'?1.2:1)*(Math.min(H,W*0.85)/800);
-  PL.vx+=(ax*spd-PL.vx)*Math.min(1,dt*5); PL.vd+=(ad*0.5-PL.vd)*Math.min(1,dt*5);
+  PL.vx+=(ax*spd-PL.vx)*Math.min(1,dt*5); PL.vd+=(ad*0.8-PL.vd)*Math.min(1,dt*6);
   PL.x+=PL.vx*dt; PL.d=Math.max(0,Math.min(1,PL.d+PL.vd*dt)); PL.x=Math.max(80,Math.min(G.W-80,PL.x));
   if(Math.abs(PL.vx)>8) PL.dir=PL.vx>0?1:-1;
   const moving=Math.hypot(PL.vx,PL.vd*400)>14; PL.moving=moving;
@@ -800,7 +803,7 @@ function eat(it,i){
 /* ================== 进化 ================== */
 function miniCv(cv,sp,w=440,h=280,t=1){const d=Math.min(devicePixelRatio||1,2); cv.width=w*d; cv.height=h*d; const x=cv.getContext('2d'); x.scale(d,d); fitDraw(x,sp,w,h,{t,rich:true},14);}
 function evolveOffer(){
-  G.paused=true; endIn();
+  G.paused=true; clearInput();
   const opts=STAGES[SV.stage+1].opts;
   $('box').innerHTML=`<h1>✨ 可以进化啦！</h1><p>你吃得饱饱的，已经长大了。选一种恐龙变身吧：</p>
    <div class="choices">${opts.map(id=>{const s=SP[id]; return `<button class="choice" data-id="${id}"><canvas></canvas><b>${s.name}</b><div><span class="tag">🕰️ ${PERIODS[s.period].name}</span><span class="tag">📏 ${s.len}</span><span class="tag">🍽️ ${s.dietTxt}</span></div><div class="tr">${TRAITS[id]}</div></button>`;}).join('')}</div>`;
@@ -859,7 +862,10 @@ $('menuBtn').onclick=()=>{
 let last=0;
 function frame(ts){
   requestAnimationFrame(frame);
-  const dt=Math.min(0.05,(ts-(last||ts))/1000); last=ts; G.t=ts/1000;
+  const dt=Math.min(0.1,(ts-(last||ts))/1000); last=ts;
+  // 自动画质：平板太吃力时降低分辨率、关掉部分特效，保证走路流畅
+  G.ft=(G.ft||0.016)*0.97+dt*0.03; G.fc=(G.fc||0)+1;
+  if(G.fc>90 && G.ft>0.04){ if(maxDPR>1){maxDPR=1; resize();} else G.lowFx=true; G.fc=0; } G.t=ts/1000;
   if(!G.paused) updatePlayer(dt);
   // NPC
   for(const n of G.npcs){ const k=U()*n.sp.size*0.8*gs(n.d), spd=(30+n.sp.size*18)*(Math.min(H,W*0.85)/800);
@@ -900,15 +906,18 @@ function draw(dt){
   const ts=Math.min(H,W*0.85)/800*0.55;
   paint(ctx,PAT.grass,ts);
   // 泥土层：按区域混合
+  let anyDirt=0; for(let k=0;k<=10;k++) anyDirt=Math.max(anyDirt,bval(cx+W*k/10,'dirt'));
+  if(anyDirt>0.02){
   lctx.globalCompositeOperation='source-over'; lctx.clearRect(0,0,W,H); paint(lctx,PAT.dirt,ts*0.9);
   lctx.globalCompositeOperation='destination-in'; g=lctx.createLinearGradient(0,0,W,0); for(let k=0;k<=10;k++){g.addColorStop(k/10,`rgba(0,0,0,${bval(cx+W*k/10,'dirt')})`);} lctx.fillStyle=g; lctx.fillRect(0,0,W,H);
   ctx.drawImage(layer,0,0,W,H);
+  }
   // 区域色调
   ctx.globalCompositeOperation='multiply'; g=ctx.createLinearGradient(0,0,W,0); for(let k=0;k<=10;k++) g.addColorStop(k/10,bcol(cx+W*k/10,'tint')); ctx.fillStyle=g; ctx.fillRect(0,top,W,H); ctx.globalCompositeOperation='source-over';
   // 远处地面雾 + 前景加深
   g=ctx.createLinearGradient(0,top,0,H); g.addColorStop(0,'rgba(228,236,226,.5)'); g.addColorStop(0.15,'rgba(228,236,226,.08)'); g.addColorStop(0.6,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(20,30,10,.22)'); ctx.fillStyle=g; ctx.fillRect(0,top,W,H-top);
   // 云影慢慢飘过
-  for(let i=0;i<5;i++){const x=((i*620+t*12-cx)%(W+900)+W+900)%(W+900)-450, y=gy((i*0.23)%1); const gg=ctx.createRadialGradient(x,y,10,x,y,260); gg.addColorStop(0,'rgba(30,50,30,.12)'); gg.addColorStop(1,'rgba(30,50,30,0)'); ctx.fillStyle=gg; ctx.save(); ctx.translate(x,y); ctx.scale(1,0.25); ctx.translate(-x,-y); ctx.beginPath(); ctx.arc(x,y,260,0,Math.PI*2); ctx.fill(); ctx.restore();}
+  if(!G.lowFx) for(let i=0;i<5;i++){const x=((i*620+t*12-cx)%(W+900)+W+900)%(W+900)-450, y=gy((i*0.23)%1); const gg=ctx.createRadialGradient(x,y,10,x,y,260); gg.addColorStop(0,'rgba(30,50,30,.12)'); gg.addColorStop(1,'rgba(30,50,30,0)'); ctx.fillStyle=gg; ctx.save(); ctx.translate(x,y); ctx.scale(1,0.25); ctx.translate(-x,-y); ctx.beginPath(); ctx.arc(x,y,260,0,Math.PI*2); ctx.fill(); ctx.restore();}
   // ---- 湖 ----
   if(cx+W>LAKE.x0 && cx<LAKE.x1) drawLake(t);
   // ---- 岩浆裂缝（慢慢明暗，不闪） ----
@@ -942,7 +951,7 @@ function draw(dt){
   G.parts=G.parts.filter(p=>p.life>0);
   // 光点：火山区是飘浮的火山灰，其他地方是花粉
   const ash=bval(mid,'dirt')>0.8;
-  G.motes.forEach(m=>{m.y-=m.v*dt; m.x+=Math.sin(t*0.5+m.s)*0.0006; if(m.y<0) m.y=1; ctx.fillStyle=ash?'rgba(255,190,140,.6)':'rgba(255,250,215,.55)'; ctx.beginPath(); ctx.arc(((m.x*W*1.3-cx*0.6)%W+W)%W, H*0.25+m.y*H*0.7, m.s,0,Math.PI*2); ctx.fill();});
+  if(!G.lowFx) G.motes.forEach(m=>{m.y-=m.v*dt; m.x+=Math.sin(t*0.5+m.s)*0.0006; if(m.y<0) m.y=1; ctx.fillStyle=ash?'rgba(255,190,140,.6)':'rgba(255,250,215,.55)'; ctx.beginPath(); ctx.arc(((m.x*W*1.3-cx*0.6)%W+W)%W, H*0.25+m.y*H*0.7, m.s,0,Math.PI*2); ctx.fill();});
   // 暗角
   g=ctx.createRadialGradient(W/2,H*0.55,Math.min(W,H)*0.45,W/2,H*0.55,Math.max(W,H)*0.85); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(20,30,15,.3)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
   drawMap();
