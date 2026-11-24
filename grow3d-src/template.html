@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>恐龙长大记 3D</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#9fd6f2;font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;color:#3b4636}
+#game canvas{display:block;touch-action:none}
+button{font-family:inherit;border:0;cursor:pointer}
+.panel{background:rgba(255,252,242,.93);border-radius:22px;padding:10px 16px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+#hud{position:fixed;left:14px;top:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:3}
+#hud>*{pointer-events:auto}
+#who{display:flex;align-items:center;gap:10px}
+#who img{width:92px;height:58px;object-fit:contain}
+#who b{font-size:22px;display:block} #who small{font-size:15px;color:#6c7563}
+.xp{height:14px;width:220px;background:#e8e1cf;border-radius:8px;overflow:hidden;margin-top:6px;box-shadow:inset 0 2px 3px rgba(0,0,0,.12)}
+.xp i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8fd16a,#4fb24a);border-radius:8px;transition:width .4s}
+.stages{display:flex;gap:6px;margin-top:6px}.stages i{width:16px;height:16px;border-radius:50%;background:#e2dccb}.stages i.on{background:#f2b33d}
+.btns{display:flex;gap:10px}
+.ib{width:56px;height:56px;border-radius:50%;background:rgba(255,252,242,.93);font-size:26px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+#mapBox{position:fixed;left:14px;bottom:14px;z-index:3;padding:6px;border-radius:18px}
+#map{display:block;width:150px;height:150px;border-radius:12px}
+#tip{position:fixed;left:50%;top:96px;transform:translateX(-50%);font-size:21px;font-weight:700;text-align:center;opacity:0;transition:opacity .5s;pointer-events:none;z-index:4;max-width:min(680px,90vw);line-height:1.5}
+#tip.show{opacity:1} #tip .small{font-weight:400;font-size:16px}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:2}
+.ftxt{position:absolute;left:0;top:0;font-size:26px;font-weight:800;color:#fff6d0;text-shadow:0 2px 0 #6b5a2c,0 0 8px rgba(80,60,20,.6)}
+#overlay{position:fixed;inset:0;background:radial-gradient(ellipse at center,rgba(30,40,25,.3),rgba(20,25,15,.62));display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
+#overlay.show{display:flex}
+.box{background:linear-gradient(#fffdf5,#f4ecd8);border-radius:30px;padding:22px 26px;max-width:780px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center;max-height:94vh;overflow-y:auto}
+.box h1{font-size:34px;margin:4px 0 8px;color:#4f6e3f}.box p{font-size:19px;line-height:1.7;margin:6px 0}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:16px 0 6px}
+.choice{background:#fff;border-radius:24px;padding:12px 10px 16px;box-shadow:0 6px 0 #e3d8bd,0 10px 20px rgba(0,0,0,.08);display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .2s}
+.choice:hover{transform:translateY(-4px)} .choice img{width:100%;max-width:320px;aspect-ratio:36/23;object-fit:contain;background:linear-gradient(#e5f4fb,#f3f0dc);border-radius:16px}
+.choice b{font-size:26px} .tag{display:inline-block;background:#f1ead6;border-radius:10px;padding:3px 8px;margin:3px;font-size:14px}.tr{font-size:15px;color:#5a7a3a}
+img.big{width:100%;max-width:460px;border-radius:20px;background:linear-gradient(#e5f4fb,#f3f0dc)}
+.btn{background:#6fa45f;color:#fff;font-size:23px;font-weight:700;padding:13px 32px;border-radius:30px;box-shadow:0 4px 0 #4f8341;margin:10px 6px 0}
+.btn.light{background:#fff;color:#3b4636;box-shadow:0 4px 0 #ddd6c4}
+.wait .choice,.wait .btn{pointer-events:none;opacity:.55}
+.legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}.legend span{background:#fff;border-radius:14px;padding:6px 10px;font-size:15px;box-shadow:0 3px 0 #e6dfcc}
+.credits{font-size:13px!important;color:#8a8576;line-height:1.6!important}
+#loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(#9fd6f2,#e9f4d8);z-index:20;font-size:24px;font-weight:700;color:#4f6e3f}
+#loading .egg{font-size:70px;animation:wob 2s ease-in-out infinite}@keyframes wob{50%{transform:rotate(8deg)}}
+@media (max-width:700px){.xp{width:140px}#who img{display:none}.choices{grid-template-columns:1fr}#map{width:110px;height:110px}}
+</style></head><body>
+<div id="game"></div>
+<div id="fx"></div>
+<div id="hud">
+  <div class="panel" id="who"><img id="whoImg" alt=""><div><b id="whoName">恐龙宝宝</b><small id="whoSub">第 1 阶段</small><div class="xp"><i id="xpBar"></i></div><div class="stages" id="stages"></div></div></div>
+  <div class="btns"><button class="ib" id="soundBtn" title="声音">🔇</button><button class="ib" id="menuBtn" title="菜单">☰</button></div>
+</div>
+<div class="panel" id="mapBox"><canvas id="map" width="150" height="150"></canvas></div>
+<div id="tip" class="panel"></div>
+<div id="overlay"><div class="box" id="box"></div></div>
+<div id="loading"><div class="egg">🥚</div><div id="loadTxt">正在加载…</div></div>
+<!--ASSETS-->
+<script>/*GAME*/</script>
+</body></html>

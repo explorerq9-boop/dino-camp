@@ -1,7 +1,8 @@
 # 🦕 恐龙游戏合集
 
 - **恐龙考察营**：挖化石、拼骨架、恐龙乐园 → `index.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/ ）
-- **恐龙长大记**：吃东西长大、一路进化 → `grow.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/grow.html ）
+- **恐龙长大记 3D**：吃东西长大、一路进化 → `grow.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/grow.html ）
+- 旧的 2D 版恐龙长大记 → `grow2d.html`
 
 ---
 
@@ -22,11 +23,22 @@
 ## 运行
 直接用浏览器打开 `index.html`。
 
-## 恐龙长大记
-大陆上有 6 个地形区域：蕨类森林、开花草原、湖边湿地、松林高地、秋叶林、火山荒原。从始盗龙宝宝开始吃东西长大，每次进化二选一（吃虫子的猎手 / 吃植物的巨人），一共 5 个阶段。按住屏幕拖动走路，电脑可用方向键。不吃其他恐龙，没有失败，进度自动保存。
+## 恐龙长大记 3D
+用 WebGL 做的 3D 卡通风格版本，电脑浏览器（Chrome / Edge / Safari）里玩最流畅，单个网页文件，离线也能用。
 
-## 素材来源（CC0 公共领域）
-- 植物与岩石 3D 模型：[Quaternius](https://quaternius.com) Stylized Nature MegaKit（预渲染成带光影的贴图）
-- 地面贴图：[ambientCG](https://ambientcg.com) Grass004、Ground037
-- 天空：[Poly Haven](https://polyhaven.com) kloppenheim_06_puresky
-- 恐龙、食物、界面：原创绘制
+- 5 个地方：🌿蕨类森林、🌼开花草原（几千朵小花）、💧大河湿地、🌴苏铁海岸、🏜️红岩台地。
+- 从迅猛龙宝宝开始，吃东西长大，进化 3 次，每次二选一：迅猛龙/副栉龙 → 剑龙/三角龙 → 霸王龙/迷惑龙。
+- 操作：鼠标点地面就走过去；方向键或 WASD 也能走；滚轮拉近拉远。平板上点屏幕走路。
+- 没有时间限制，不会输，碰到大恐龙只会被轻轻推开；声音默认关闭；进度自动保存。
+- 电脑太卡时会自动降低分辨率、关掉阴影，保证流畅。
+
+源代码在 `grow3d-src/`（three.js + esbuild 打包，模型以 base64 内嵌进 grow.html）。
+
+## 素材来源（全部 CC0 公共领域，可免费使用）
+- 恐龙模型和动画：[Quaternius](https://quaternius.com) Animated Dinosaur Pack（迅猛龙、副栉龙、剑龙、三角龙、霸王龙、迷惑龙），重新上色并加了程序生成的鳞片质感
+- 树、棕榈、柳树、石头、仙人掌花、睡莲、小花：[Quaternius](https://quaternius.com) Ultimate Nature Pack
+- 蕨类、花丛、高草、蘑菇：[Quaternius](https://quaternius.com) Stylized Nature MegaKit
+- 地形、河流、海、红岩台地、花海、天空、云、所有食物：程序原创绘制
+- 3D 引擎：[three.js](https://threejs.org)（MIT 许可）
+
+旧 2D 版（grow2d.html）另外用了 [ambientCG](https://ambientcg.com) 的 Grass004、Ground037 地面贴图和 [Poly Haven](https://polyhaven.com) 的天空照片，同样是 CC0。
