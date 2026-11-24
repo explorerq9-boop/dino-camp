@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>恐龙长大记</title>
+<style>
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;}
+html,body{margin:0; height:100%; overflow:hidden; background:#2d3b2a; font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif; color:#3b4636; touch-action:none;}
+button{font-family:inherit; color:inherit; border:none; cursor:pointer;}
+#cv{position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none;}
+#hud{position:fixed; top:10px; left:12px; right:12px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; pointer-events:none; z-index:5;}
+#hud > *{pointer-events:auto;}
+.panel{background:rgba(255,252,242,.9); border-radius:22px; padding:10px 16px; box-shadow:0 6px 18px rgba(0,0,0,.18); backdrop-filter:blur(6px);}
+#who{display:flex; align-items:center; gap:12px; min-width:250px;}
+#who canvas{width:76px; height:52px;}
+#who b{font-size:20px;} #who small{display:block; color:#7a8470; font-size:14px;}
+.xp{height:14px; width:200px; background:#e8e1cf; border-radius:8px; overflow:hidden; margin-top:6px; box-shadow:inset 0 2px 3px rgba(0,0,0,.12);}
+.xp i{display:block; height:100%; width:0; background:linear-gradient(#f6cf6a,#e0a73a); border-radius:8px; transition:width .4s;}
+.stages{display:flex; gap:5px; margin-top:6px;} .stages i{width:24px; height:7px; border-radius:4px; background:#ddd5c0;} .stages i.on{background:#7fb26b;}
+.btns{display:flex; gap:8px;}
+.ib{width:52px; height:52px; border-radius:50%; background:rgba(255,252,242,.9); font-size:24px; box-shadow:0 6px 18px rgba(0,0,0,.18);}
+#tip{position:fixed; left:50%; bottom:28px; transform:translateX(-50%); font-size:19px; font-weight:700; padding:10px 20px; opacity:0; transition:opacity .6s; pointer-events:none; z-index:5; text-align:center; max-width:90vw;}
+#tip.show{opacity:1;}
+#overlay{position:fixed; inset:0; background:radial-gradient(ellipse at center, rgba(30,40,25,.35), rgba(20,25,15,.7)); display:none; align-items:center; justify-content:center; z-index:10; padding:16px;}
+#overlay.show{display:flex; animation:fade .6s ease;}
+@keyframes fade{from{opacity:0} to{opacity:1}}
+.box{background:linear-gradient(#fffdf5,#f4ecd8); border-radius:30px; padding:22px 24px; max-width:760px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,.35); text-align:center; max-height:94vh; overflow-y:auto;}
+.box h1{font-size:32px; margin:4px 0 6px; color:#4f6e3f;} .box p{font-size:18px; line-height:1.7; margin:6px 0;}
+.choices{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0 6px;}
+.choice{background:#fff; border-radius:24px; padding:10px 10px 14px; box-shadow:0 6px 0 #e3d8bd, 0 10px 20px rgba(0,0,0,.08); display:flex; flex-direction:column; align-items:center; transition:transform .2s;}
+.choice:active{transform:translateY(3px);}
+.choice canvas{width:100%; aspect-ratio:22/14; border-radius:16px; background:linear-gradient(#dfeef0,#eef2dc);}
+.choice b{font-size:24px; margin-top:6px;} .choice .tr{font-size:15px; color:#6c7563; line-height:1.6; margin-top:4px;}
+.tag{display:inline-block; background:#eef3e2; border-radius:10px; padding:2px 8px; margin:2px; font-size:14px;}
+.btn{background:#6fa45f; color:#fff; font-size:22px; font-weight:700; padding:13px 30px; border-radius:30px; box-shadow:0 4px 0 #4f8341; margin:8px 6px 0;}
+.btn.light{background:#fff; color:#3b4636; box-shadow:0 4px 0 #ddd6c4;}
+#joy{position:fixed; width:130px; height:130px; border-radius:50%; border:3px solid rgba(255,255,255,.55); background:rgba(255,255,255,.12); pointer-events:none; display:none; z-index:4; transform:translate(-50%,-50%);}
+#joy i{position:absolute; left:50%; top:50%; width:54px; height:54px; margin:-27px; border-radius:50%; background:rgba(255,255,255,.75); box-shadow:0 4px 10px rgba(0,0,0,.2);}
+.legend{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0;}
+.legend span{background:#fff; border-radius:14px; padding:6px 10px; font-size:15px; box-shadow:0 3px 0 #e6dfcc;}
+@media (max-width:560px){#who{min-width:0;} .xp{width:130px;} #who canvas{width:56px;height:40px;} .choice b{font-size:19px;} .box h1{font-size:26px;}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud">
+  <div class="panel" id="who"><canvas id="whoCv"></canvas><div><b id="whoName">始盗龙宝宝</b><small id="whoSub">第 1 阶段</small><div class="xp"><i id="xpBar"></i></div><div class="stages" id="stages"></div></div></div>
+  <div class="btns"><button class="ib" id="snd">🔇</button><button class="ib" id="menuBtn">☰</button></div>
+</div>
+<div id="tip" class="panel"></div>
+<div id="joy"><i></i></div>
+<div id="overlay"><div class="box" id="box"></div></div>
+
+<script>
+if(!CanvasRenderingContext2D.prototype.roundRect){CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){r=Math.min(r,w/2,h/2);this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);this.closePath();};}
+/* ============ 恐龙资料 ============ */
+const PERIODS = {
+  cre:{name:'白垩纪', time:'约1.45亿—6600万年前', rock:['#e2c79a','#d4b47f','#c9a46c'], soil:'#8d6f4a', sky:'#f3dfb8'},
+  jur:{name:'侏罗纪', time:'约2.01亿—1.45亿年前', rock:['#c9bca4','#b5a68a','#a39276'], soil:'#6f6250', sky:'#d9e6cf'},
+  tri:{name:'三叠纪', time:'约2.52亿—2.01亿年前', rock:['#d99b78','#c9825f','#b8704f'], soil:'#7d4a36', sky:'#f2d2bc'},
+};
+const FOODS = {plant:{e:'🌿',n:'蕨叶'}, meat:{e:'🍖',n:'肉'}, fish:{e:'🐟',n:'鱼'}};
+
+const SPECIES = [
+/* ---------- 白垩纪 ---------- */
+{id:'trex', name:'霸王龙', latin:'Tyrannosaurus', period:'cre', len:'约12米', wt:'约8吨', diet:['meat'], dietTxt:'肉食', place:'北美洲',
+ facts:['它的咬合力是已知陆地动物里最强的之一，能咬碎骨头。','最大的牙齿连牙根有30厘米长，差不多一把尺子那么长。','小手臂虽然短，但每只都能举起约200公斤的东西。'],
+ size:1.15, color:'#b86f4b', belly:'#efd3ab', accent:'#7a3f27', eye:'#e0a73a',
+ spine:[[0,-80,1.5,1.5],[28,-86,6,6],[58,-92,12,13],[88,-98,19,22],[112,-98,24,30],[132,-100,19,24],[148,-111,12,13],[160,-123,17,16],[180,-127,17,17],[197,-123,13,12],[207,-118,4,4]], neck:6,
+ eye:[7.7,-1,8,4.2], mouth:[7.4,-5,10,-2], nostril:[9.7,4],
+ legs:[{i:4,v:-4,l1:46,l2:52,w1:32,w2:13,foot:22,wf:9,bend:1,dx:-4}],
+ arms:[{i:5.5,u:0,v:-12,l1:12,l2:10,w1:7,w2:5,a1:1.25,a2:0.2}],
+ feats:[{t:'stripes',s0:1.5,s1:6,n:8,w:3.2,depth:0.45}], gait:'biped'},
+{id:'tri', name:'三角龙', latin:'Triceratops', period:'cre', len:'约9米', wt:'约6吨', diet:['plant'], dietTxt:'植食', place:'北美洲',
+ facts:['它的头骨是所有陆地动物里最大的之一，长度超过2米。','嘴巴前面像鹦鹉的喙，可以咬断很硬的植物。','头后面的大“盾牌”叫颈盾，可能用来保护自己，也用来吸引同伴。'],
+ size:1.0, color:'#5d8aa3', belly:'#d3e2d9', accent:'#e0a24a', eye:'#d6a03c',
+ spine:[[0,-50,1.5,1.5],[30,-60,7,7],[60,-72,16,16],[88,-80,27,28],[115,-80,29,30],[140,-72,25,26],[160,-63,17,17],[178,-60,17,16],[198,-54,10,9],[210,-48,3,3]], neck:6,
+ eye:[7.3,-3,5,3.6], mouth:[7.6,-6,9.7,-2], nostril:[8.8,1],
+ legs:[{i:3.6,v:-10,l1:32,l2:36,w1:30,w2:16,foot:11,wf:10,bend:1,dx:-2},{i:5.4,v:-12,l1:28,l2:30,w1:20,w2:14,foot:9,wf:9,bend:-1,dx:4}],
+ feats:[{t:'stripes',s0:1.5,s1:5.5,n:7,w:4,depth:0.35},{t:'frill',i:6.1,u:-2,v:20,rx:22,ry:34,rot:-0.45},{t:'headball',i:7.4,u:0,v:1,rx:23,ry:17,rot:-0.12},
+  {t:'horn',i:7.3,u:2,v:13,len:34,ang:1.05,w:5},{t:'horn',i:8.8,u:0,v:7,len:12,ang:1.25,w:4.5}], gait:'quad'},
+{id:'raptor', name:'伶盗龙', latin:'Velociraptor', period:'cre', len:'约2米', wt:'约15公斤', diet:['meat'], dietTxt:'肉食', place:'蒙古、中国内蒙古',
+ facts:['科学家在它的手臂骨头上发现了长羽毛的痕迹，它其实浑身是羽毛。','每只脚上都有一个弯弯的大爪子，走路时会抬起来保护它。','它只有火鸡那么大，比很多人想象的小得多。'],
+ size:0.55, color:'#a9844c', belly:'#efdcb5', accent:'#5e4426', eye:'#e8b440',
+ spine:[[0,-66,1,1],[30,-66,4,4],[60,-66,8,8],[85,-66,13,13],[103,-66,12,14],[116,-78,6,7],[124,-90,6,6],[134,-96,8,7],[148,-94,6,5],[160,-90,2,2]], neck:5,
+ eye:[7.2,0,3,2.8], mouth:[7.2,-3,9,-1], nostril:[8.4,2],
+ legs:[{i:3.2,v:-4,l1:30,l2:34,w1:17,w2:7,foot:12,wf:5,bend:1,dx:-4,claw:1}],
+ arms:[{i:4.3,u:0,v:-7,l1:13,l2:13,w1:5,w2:4,a1:1.0,a2:0.3,feather:1}],
+ feats:[{t:'stripes',s0:0.4,s1:3,n:6,w:2.5,depth:0.9},{t:'fuzz',s0:0.2,s1:7.5,len:5},{t:'tailfan',len:14}], gait:'biped'},
+{id:'anky', name:'甲龙', latin:'Ankylosaurus', period:'cre', len:'约7米', wt:'约6吨', diet:['plant'], dietTxt:'植食', place:'北美洲',
+ facts:['尾巴末端的大锤子是由骨头长在一起形成的，可以用力甩向敌人。','它身上覆盖着骨板，连眼皮上都有骨片。','它的腿短短的，身体又宽又矮，就像一辆坦克。'],
+ size:0.95, color:'#8a7650', belly:'#d9caa0', accent:'#5e5038', eye:'#c99a3a',
+ spine:[[0,-40,5,5],[25,-42,5,5],[50,-47,8,8],[78,-58,24,18],[108,-62,27,20],[134,-56,22,18],[152,-50,14,13],[166,-47,13,11],[180,-43,4,4]], neck:6,
+ eye:[6.6,-1,4,2.6], mouth:[6.8,-5,8,-2], nostril:[7.6,2],
+ legs:[{i:3.4,v:-6,l1:25,l2:28,w1:22,w2:15,foot:8,wf:9,bend:1},{i:5.2,v:-6,l1:22,l2:26,w1:18,w2:13,foot:8,wf:8,bend:-1}],
+ feats:[{t:'club'},{t:'armor',s0:2.6,s1:6,step:0.28},{t:'spikes',list:[[3.2,0.95,2.1,9],[3.8,0.95,2.0,10],[4.4,0.95,1.9,10],[5,0.95,1.8,9],[5.6,0.9,1.7,8],[6.1,0.8,1.6,7]]}], gait:'quad'},
+{id:'para', name:'副栉龙', latin:'Parasaurolophus', period:'cre', len:'约9.5米', wt:'约2.5吨', diet:['plant'], dietTxt:'植食', place:'北美洲',
+ facts:['头上的长冠是空心的管子，空气吹过会发出像大号一样低沉的声音。','嘴巴扁扁的像鸭子，嘴里有几百颗牙齿一排排地替换。','它平时四条腿走路，跑起来可以只用两条后腿。'],
+ size:1.05, color:'#8d6a8c', belly:'#ecd8d6', accent:'#e2ae4a', eye:'#d9a23a',
+ spine:[[0,-62,1.5,1.5],[30,-74,7,7],[58,-88,16,16],[84,-96,26,27],[110,-92,25,26],[130,-82,18,19],[146,-96,10,10],[158,-110,10,9],[176,-108,7,6],[190,-104,4,3]], neck:6,
+ eye:[7.3,0,3,2.8], mouth:[7.4,-4,9,-1.5], nostril:[8.4,2],
+ legs:[{i:3.4,v:-10,l1:38,l2:44,w1:28,w2:14,foot:14,wf:8,bend:1},{i:5.2,v:-8,l1:36,l2:40,w1:14,w2:9,foot:8,wf:6,bend:-1,dx:2}],
+ feats:[{t:'stripes',s0:1.5,s1:6,n:9,w:3,depth:0.5},{t:'crest',i:7,pts:[[0,7],[-12,16],[-28,24],[-44,28]],w:8}], gait:'quad'},
+{id:'spino', name:'棘龙', latin:'Spinosaurus', period:'cre', len:'约14米', wt:'约7吨', diet:['fish','meat'], dietTxt:'主要吃鱼', place:'北非（埃及、摩洛哥）',
+ facts:['背上的大帆由很长的骨棘撑起来，最高的超过1.6米。','它的尾巴扁扁的像船桨，科学家认为它很会游泳。','它的嘴又长又窄，像鳄鱼一样，很适合抓滑溜溜的鱼。'],
+ size:1.25, color:'#4d7b74', belly:'#d8e0c8', accent:'#d4704a', eye:'#e2b03c',
+ spine:[[0,-70,3,3],[32,-80,8,12],[62,-88,14,18],[90,-96,20,23],[116,-98,21,25],[136,-100,16,20],[150,-112,9,10],[164,-118,9,8],[188,-116,6,5],[212,-110,3,3]], neck:6,
+ eye:[6.8,0,3,3], mouth:[6.9,-3,9,-1], nostril:[8.4,1.5],
+ legs:[{i:3.6,v:-8,l1:42,l2:46,w1:26,w2:12,foot:18,wf:8,bend:1,dx:-4}],
+ arms:[{i:5.2,u:0,v:-10,l1:16,l2:14,w1:7,w2:5,a1:1.2,a2:0.4}],
+ feats:[{t:'sail',s0:2.2,s1:5.4,h:58},{t:'stripes',s0:0.3,s1:2.5,n:5,w:3,depth:0.9}], gait:'biped'},
+{id:'sino', name:'中华龙鸟', latin:'Sinosauropteryx', period:'cre', len:'约1米', wt:'约0.5公斤', diet:['meat'], dietTxt:'肉食（小动物）', place:'中国辽宁',
+ facts:['1996年在中国辽宁发现，是世界上第一种被发现长着羽毛的恐龙。','科学家从化石里找到了颜色的线索：它的尾巴是棕红色和白色一圈一圈的。','它的名字里虽然有“鸟”，但它其实是一种小恐龙。'],
+ size:0.45, color:'#c06c38', belly:'#f3dcc0', accent:'#fff3e2', eye:'#2f2a22',
+ spine:[[0,-42,2,2],[30,-46,4,4],[60,-51,6,6],[85,-56,12,12],[100,-56,11,12],[110,-66,5,5],[116,-76,5,5],[124,-80,6,5],[136,-78,2,2]], neck:5,
+ eye:[7,0,2,2.4], mouth:[7,-2.5,8,-1], nostril:[7.8,1.5],
+ legs:[{i:3.3,v:-4,l1:24,l2:30,w1:14,w2:5,foot:10,wf:4,bend:1}],
+ arms:[{i:4.4,u:0,v:-6,l1:8,l2:8,w1:4,w2:3,a1:1.1,a2:0.4}],
+ feats:[{t:'rings',s0:0.2,s1:2.6,n:8},{t:'fuzz',s0:0.1,s1:7.2,len:4}], gait:'biped'},
+{id:'ptero', name:'无齿翼龙', latin:'Pteranodon', period:'cre', len:'翼展约6米', wt:'约25公斤', diet:['fish'], dietTxt:'吃鱼', place:'北美洲',
+ facts:['它不是恐龙！它是翼龙，是和恐龙同时代、会飞的爬行动物。','名字的意思是“没有牙齿的翅膀”，它的嘴里确实一颗牙都没有。','它的翅膀是一层皮膜，由一根超长的第四手指撑开。'],
+ size:0.75, color:'#c4895a', belly:'#f0dcc0', accent:'#8f5434', wingc:'#dcae84', eye:'#2f2a22',
+ spine:[[0,-60,1,1],[10,-62,4,4],[24,-64,9,10],[40,-66,7,7],[50,-74,4,4],[58,-80,6,6],[78,-77,3,2],[98,-72,1,1]], neck:4,
+ eye:[5.2,-1,2,2.6], mouth:[5.3,-2,7,0], nostril:null,
+ feats:[{t:'crest',i:5,pts:[[0,5],[-12,9],[-26,12]],w:6}], wing:{i:2.6,hip:1.6,span:85}, gait:'fly'},
+/* ---------- 侏罗纪 ---------- */
+{id:'steg', name:'剑龙', latin:'Stegosaurus', period:'jur', len:'约9米', wt:'约5吨', diet:['plant'], dietTxt:'植食', place:'北美洲、葡萄牙',
+ facts:['背上有17块左右的骨板，可能用来调节体温，也让它看起来更大。','尾巴末端有4根尖刺，用来保护自己。','它的身体有大象那么大，脑袋却很小。'],
+ size:1.0, color:'#76934f', belly:'#e0e3b0', accent:'#c9653f', eye:'#d6a03c',
+ spine:[[0,-62,1.5,1.5],[28,-68,6,6],[55,-80,13,13],[82,-96,26,24],[108,-96,28,26],[132,-80,20,20],[152,-62,11,11],[168,-48,8,8],[182,-42,8,7],[194,-40,3,3]], neck:6,
+ eye:[7.9,-1,2,2.6], mouth:[8,-4,9,-1.5], nostril:[8.7,1.5],
+ legs:[{i:3.6,v:-8,l1:40,l2:44,w1:28,w2:16,foot:10,wf:10,bend:1},{i:5.6,v:-6,l1:28,l2:32,w1:17,w2:12,foot:8,wf:9,bend:-1}],
+ feats:[{t:'plates',s0:1.5,s1:6.3,n:9,h:30},{t:'spikes',list:[[0.25,0.6,2.3,16],[0.45,0.6,2.0,17],[0.65,0.6,2.4,14],[0.85,0.6,2.1,15]]},{t:'stripes',s0:2,s1:6,n:6,w:3,depth:0.3}], gait:'quad'},
+{id:'brach', name:'腕龙', latin:'Brachiosaurus', period:'jur', len:'约22米', wt:'约40吨', diet:['plant'], dietTxt:'植食', place:'北美洲',
+ facts:['它的前腿比后腿长，所以背是向后斜的，像一只长颈鹿。','它抬起头可以够到大约9米高的地方，比三层楼还高。','一天大概要吃几百公斤的植物。'],
+ size:1.35, color:'#748aa6', belly:'#dde2e6', accent:'#56627d', eye:'#d6a03c',
+ spine:[[0,-58,1.5,1.5],[30,-70,7,7],[60,-88,16,16],[88,-102,28,29],[115,-110,30,31],[134,-118,24,26],[146,-145,14,14],[154,-178,11,11],[160,-205,10,10],[172,-214,11,9],[188,-208,4,4]], neck:5,
+ eye:[9.1,-2,3,3], mouth:[9.2,-4,10,-1.5], nostril:[9.3,9],
+ legs:[{i:2.8,v:-10,l1:40,l2:46,w1:32,w2:19,foot:9,wf:12,bend:1},{i:4.8,v:-12,l1:50,l2:52,w1:28,w2:18,foot:8,wf:11,bend:-1}],
+ feats:[{t:'stripes',s0:1,s1:5,n:7,w:4,depth:0.3},{t:'bump',i:9,u:-2,v:9,r:7}], gait:'quad'},
+{id:'allo', name:'异特龙', latin:'Allosaurus', period:'jur', len:'约8.5米', wt:'约2吨', diet:['meat'], dietTxt:'肉食', place:'北美洲、葡萄牙',
+ facts:['它的眼睛上方有一对小小的角。','它是侏罗纪最常见的大型肉食恐龙，比霸王龙早生活了大约8000万年。','它的手臂比霸王龙长，每只手有三根锋利的爪子。'],
+ size:1.0, color:'#a37a4d', belly:'#ecd7b3', accent:'#5e3d22', eye:'#e3ae3c',
+ spine:[[0,-78,1.5,1.5],[30,-84,6,6],[60,-90,11,12],[88,-96,17,20],[110,-96,19,23],[128,-98,15,18],[143,-108,10,11],[154,-118,12,11],[172,-120,12,10],[188,-116,7,6],[198,-112,3,3]], neck:6,
+ eye:[7.6,0,5,3.4], mouth:[7.3,-4,9.6,-1.5], nostril:[9.2,2.5],
+ legs:[{i:3.8,v:-4,l1:44,l2:50,w1:28,w2:12,foot:20,wf:8,bend:1,dx:-4}],
+ arms:[{i:5.3,u:0,v:-10,l1:18,l2:15,w1:7,w2:5,a1:1.1,a2:0.45}],
+ feats:[{t:'stripes',s0:1,s1:6,n:10,w:2.6,depth:0.55},{t:'horn',i:7.5,u:0,v:11,len:7,ang:1.6,w:4}], gait:'biped'},
+{id:'mamen', name:'马门溪龙', latin:'Mamenchisaurus', period:'jur', len:'约22米', wt:'约20吨', diet:['plant'], dietTxt:'植食', place:'中国四川',
+ facts:['它的脖子是所有动物里最长的之一，几乎占了身长的一半。','1952年在四川修公路时被发现，地名“马鸣溪”因为口音被记成了“马门溪”。','它的脖子虽然长，但骨头里有很多空腔，所以并不太重。'],
+ size:1.3, color:'#a8875a', belly:'#efe0c4', accent:'#6f5236', eye:'#d6a03c',
+ spine:[[0,-50,1.5,1.5],[28,-60,6,6],[55,-76,15,15],[80,-88,24,25],[104,-90,25,26],[122,-90,20,22],[145,-106,11,11],[172,-130,9,9],[198,-152,8,8],[214,-160,9,8],[228,-156,3,3]], neck:5,
+ eye:[9,0,2.5,2.6], mouth:[9.1,-3.5,10,-1], nostril:[9.5,4],
+ legs:[{i:3,v:-10,l1:36,l2:40,w1:26,w2:17,foot:8,wf:10,bend:1},{i:5,v:-10,l1:36,l2:40,w1:22,w2:16,foot:8,wf:10,bend:-1}],
+ feats:[{t:'stripes',s0:1,s1:8.5,n:14,w:3,depth:0.4}], gait:'quad'},
+{id:'guan', name:'冠龙', latin:'Guanlong', period:'jur', len:'约3米', wt:'约75公斤', diet:['meat'], dietTxt:'肉食', place:'中国新疆',
+ facts:['它是霸王龙家族里最早的成员之一，比霸王龙早了9000多万年。','头上有一个薄薄的大冠，像戴了一顶帽子，可能是用来炫耀的。','它的化石是在新疆五彩湾被发现的。'],
+ size:0.7, color:'#7b7d4b', belly:'#e8e2bb', accent:'#d65d38', eye:'#e8b440',
+ spine:[[0,-62,1,1],[30,-64,5,5],[58,-66,9,9],[84,-68,14,15],[102,-68,13,15],[116,-80,7,8],[124,-92,7,7],[136,-97,9,8],[152,-95,7,6],[164,-90,2,2]], neck:5,
+ eye:[7.1,0,3,2.8], mouth:[7.1,-3.5,9,-1], nostril:[8.4,2],
+ legs:[{i:3.2,v:-4,l1:30,l2:34,w1:18,w2:7,foot:13,wf:5,bend:1,dx:-4}],
+ arms:[{i:4.3,u:0,v:-7,l1:13,l2:12,w1:5,w2:4,a1:1.0,a2:0.35}],
+ feats:[{t:'sail',s0:6.8,s1:8.8,h:14,c:'accent'},{t:'stripes',s0:0.5,s1:4,n:8,w:2.4,depth:0.6},{t:'fuzz',s0:1,s1:5,len:4}], gait:'biped'},
+/* ---------- 三叠纪 ---------- */
+{id:'plateo', name:'板龙', latin:'Plateosaurus', period:'tri', len:'约8米', wt:'约700公斤', diet:['plant'], dietTxt:'植食', place:'德国、瑞士',
+ facts:['它是最早的大型植食恐龙之一，是后来腕龙这些巨型恐龙的远亲。','它用两条后腿走路，前肢可以抓住树枝。','在德国一个地方就发现了几十具板龙化石。'],
+ size:0.95, color:'#998449', belly:'#efe2bd', accent:'#64552a', eye:'#d6a03c',
+ spine:[[0,-62,1.5,1.5],[30,-72,6,6],[58,-84,12,13],[82,-92,19,21],[104,-94,19,22],[120,-100,14,16],[132,-116,8,8],[140,-132,7,7],[150,-140,8,7],[164,-138,3,3]], neck:5,
+ eye:[8.1,0,2.5,2.6], mouth:[8.1,-3,9,-1], nostril:[8.7,2],
+ legs:[{i:3.3,v:-8,l1:42,l2:48,w1:25,w2:12,foot:16,wf:7,bend:1}],
+ arms:[{i:5,u:0,v:-10,l1:20,l2:18,w1:8,w2:6,a1:1.3,a2:0.6}],
+ feats:[{t:'stripes',s0:1,s1:6,n:10,w:2.6,depth:0.5}], gait:'biped'},
+{id:'coelo', name:'腔骨龙', latin:'Coelophysis', period:'tri', len:'约3米', wt:'约20公斤', diet:['meat'], dietTxt:'肉食', place:'美国新墨西哥州',
+ facts:['它的骨头是空心的，所以身体很轻，跑得很快。','1998年，一块腔骨龙头骨化石被航天飞机带上了太空！','在一个叫“幽灵牧场”的地方发现了上千具它的化石。'],
+ size:0.6, color:'#a89257', belly:'#f0e4c4', accent:'#6f572b', eye:'#e8b440',
+ spine:[[0,-56,1,1],[30,-58,3,3],[60,-60,6,6],[80,-62,9,9],[96,-62,8,10],[108,-74,4,5],[114,-88,4,4],[122,-94,5,4],[140,-90,2,2]], neck:5,
+ eye:[7.1,0,2,2.4], mouth:[7.1,-2.5,8,-0.8], nostril:[7.8,1.5],
+ legs:[{i:3.3,v:-3,l1:26,l2:32,w1:12,w2:5,foot:12,wf:4,bend:1,dx:-2}],
+ arms:[{i:4.4,u:0,v:-5,l1:10,l2:10,w1:4,w2:3,a1:1.1,a2:0.4}],
+ feats:[{t:'stripes',s0:0.5,s1:5,n:12,w:1.8,depth:0.6}], gait:'biped'},
+{id:'eorap', name:'始盗龙', latin:'Eoraptor', period:'tri', len:'约1米', wt:'约10公斤', diet:['meat','plant'], dietTxt:'杂食（肉和植物都吃）', place:'阿根廷',
+ facts:['它生活在大约2.3亿年前，是最早的恐龙之一。','它只有一米长，和一只狗差不多大。','它的牙齿有的尖、有的像树叶，所以科学家认为它什么都吃。'],
+ size:0.45, color:'#748652', belly:'#e8e8c8', accent:'#46532c', eye:'#e8b440',
+ spine:[[0,-46,1,1],[22,-48,3,3],[44,-50,6,6],[64,-52,10,10],[78,-52,9,11],[88,-62,5,6],[94,-72,5,5],[102,-76,6,5],[116,-73,2,2]], neck:5,
+ eye:[7.1,0,2,2.4], mouth:[7.1,-2.5,8,-0.8], nostril:[7.8,1.5],
+ legs:[{i:3.3,v:-3,l1:24,l2:28,w1:12,w2:5,foot:10,wf:4,bend:1}],
+ arms:[{i:4.4,u:0,v:-5,l1:8,l2:8,w1:4,w2:3,a1:1.1,a2:0.4}],
+ feats:[{t:'stripes',s0:0.5,s1:5,n:9,w:2,depth:0.6}], gait:'biped'},
+];
+const SP = Object.fromEntries(SPECIES.map(s=>[s.id,s]));
+SPECIES.forEach(sp=>{let m=-1; sp.spine.forEach((p,i)=>{if(p[2]+p[3]>m){m=p[2]+p[3]; sp.hipIdx=i;}});});
+
+/* ============ 颜色工具 ============ */
+function hex2rgb(h){const n=parseInt(h.slice(1),16); return [n>>16,(n>>8)&255,n&255];}
+function shade(h,f){const c=hex2rgb(h).map(v=>Math.round(Math.max(0,Math.min(255, f<1? v*f : v+(255-v)*(f-1))))); return 'rgb('+c.join(',')+')';}
+function rgba(h,a){return 'rgba('+hex2rgb(h).join(',')+','+a+')';}
+
+/* ============ 脊柱采样 ============ */
+const PER=8;
+function cr(a,b,c,d,t){const t2=t*t,t3=t2*t; return 0.5*(2*b+(-a+c)*t+(2*a-5*b+4*c-d)*t2+(-a+3*b-3*c+d)*t3);}
+function sample(pts){
+  const out=[], n=pts.length;
+  for(let i=0;i<n-1;i++){const p0=pts[Math.max(0,i-1)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(n-1,i+2)];
+    for(let k=0;k<PER;k++){const t=k/PER, e=(1-Math.cos(t*Math.PI))/2;
+      out.push({x:cr(p0[0],p1[0],p2[0],p3[0],t), y:cr(p0[1],p1[1],p2[1],p3[1],t), wt:p1[2]+(p2[2]-p1[2])*e, wb:p1[3]+(p2[3]-p1[3])*e});}}
+  const L=pts[n-1]; out.push({x:L[0],y:L[1],wt:L[2],wb:L[3]});
+  for(let i=0;i<out.length;i++){const a=out[Math.max(0,i-2)], b=out[Math.min(out.length-1,i+2)]; let tx=b.x-a.x, ty=b.y-a.y; const l=Math.hypot(tx,ty)||1; tx/=l; ty/=l;
+    Object.assign(out[i],{tx,ty,nx:ty,ny:-tx});}
+  return out;
+}
+function F(S,idx){const j=Math.max(0,Math.min(S.length-1.001, idx*PER)), a=S[Math.floor(j)], b=S[Math.ceil(j)], f=j-Math.floor(j);
+  const r={}; for(const k of ['x','y','wt','wb','tx','ty','nx','ny']) r[k]=a[k]+(b[k]-a[k])*f; return r;}
+function P(f,u,v){return {x:f.x+f.tx*u+f.nx*v, y:f.y+f.ty*u+f.ny*v};}
+
+function pose(sp,o){
+  const t=o.t||0, mv=o.moving?1:0, ph=o.phase||0, n=sp.spine.length, hip=sp.hipIdx, nk=sp.neck;
+  const bob = mv? -Math.abs(Math.sin(ph))*2.2 : Math.sin(t*1.6)*0.5;
+  return sp.spine.map((p,i)=>{
+    let [x,y,wt,wb]=p;
+    if(i<hip){const k=Math.pow((hip-i)/hip,1.5); y+=Math.sin(t*1.3 - i*0.7)*(sp.sway??5)*k;}
+    if(i>=nk){const k=(i-nk+1)/(n-nk); y+=(Math.sin(t*1.05)*1.6 + (mv?Math.sin(ph*2)*1.4:0))*k;}
+    if(i>=hip-1 && i<=nk){const b=1+0.022*Math.sin(t*1.7); wt*=b; wb*=b;}
+    return [x,y+bob,wt,wb];
+  });
+}
+
+/* ============ 画图基础 ============ */
+function smoothTo(ctx, pts, move){
+  if(move) ctx.moveTo(pts[0].x,pts[0].y); else ctx.lineTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length-1;i++){ctx.quadraticCurveTo(pts[i].x,pts[i].y,(pts[i].x+pts[i+1].x)/2,(pts[i].y+pts[i+1].y)/2);}
+  const l=pts[pts.length-1]; ctx.lineTo(l.x,l.y);
+}
+function bodyPath(ctx,S){
+  const top=S.map(p=>({x:p.x+p.nx*p.wt, y:p.y+p.ny*p.wt}));
+  const bot=S.map(p=>({x:p.x-p.nx*p.wb, y:p.y-p.ny*p.wb}));
+  const e=S[S.length-1], s=S[0], be=bot[bot.length-1];
+  ctx.beginPath(); smoothTo(ctx,top,true);
+  ctx.quadraticCurveTo(e.x+e.tx*(e.wt+e.wb)*1.1, e.y+e.ty*(e.wt+e.wb)*1.1, be.x, be.y);
+  smoothTo(ctx,bot.slice().reverse(),false);
+  ctx.quadraticCurveTo(s.x-s.tx*(s.wt+s.wb)*1.1, s.y-s.ty*(s.wt+s.wb)*1.1, top[0].x, top[0].y);
+  ctx.closePath();
+}
+function seeded(seed){let s=seed; return ()=>{s=(s*16807)%2147483647; return (s-1)/2147483646;};}
+
+function shade2(c,f){if(typeof c!=='string') return c; if(c.startsWith('#')) return shade(c,f); const m=c.match(/\d+/g).map(Number); return 'rgb('+m.slice(0,3).map(v=>Math.round(Math.max(0,Math.min(255,f<1?v*f:v+(255-v)*(f-1))))).join(',')+')';}
+function palette(sp,mode){
+  if(mode==='fossil') return {base:'#eadcbd',dark:'#d3c09a',belly:'#f6eedb',line:'#8c7350',accent:'#dfcca6',limb:'#e6d6b4',limbFar:'#cdbb96',horn:'#f4ecd8',wing:'#e3d3b0',fossil:1};
+  if(mode==='sil') return {base:'#cdc6b6',dark:'#cdc6b6',belly:'#cdc6b6',line:'#bab29f',accent:'#c4bcaa',limb:'#cdc6b6',limbFar:'#c1b9a8',horn:'#cdc6b6',wing:'#c4bcaa',sil:1};
+  const c=sp.color; return {base:c,dark:shade(c,0.68),belly:sp.belly,line:shade(c,0.42),accent:sp.accent,limb:shade(c,0.97),limbFar:shade(c,0.7),horn:'#f2e8cf',wing:sp.wingc||sp.accent,eye:sp.eye};
+}
+
+/* ============ 四肢 ============ */
+function ik(h,A,l1,l2,bend){
+  const ax=A.x-h.x, ay=A.y-h.y, d=Math.hypot(ax,ay)||1, dm=Math.min(d,(l1+l2)*0.995), ux=ax/d, uy=ay/d;
+  const E={x:h.x+ux*dm, y:h.y+uy*dm};
+  const a=(l1*l1-l2*l2+dm*dm)/(2*dm), hh=Math.sqrt(Math.max(0,l1*l1-a*a));
+  return {A:E, K:{x:h.x+ux*a+uy*hh*bend, y:h.y+uy*a-ux*hh*bend}};
+}
+function legGeom(S,L,ph,moving,far){
+  const h=P(F(S,L.i),0,L.v);
+  const reach=L.l1+L.l2, stride=moving? reach*0.26:0, lift=moving? 6:0;
+  const bx=h.x+(L.dx||0)+(far?-3:0)+stride*Math.sin(ph);
+  const by=-(L.wf/2)-lift*Math.max(0,Math.cos(ph));
+  if(L.bend>0 && L.digi!==false && L.foot>=12){ // 趾行：大腿-小腿-跖骨-脚趾
+    const meta=L.l2*0.42, shin=L.l2*0.58;
+    const B={x:bx+L.l1*0.22,y:by}, A0={x:B.x-meta*0.42, y:by-meta*0.9};
+    const r=ik(h,A0,L.l1,shin,1);
+    const B2={x:r.A.x+(B.x-A0.x), y:r.A.y+(B.y-A0.y)};
+    return {H:h,K:r.K,A:r.A,B:B2,T:{x:B2.x+L.foot*0.85,y:B2.y},digi:1};
+  }
+  const r=ik(h,{x:bx,y:by},L.l1,L.l2,L.bend);
+  return {H:h,K:r.K,A:r.A,B:r.A,T:{x:r.A.x+L.foot,y:r.A.y}};
+}
+function line(ctx,a,b){ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();}
+function taper(ctx,a,ra,b,rb){
+  const ang=Math.atan2(b.y-a.y,b.x-a.x);
+  ctx.beginPath(); ctx.arc(a.x,a.y,ra,ang+Math.PI/2,ang-Math.PI/2); ctx.arc(b.x,b.y,rb,ang-Math.PI/2,ang+Math.PI/2); ctx.closePath(); ctx.fill();
+}
+function drawLeg(ctx,g,L,fill,lc,pal){
+  if(pal.rich && !pal.sil){const gr=ctx.createLinearGradient(g.H.x-L.w1,g.H.y,g.H.x+L.w1,g.T.y); gr.addColorStop(0,shade2(fill,1.18)); gr.addColorStop(0.5,fill); gr.addColorStop(1,shade2(fill,0.72)); fill=gr;}
+  const r1=L.w1*0.58, rk=L.w2*0.66, ra=L.w2*0.45, rf=L.wf/2;
+  for(const pass of [0,1]){
+    const e=pass?0:2.1; ctx.fillStyle=pass?fill:lc;
+    taper(ctx,g.H,r1+e,g.K,rk+e);
+    taper(ctx,g.K,rk+e,g.A,ra+e);
+    if(g.digi) taper(ctx,g.A,ra+e,g.B,rf+e);
+    taper(ctx,{x:g.B.x-rf*0.3,y:g.B.y},rf+e,g.T,rf*0.8+e);
+  }
+  if(!pal.sil){
+    ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=2.5; ctx.lineCap='round';
+    const m={x:g.H.x+(g.K.x-g.H.x)*0.2-r1*0.3, y:g.H.y+(g.K.y-g.H.y)*0.2-r1*0.25}, n={x:g.H.x+(g.K.x-g.H.x)*0.65-rk*0.3,y:g.H.y+(g.K.y-g.H.y)*0.65-rk*0.3};
+    line(ctx,m,n);
+    ctx.fillStyle=pal.fossil?'#d9c9a5':'#f1e6cc'; ctx.strokeStyle=lc; ctx.lineWidth=1;
+    for(let k=0;k<2;k++){const x=g.T.x+rf*0.6-k*rf*1.1, y=g.T.y+rf;
+      ctx.beginPath(); ctx.moveTo(x-2.2,y-rf*1.1); ctx.lineTo(x+3.4,y-0.3); ctx.lineTo(x-1.6,y); ctx.closePath(); ctx.fill(); ctx.stroke();}
+    if(pal.fossil){ctx.strokeStyle='rgba(140,115,80,.35)'; ctx.lineWidth=1.4; line(ctx,g.H,g.K); line(ctx,g.K,g.A);}
+  }
+}
+function armGeom(S,A,t){
+  const s=P(F(S,A.i),A.u,A.v), w=Math.sin(t*1.3)*0.08;
+  const e={x:s.x+A.l1*Math.cos(A.a1+w), y:s.y+A.l1*Math.sin(A.a1+w)};
+  const h={x:e.x+A.l2*Math.cos(A.a2+w), y:e.y+A.l2*Math.sin(A.a2+w)};
+  return {s,e,h};
+}
+function drawArm(ctx,g,A,fill,lc,pal){
+  ctx.lineCap='round';
+  for(const pass of [0,1]){const e=pass?0:2.2; ctx.strokeStyle=pass?fill:lc;
+    ctx.lineWidth=A.w1+e*2; line(ctx,g.s,g.e); ctx.lineWidth=A.w2+e*2; line(ctx,g.e,g.h);}
+  if(A.feather && !pal.sil){
+    ctx.strokeStyle=pal.dark; ctx.lineWidth=2;
+    for(let k=0;k<5;k++){const f=k/4, x=g.s.x+(g.h.x-g.s.x)*(0.35+f*0.65), y=g.s.y+(g.h.y-g.s.y)*(0.35+f*0.65);
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.quadraticCurveTo(x-6,y+6,x-9+k,y+12-k); ctx.stroke();}
+  }
+  if(!pal.sil){ctx.strokeStyle=lc; ctx.lineWidth=1.3;
+    for(let k=0;k<2;k++){ctx.beginPath(); ctx.moveTo(g.h.x,g.h.y); ctx.quadraticCurveTo(g.h.x+3,g.h.y+2+k*2,g.h.x+2,g.h.y+5+k*2); ctx.stroke();}}
+}
+
+/* ============ 特征 ============ */
+function hornShape(ctx,f,u,v,len,ang,w,fill,lc){
+  const B=P(f,u,v), dx=f.tx*Math.cos(ang)+f.nx*Math.sin(ang), dy=f.ty*Math.cos(ang)+f.ny*Math.sin(ang);
+  const px=-dy, py=dx, tip={x:B.x+dx*len, y:B.y+dy*len};
+  ctx.beginPath(); ctx.moveTo(B.x+px*w,B.y+py*w);
+  ctx.quadraticCurveTo(B.x+dx*len*0.55+px*w*0.9, B.y+dy*len*0.55+py*w*0.9, tip.x,tip.y);
+  ctx.quadraticCurveTo(B.x+dx*len*0.5-px*w*0.4, B.y+dy*len*0.5-py*w*0.4, B.x-px*w,B.y-py*w);
+  ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=lc; ctx.lineWidth=1.6; ctx.stroke();
+}
+function featBack(ctx,S,sp,pal,feat){ // 画在身体后面的
+  if(feat.t==='plates'){
+    for(let r=0;r<2;r++) for(let k=0;k<feat.n;k++){
+      const s=feat.s0+(feat.s1-feat.s0)*(k+(r?0.5:0))/(feat.n-1); if(s>feat.s1) continue;
+      const f=F(S,s), q=(s-feat.s0)/(feat.s1-feat.s0), z=feat.h*(0.42+0.58*Math.sin(Math.PI*q))*(r?0.85:1), b=f.wt*0.55;
+      const pts=[P(f,-z*0.22,b-2),P(f,-z*0.36,b+z*0.45),P(f,z*0.04,b+z),P(f,z*0.38,b+z*0.42),P(f,z*0.24,b-2)];
+      ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+      ctx.quadraticCurveTo(pts[1].x,pts[1].y,(pts[1].x+pts[2].x)/2,(pts[1].y+pts[2].y)/2);
+      ctx.quadraticCurveTo(pts[2].x,pts[2].y,(pts[2].x+pts[3].x)/2,(pts[2].y+pts[3].y)/2);
+      ctx.quadraticCurveTo(pts[3].x,pts[3].y,pts[4].x,pts[4].y); ctx.closePath();
+      ctx.fillStyle=pal.sil?pal.accent:(r? shade(pal.fossil?'#d8c49c':pal.accent,0.8) : (pal.fossil?'#e5d4b0':pal.accent)); ctx.fill();
+      ctx.strokeStyle=pal.line; ctx.lineWidth=1.6; ctx.stroke();
+      if(!pal.sil){ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=1.2; const m=P(f,0,b+z*0.15), tp=P(f,z*0.02,b+z*0.85); line(ctx,m,tp);}
+    }
+  }
+  if(feat.t==='sail'){
+    const top=[], bot=[];
+    for(let s=feat.s0;s<=feat.s1+1e-6;s+=0.1){const f=F(S,s), q=(s-feat.s0)/(feat.s1-feat.s0), h=feat.h*Math.pow(Math.sin(Math.PI*q),0.75);
+      top.push(P(f,0,f.wt*0.6+h)); bot.push(P(f,0,f.wt*0.5));}
+    ctx.beginPath(); smoothTo(ctx,top,true); smoothTo(ctx,bot.reverse(),false); ctx.closePath();
+    const col=pal.fossil?'#e3d2ae':pal.accent;
+    if(!pal.sil){const yb=Math.min(...top.map(p=>p.y)); const g=ctx.createLinearGradient(0,yb,0,bot[0].y); g.addColorStop(0,shade(col.startsWith('#')?col:'#e3d2ae',1.15)); g.addColorStop(1,col.startsWith('#')?shade(col,0.85):col); ctx.fillStyle=g;} else ctx.fillStyle=pal.accent;
+    ctx.fill(); ctx.strokeStyle=pal.line; ctx.lineWidth=1.6; ctx.stroke();
+    if(!pal.sil){ctx.save(); ctx.clip(); ctx.strokeStyle='rgba(60,30,20,.22)'; ctx.lineWidth=1.4;
+      for(let s=feat.s0+0.15;s<feat.s1;s+=0.22){const f=F(S,s); line(ctx,P(f,0,f.wt*0.5),P(f,0,f.wt+feat.h*1.1));}
+      ctx.restore();}
+  }
+  if(feat.t==='crest'){
+    const f=F(S,feat.i), pts=feat.pts.map(([u,v])=>P(f,u,v));
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    for(const pass of [0,1]){ctx.strokeStyle=pass?(pal.fossil?'#e5d4b0':pal.accent):pal.line; ctx.lineWidth=feat.w+(pass?0:3.4);
+      ctx.beginPath(); smoothTo(ctx,pts,true); ctx.stroke();}
+    if(!pal.sil){ctx.strokeStyle='rgba(255,255,255,.3)'; ctx.lineWidth=1.5; ctx.beginPath(); smoothTo(ctx,pts.map(p=>({x:p.x,y:p.y-feat.w*0.22})),true); ctx.stroke();}
+  }
+  if(feat.t==='spikes'){
+    for(const [s,vf,ang,len] of feat.list){const f=F(S,s); hornShape(ctx,f,0,f.wt*vf,len,ang,3.2,pal.horn,pal.line);}
+  }
+  if(feat.t==='tailfan' && !pal.sil){
+    const f=F(S,0.3); ctx.strokeStyle=pal.dark; ctx.lineCap='round';
+    for(let k=-3;k<=3;k++){ctx.lineWidth=2.4; const a=Math.PI+k*0.16; const b=P(f,0,0);
+      ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.quadraticCurveTo(b.x+Math.cos(a)*feat.len*0.6,b.y+Math.sin(a)*feat.len*0.6+2,b.x+Math.cos(a)*feat.len,b.y+Math.sin(a)*feat.len); ctx.stroke();}
+  }
+  if(feat.t==='club'){
+    const f=F(S,0.05), c=P(f,-4,0);
+    ctx.fillStyle=pal.sil?pal.base:(pal.fossil?'#e0cfa9':shade(sp.color,0.8)); ctx.strokeStyle=pal.line; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.ellipse(c.x,c.y-3,10,7,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(c.x+1,c.y+4,11,7.5,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  }
+}
+function featFront(ctx,S,sp,pal,feat){ // 画在身体前面的
+  if(feat.t==='frill'){
+    const f=F(S,feat.i), c=P(f,feat.u,feat.v), rot=Math.atan2(f.ty,f.tx)+feat.rot;
+    const col=pal.fossil?'#e3d1aa':pal.accent;
+    ctx.fillStyle=pal.sil?pal.accent:(pal.fossil?'#efe1c2':shade(col,0.9)); ctx.strokeStyle=pal.line; ctx.lineWidth=1.4;
+    for(let k=0;k<13;k++){const a=-Math.PI*0.95+k*(Math.PI*1.25/12); const x=c.x+Math.cos(a)*feat.rx*Math.cos(rot)-Math.sin(a)*feat.ry*Math.sin(rot), y=c.y+Math.cos(a)*feat.rx*Math.sin(rot)+Math.sin(a)*feat.ry*Math.cos(rot);
+      ctx.beginPath(); ctx.arc(x,y,4.2,0,Math.PI*2); ctx.fill(); ctx.stroke();}
+    ctx.beginPath(); ctx.ellipse(c.x,c.y,feat.rx,feat.ry,rot,0,Math.PI*2);
+    if(!pal.sil){const g=ctx.createRadialGradient(c.x+8,c.y+8,2,c.x,c.y,feat.ry); g.addColorStop(0,shade(pal.fossil?'#e3d1aa':col,0.75)); g.addColorStop(0.6,col); g.addColorStop(1,shade(pal.fossil?'#e3d1aa':col,1.15)); ctx.fillStyle=g;} else ctx.fillStyle=pal.accent;
+    ctx.fill(); ctx.lineWidth=1.8; ctx.stroke();
+    if(!pal.sil && !pal.fossil){ctx.strokeStyle=rgba(sp.color,0.45); ctx.lineWidth=2;
+      for(let k=0;k<6;k++){const a=-Math.PI*0.85+k*0.22; ctx.beginPath(); ctx.moveTo(c.x+Math.cos(a+rot)*5,c.y+Math.sin(a+rot)*5); ctx.lineTo(c.x+Math.cos(a+rot)*feat.ry*0.82,c.y+Math.sin(a+rot)*feat.ry*0.82); ctx.stroke();}}
+  }
+  if(feat.t==='headball'){
+    const f=F(S,feat.i), c=P(f,feat.u,feat.v), rot=Math.atan2(f.ty,f.tx)+feat.rot;
+    ctx.beginPath(); ctx.ellipse(c.x,c.y,feat.rx,feat.ry,rot,0,Math.PI*2);
+    if(!pal.sil){const g=ctx.createLinearGradient(0,c.y-feat.ry,0,c.y+feat.ry); g.addColorStop(0,pal.dark); g.addColorStop(0.5,pal.base); g.addColorStop(1,pal.belly); ctx.fillStyle=g;} else ctx.fillStyle=pal.base;
+    ctx.fill(); ctx.strokeStyle=pal.line; ctx.lineWidth=2; ctx.stroke();
+  }
+  if(feat.t==='horn'){const f=F(S,feat.i); hornShape(ctx,f,feat.u,feat.v,feat.len,feat.ang,feat.w,pal.horn,pal.line);}
+  if(feat.t==='bump'){const f=F(S,feat.i), c=P(f,feat.u,feat.v); ctx.beginPath(); ctx.arc(c.x,c.y,feat.r,Math.PI,0); ctx.fillStyle=pal.base; ctx.fill(); ctx.strokeStyle=pal.line; ctx.lineWidth=1.6; ctx.stroke();}
+  if(feat.t==='armor'){
+    let row=0;
+    for(let s=feat.s0;s<=feat.s1;s+=feat.step){const f=F(S,s); row++;
+      for(const [vf,rf] of [[0.78,0.16],[0.42,0.14],[0.08,0.12]]){
+        const c=P(f,(row%2)*2,f.wt*vf), r=Math.max(2.4,f.wt*rf);
+        ctx.beginPath(); ctx.ellipse(c.x,c.y,r*1.1,r*0.8,0,0,Math.PI*2);
+        ctx.fillStyle=pal.sil?pal.dark:(pal.fossil?'#ddc9a0':shade(sp.color,0.78)); ctx.fill();
+        if(!pal.sil){ctx.strokeStyle=pal.line; ctx.lineWidth=1; ctx.stroke(); ctx.fillStyle='rgba(255,255,255,.25)'; ctx.beginPath(); ctx.arc(c.x-r*0.3,c.y-r*0.3,r*0.3,0,Math.PI*2); ctx.fill();}
+      }}
+  }
+  if(feat.t==='fuzz' && !pal.sil){
+    ctx.strokeStyle=pal.fossil?'rgba(140,115,80,.4)':rgba(sp.color,0.9); ctx.lineWidth=1.6; ctx.lineCap='round';
+    for(let s=feat.s0;s<=feat.s1;s+=0.17){const f=F(S,s), b=P(f,0,f.wt-1.5), e=P(f,-feat.len*1.1,f.wt+feat.len*0.45);
+      ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.quadraticCurveTo((b.x+e.x)/2,(b.y+e.y)/2-1.5,e.x,e.y); ctx.stroke();}
+  }
+}
+function pattern(ctx,S,sp,pal){
+  for(const feat of sp.feats||[]){
+    if(feat.t==='stripes'){ctx.fillStyle=rgba(sp.accent.startsWith('#')?sp.accent:'#000000',0.32);
+      if(sp.id==='tri'||sp.id==='para'||sp.id==='spino'||sp.id==='guan') ctx.fillStyle='rgba(40,30,20,.18)';
+      for(let k=0;k<feat.n;k++){const s=feat.s0+(feat.s1-feat.s0)*k/(feat.n-1), f=F(S,s), d=(f.wt+f.wb)*feat.depth;
+        const a=P(f,-feat.w,f.wt+2), b=P(f,feat.w*1.2,f.wt+2), c=P(f,feat.w*0.2,f.wt-d), e=P(f,-feat.w*0.6,f.wt-d*0.85);
+        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.quadraticCurveTo(c.x+2,c.y,c.x,c.y); ctx.lineTo(e.x,e.y); ctx.closePath(); ctx.fill();}}
+    if(feat.t==='rings'){ctx.fillStyle='rgba(255,246,230,.85)';
+      for(let k=0;k<feat.n;k++){const s=feat.s0+(feat.s1-feat.s0)*k/(feat.n-1), f=F(S,s), w=1.6+k*0.15;
+        const a=P(f,-w,f.wt+2), b=P(f,w,f.wt+2), c=P(f,w,-f.wb-2), d=P(f,-w,-f.wb-2);
+        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(c.x,c.y); ctx.lineTo(d.x,d.y); ctx.closePath(); ctx.fill();}}
+  }
+}
+
+/* ============ 主绘制 ============ */
+function drawDino(ctx,sp,o={}){
+  const mode=o.mode||'live', pal=Object.assign({},palette(sp,mode),{rich:!!o.rich}), t=o.t||0, ph=o.phase||0, mv=!!o.moving;
+  const S=sample(pose(sp,o));
+  const feats=sp.feats||[];
+  const gaitOff = sp.gait==='quad'? [[0,Math.PI],[Math.PI,0]] : [[0,Math.PI]];
+  ctx.save(); ctx.lineJoin='round';
+  // 远侧肢体
+  const legs=(sp.legs||[]).map((L,j)=>({L, near:legGeom(S,L,ph+gaitOff[j]?.[0]||0,mv,false), far:legGeom(S,L,ph+(gaitOff[j]?.[1]??Math.PI),mv,true)}));
+  if(sp.gait==='fly') wing(ctx,S,sp,pal,t,true);
+  legs.forEach(g=>drawLeg(ctx,g.far,g.L,pal.limbFar,pal.line,pal));
+  (sp.arms||[]).forEach(A=>{const g=armGeom(S,A,t+1); g.s.x-=3; g.e.x-=3; g.h.x-=3; drawArm(ctx,g,A,pal.limbFar,pal.line,pal);});
+  feats.forEach(f=>featBack(ctx,S,sp,pal,f));
+  // 身体
+  bodyPath(ctx,S);
+  let minY=1e9,maxY=-1e9; S.forEach(p=>{minY=Math.min(minY,p.y-p.wt); maxY=Math.max(maxY,p.y+p.wb);});
+  if(pal.sil) ctx.fillStyle=pal.base; else {const g=ctx.createLinearGradient(0,minY,0,maxY); g.addColorStop(0,pal.dark); g.addColorStop(0.45,pal.base); g.addColorStop(0.8,pal.belly); g.addColorStop(1,pal.belly); ctx.fillStyle=g;}
+  ctx.fill();
+  if(!pal.sil){
+    ctx.save(); bodyPath(ctx,S); ctx.clip();
+    if(!pal.fossil) pattern(ctx,S,sp,pal);
+    // 体积感：内阴影 + 背部高光
+    bodyPath(ctx,S); ctx.strokeStyle='rgba(50,35,20,.16)'; ctx.lineWidth=9; ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.22)'; ctx.lineWidth=3; ctx.lineCap='round'; ctx.beginPath();
+    smoothTo(ctx,S.slice(Math.floor(PER*0.6),Math.floor((sp.neck+1)*PER)).map(p=>({x:p.x+p.nx*(p.wt*0.7),y:p.y+p.ny*(p.wt*0.7)})),true); ctx.stroke();
+    if(pal.fossil) fossilMarks(ctx,S,sp);
+    if(o.rich){ // 立体光影：顶光高光 + 腹部环境遮蔽 + 边缘反光
+      const hp=F(S,sp.hipIdx+0.6), c=P(hp,0,hp.wt*0.6), R=(maxY-minY)*1.6;
+      let gr=ctx.createRadialGradient(c.x-8,c.y-6,2,c.x,c.y,R); gr.addColorStop(0,'rgba(255,250,230,.42)'); gr.addColorStop(0.35,'rgba(255,250,230,.12)'); gr.addColorStop(1,'rgba(255,250,230,0)');
+      ctx.fillStyle=gr; ctx.fillRect(-400,-400,900,800);
+      gr=ctx.createLinearGradient(0,minY,0,maxY); gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(0.62,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(30,20,10,.32)');
+      ctx.fillStyle=gr; ctx.fillRect(-400,-400,900,800);
+      const hd=F(S,sp.spine.length-2.2), hc=P(hd,0,hd.wt*0.5);
+      gr=ctx.createRadialGradient(hc.x,hc.y,1,hc.x,hc.y,hd.wt*2.2); gr.addColorStop(0,'rgba(255,250,230,.35)'); gr.addColorStop(1,'rgba(255,250,230,0)'); ctx.fillStyle=gr; ctx.fillRect(-400,-400,900,800);
+      bodyPath(ctx,S); ctx.save(); ctx.translate(0,3); ctx.strokeStyle='rgba(255,236,200,.35)'; ctx.lineWidth=3; ctx.restore();
+    }
+    ctx.restore();
+  }
+  bodyPath(ctx,S); ctx.strokeStyle=pal.line; ctx.lineWidth=pal.sil?1.5:2.2; ctx.stroke();
+  feats.forEach(f=>featFront(ctx,S,sp,pal,f));
+  // 近侧肢体
+  legs.forEach(g=>drawLeg(ctx,g.near,g.L,pal.limb,pal.line,pal));
+  (sp.arms||[]).forEach(A=>drawArm(ctx,armGeom(S,A,t),A,pal.limb,pal.line,pal));
+  if(sp.gait==='fly') wing(ctx,S,sp,pal,t,false);
+  // 脸
+  if(!pal.sil) face(ctx,S,sp,pal,t);
+  ctx.restore();
+}
+function fossilMarks(ctx,S,sp){
+  ctx.fillStyle='rgba(140,115,80,.45)';
+  const end=Math.floor((sp.neck+0.8)*PER);
+  for(let j=2;j<end;j+=3){const p=S[j], r=Math.max(1.2,Math.min(2.6,(p.wt+p.wb)*0.07)); ctx.beginPath(); ctx.ellipse(p.x,p.y-p.wt*0.25,r*1.3,r,Math.atan2(p.ty,p.tx),0,Math.PI*2); ctx.fill();}
+  ctx.strokeStyle='rgba(140,115,80,.4)'; ctx.lineWidth=1.6; ctx.lineCap='round';
+  for(let s=sp.hipIdx-0.4;s<sp.neck-0.3;s+=0.28){const f=F(S,s), a=P(f,0,-f.wt*0.25), c=P(f,4,-f.wb*0.6), b=P(f,-1,-f.wb*0.85);
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.quadraticCurveTo(c.x,c.y,b.x,b.y); ctx.stroke();}
+}
+function face(ctx,S,sp,pal,t){
+  if(sp.mouth){const [i0,v0,i1,v1]=sp.mouth, f0=F(S,i0), f1=F(S,i1), a=P(f0,0,v0), b=P(f1,0,v1), m=P(F(S,(i0+i1)/2),0,(v0+v1)/2-1.2);
+    ctx.strokeStyle=pal.line; ctx.lineWidth=1.6; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.quadraticCurveTo(m.x,m.y,a.x,a.y);
+    const up=P(f0,-2.5,v0+2.2); ctx.quadraticCurveTo(a.x-1,a.y,up.x,up.y); ctx.stroke();}
+  if(sp.nostril){const f=F(S,sp.nostril[0]), n=P(f,0,sp.nostril[1]); ctx.fillStyle=pal.line; ctx.beginPath(); ctx.ellipse(n.x,n.y,1.5,1,Math.atan2(f.ty,f.tx),0,Math.PI*2); ctx.fill();}
+  const [ei,eu,ev,r]=sp.eye, f=F(S,ei), c=P(f,eu,ev);
+  if(pal.fossil){ctx.fillStyle='rgba(120,95,60,.55)'; ctx.beginPath(); ctx.ellipse(c.x,c.y,r*1.25,r*1.05,0,0,Math.PI*2); ctx.fill(); return;}
+  const blink = (Math.sin(t*0.9+sp.id.length)>0.985);
+  if(blink){ctx.strokeStyle=pal.line; ctx.lineWidth=1.6; ctx.beginPath(); ctx.arc(c.x,c.y-r*0.2,r,0.2,Math.PI-0.2); ctx.stroke(); return;}
+  ctx.fillStyle='#fffdf5'; ctx.beginPath(); ctx.ellipse(c.x,c.y,r*1.12,r,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=pal.line; ctx.lineWidth=1.1; ctx.stroke();
+  ctx.fillStyle=pal.eye||'#d6a03c'; ctx.beginPath(); ctx.arc(c.x+r*0.22,c.y+r*0.05,r*0.74,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#231d16'; ctx.beginPath(); ctx.arc(c.x+r*0.3,c.y+r*0.05,r*0.42,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(c.x+r*0.5,c.y-r*0.28,r*0.22,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=pal.line; ctx.lineWidth=1.8; ctx.lineCap='round'; ctx.beginPath(); ctx.arc(c.x,c.y+r*0.3,r*1.35,-Math.PI*0.82,-Math.PI*0.3); ctx.stroke();
+}
+function wing(ctx,S,sp,pal,t,far){
+  const W=sp.wing, f=F(S,W.i), sh=P(f,2,1), hip=P(F(S,W.hip),0,-2), up=Math.sin(t*2.2)*(far?0.9:1);
+  const span=W.span*(far?0.85:1), o=far?-4:0;
+  const wrist={x:sh.x+10+o, y:sh.y-span*0.42*up-8+(far?-6:0)};
+  const tip={x:sh.x-span*0.95+o, y:sh.y-span*0.32*up+2+(far?-8:0)};
+  const mid={x:(tip.x+hip.x)/2+4, y:Math.max(tip.y,hip.y)+14};
+  ctx.beginPath(); ctx.moveTo(sh.x,sh.y); ctx.quadraticCurveTo((sh.x+wrist.x)/2,wrist.y+4,wrist.x,wrist.y);
+  ctx.quadraticCurveTo((wrist.x+tip.x)/2,(wrist.y+tip.y)/2-10*up-4,tip.x,tip.y);
+  ctx.quadraticCurveTo(mid.x,mid.y,hip.x,hip.y); ctx.closePath();
+  const col=pal.wing.startsWith('#')?pal.wing:'#d9c7a4';
+  if(!pal.sil){const g=ctx.createLinearGradient(sh.x,sh.y,tip.x,tip.y); g.addColorStop(0,far?shade(col,0.72):shade(col,0.92)); g.addColorStop(1,far?shade(col,0.82):shade(col,1.12)); ctx.fillStyle=g;} else ctx.fillStyle=pal.accent;
+  ctx.fill(); ctx.strokeStyle=pal.line; ctx.lineWidth=1.8; ctx.stroke();
+  if(!pal.sil){ctx.strokeStyle=pal.line; ctx.lineWidth=3; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(sh.x,sh.y); ctx.quadraticCurveTo((sh.x+wrist.x)/2,wrist.y+4,wrist.x,wrist.y);
+    ctx.quadraticCurveTo((wrist.x+tip.x)/2,(wrist.y+tip.y)/2-10*up-4,tip.x,tip.y); ctx.stroke();
+    ctx.strokeStyle='rgba(80,50,30,.15)'; ctx.lineWidth=1.2; for(let k=1;k<4;k++){const q=k/4; line(ctx,{x:wrist.x+(tip.x-wrist.x)*q,y:wrist.y+(tip.y-wrist.y)*q-3},{x:hip.x+(mid.x-hip.x)*q*1.4,y:hip.y+(mid.y-hip.y)*q*1.4});}}
+}
+
+/* ============ 包围盒与适配绘制 ============ */
+const BBOX={};
+function bbox(sp){
+  if(BBOX[sp.id]) return BBOX[sp.id];
+  const c=document.createElement('canvas'); c.width=700; c.height=520; const x=c.getContext('2d');
+  x.translate(220,400);
+  const ts = sp.gait==='fly'? [0,0.7,1.4,2.1] : [0];
+  ts.forEach(t=>drawDino(x,sp,{t:t, mode:'sil'}));
+  const d=x.getImageData(0,0,700,520).data; let x0=700,y0=520,x1=0,y1=0;
+  for(let yy=0;yy<520;yy+=2) for(let xx=0;xx<700;xx+=2){if(d[(yy*700+xx)*4+3]>10){if(xx<x0)x0=xx; if(xx>x1)x1=xx; if(yy<y0)y0=yy; if(yy>y1)y1=yy;}}
+  return BBOX[sp.id]={x:x0-220-4,y:y0-400-4,w:x1-x0+8,h:y1-y0+8};
+}
+function fitDraw(ctx,sp,cw,ch,o={},pad=8){
+  const b=bbox(sp), s=Math.min((cw-pad*2)/b.w,(ch-pad*2)/b.h);
+  ctx.save(); ctx.translate((cw-b.w*s)/2 - b.x*s, (ch-b.h*s)/2 - b.y*s); ctx.scale(s,s);
+  if(sp.gait!=='fly' && (o.mode||'live')==='live'){ctx.fillStyle='rgba(60,50,30,.13)'; ctx.beginPath(); ctx.ellipse(b.x+b.w*0.55,0,b.w*0.36,5,0,0,Math.PI*2); ctx.fill();}
+  drawDino(ctx,sp,o); ctx.restore(); return s;
+}
+
+</script>
+<script>
+/* ================== 进化路线 ================== */
+const STAGES=[
+  {opts:['eorap']},
+  {opts:['coelo','plateo']},
+  {opts:['guan','steg']},
+  {opts:['allo','tri']},
+  {opts:['trex','brach']},
+];
+const NEED=[18,30,45,65,Infinity];          // 每个阶段需要的成长值
+const STAGE_SIZE=[0.78,0.92,1.06,1.22,1.42];   // 每阶段的大小
+const TRAITS={
+  eorap:'什么都吃的小家伙，灵活好动。',
+  coelo:'身体轻、跑得快。吃<b>虫子</b>长得更快。', plateo:'个子高、能吃到矮树叶。吃<b>植物</b>长得更快。',
+  guan:'头上有漂亮的冠，跑得快。吃<b>虫子</b>长得更快。', steg:'背上有骨板，很结实。吃<b>植物</b>长得更快。',
+  allo:'强壮的猎手，步子大。吃<b>虫子</b>长得更快。', tri:'有三只角和大颈盾。吃<b>植物</b>长得更快。',
+  trex:'最终形态：恐龙之王！', brach:'最终形态：高高的长脖子巨人！',
+};
+const meatEater=sp=>sp.diet.includes('meat')&&!sp.diet.includes('plant');
+const plantEater=sp=>sp.diet.includes('plant')&&!sp.diet.includes('meat');
+
+/* ================== 食物 ================== */
+// tier：需要多大才能吃。kind：plant / bug
+const FOOD={
+  berry:{tier:1,kind:'plant',xp:1,name:'浆果'},
+  beetle:{tier:1,kind:'bug',xp:1,name:'甲虫'},
+  fly:{tier:2,kind:'bug',xp:2,name:'大蜻蜓',air:1},
+  fern:{tier:2,kind:'plant',xp:2,name:'蕨菜'},
+  mush:{tier:2,kind:'plant',xp:2,name:'蘑菇'},
+  cone:{tier:3,kind:'plant',xp:3,name:'苏铁果'},
+  milli:{tier:3,kind:'bug',xp:3,name:'大马陆'},
+  melon:{tier:4,kind:'plant',xp:4,name:'大果子'},
+  roach:{tier:4,kind:'bug',xp:4,name:'巨型蟑螂'},
+  tree:{tier:5,kind:'plant',xp:5,name:'银杏树叶'},
+  drag:{tier:5,kind:'bug',xp:5,name:'巨脉蜻蜓',air:1},
+};
+const FOOD_KEYS=Object.keys(FOOD);
+
+/* ================== 存档 ================== */
+const KEY='dinogrow_v1';
+const SV=Object.assign({stage:0, path:['eorap'], xp:0, sound:false, seen:false, done:[]}, JSON.parse(localStorage.getItem(KEY)||'{}'));
+const save=()=>localStorage.setItem(KEY,JSON.stringify(SV));
+const $=id=>document.getElementById(id);
+
+/* ================== 声音 ================== */
+let actx=null;
+function tone(fs,vol=0.05,type='sine',gap=0.12){ if(!SV.sound) return; try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  fs.forEach((f,i)=>{const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime+i*gap; o.type=type; o.frequency.value=f;
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+0.03); g.gain.exponentialRampToValueAtTime(0.0008,t+0.5); o.connect(g).connect(actx.destination); o.start(t); o.stop(t+0.55);});}catch(e){} }
+function say(t){if(!SV.sound||!window.speechSynthesis) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='zh-CN'; u.rate=0.9; u.volume=0.85; speechSynthesis.speak(u);}
+$('snd').onclick=()=>{SV.sound=!SV.sound; save(); $('snd').textContent=SV.sound?'🔊':'🔇'; if(SV.sound) tone([523]);};
+$('snd').textContent=SV.sound?'🔊':'🔇';
+let tipT=0; function tip(t,ms=2600){const e=$('tip'); e.innerHTML=t; e.classList.add('show'); clearTimeout(tipT); tipT=setTimeout(()=>e.classList.remove('show'),ms);}
+
+/* ================== 世界 ================== */
+const cv=$('cv'); let ctx, W=0, H=0, DPR=1;
+const G={W:5200, camX:0, items:[], npcs:[], trees:[], parts:[], motes:[], t:0, paused:false};
+const PL={x:600, d:0.5, vx:0, vd:0, dir:1, phase:0, grow:0, bump:0, munch:0};
+function resize(){DPR=Math.min(window.devicePixelRatio||1,2); W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx=cv.getContext('2d'); ctx.setTransform(DPR,0,0,DPR,0,0); buildBack(); }
+const HZ=()=>H*0.40;                         // 地平线
+const gy=d=>HZ()+H*0.10+d*H*0.48;            // 深度 -> 屏幕 y
+const gs=d=>0.62+0.38*d;                     // 深度 -> 远近缩放
+const U=()=>Math.min(H,W*0.85)*0.00175;      // 恐龙单位像素
+function rnd(a,b){return a+Math.random()*(b-a);}
+
+/* --- 远景预渲染（山、雾、森林剪影） --- */
+let back=null;
+function buildBack(){
+  const w=Math.ceil(W*1.6+400), h=Math.ceil(HZ()+H*0.14), c=document.createElement('canvas'); c.width=w*DPR; c.height=h*DPR; const x=c.getContext('2d'); x.scale(DPR,DPR);
+  const R=seeded(11), hz=HZ();
+  const ridge=(base,amp,step,col,fog)=>{x.beginPath(); x.moveTo(0,h); let y=base; for(let i=0;i<=w;i+=step){y=base-amp*(0.5+0.5*Math.sin(i*0.004+base))-R()*amp*0.4; x.lineTo(i,y);} x.lineTo(w,h); x.closePath();
+    const g=x.createLinearGradient(0,base-amp*1.4,0,h); g.addColorStop(0,col); g.addColorStop(1,fog); x.fillStyle=g; x.fill();};
+  ridge(hz-H*0.08,H*0.16,40,'#8fa6c0','#c9d9dc');
+  // 火山
+  const vx=w*0.45, vy=hz-H*0.27, vb=H*0.34; let g=x.createLinearGradient(vx-vb,0,vx+vb,0); g.addColorStop(0,'#9d93a8'); g.addColorStop(0.55,'#8b7f97'); g.addColorStop(1,'#6f6580');
+  x.fillStyle=g; x.beginPath(); x.moveTo(vx-vb,hz+10); x.lineTo(vx-vb*0.15,vy); x.quadraticCurveTo(vx,vy+8,vx+vb*0.15,vy); x.lineTo(vx+vb,hz+10); x.closePath(); x.fill();
+  g=x.createLinearGradient(0,vy,0,hz); g.addColorStop(0,'rgba(200,215,220,0)'); g.addColorStop(1,'rgba(200,215,220,.8)'); x.fillStyle=g; x.fill();
+  back={c,w,h,vx,vy};
+  ridge(hz-H*0.02,H*0.08,30,'#7f9f8e','#b9cfbf');
+  // 远处森林剪影（三层，越远越淡）
+  [['#6f9273','#a9c3a6',hz+H*0.02,0.9],['#5d8462','#93b393',hz+H*0.06,1.1],['#4d7552','#86a983',hz+H*0.1,1.3]].forEach(([c1,c2,base,s])=>{
+    for(let i=-20;i<w+40;i+=rnd(18,34)*s){const r=rnd(14,26)*s, y=base-rnd(0,10); const gg=x.createRadialGradient(i-r*0.3,y-r*0.4,2,i,y,r*1.2); gg.addColorStop(0,c2); gg.addColorStop(1,c1); x.fillStyle=gg; x.beginPath(); x.arc(i,y,r,0,Math.PI*2); x.fill();}
+    x.fillStyle=c1; x.fillRect(0,base,w,h-base);});
+  g=x.createLinearGradient(0,hz-H*0.05,0,h); g.addColorStop(0,'rgba(235,240,225,0)'); g.addColorStop(0.7,'rgba(235,240,225,.35)'); g.addColorStop(1,'rgba(235,240,225,.15)'); x.fillStyle=g; x.fillRect(0,0,w,h);
+}
+
+/* --- 大树（装饰，带光影） --- */
+function drawTree(x,tr,k){
+  const s=tr.s*k; ctx.save(); ctx.translate(x,tr.y);
+  // 投影
+  let g=ctx.createRadialGradient(0,0,2,0,0,90*s); g.addColorStop(0,'rgba(20,35,15,.35)'); g.addColorStop(1,'rgba(20,35,15,0)'); ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(10*s,0,95*s,22*s,0,0,Math.PI*2); ctx.fill();
+  if(tr.type==='conifer'){
+    g=ctx.createLinearGradient(-9*s,0,9*s,0); g.addColorStop(0,'#8a6847'); g.addColorStop(0.5,'#6c4f34'); g.addColorStop(1,'#4b3523'); ctx.fillStyle=g; ctx.fillRect(-8*s,-260*s,16*s,262*s);
+    for(let i=0;i<6;i++){const y=-255*s+i*30*s, r=(36+i*9)*s; blob(0,y,r*1.25,r*0.45,'#3f6b3c','#7fae66');}
+  } else if(tr.type==='palm'){
+    g=ctx.createLinearGradient(-12*s,0,12*s,0); g.addColorStop(0,'#a07a50'); g.addColorStop(1,'#5d4129'); ctx.strokeStyle=g; ctx.lineWidth=16*s; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(18*s,-120*s,4*s,-230*s); ctx.stroke();
+    ctx.strokeStyle='rgba(60,40,20,.3)'; ctx.lineWidth=2; for(let y=-20;y>-220;y-=16){ctx.beginPath(); ctx.moveTo(-7*s+ (y<-120?10*s:6*s),y*s); ctx.lineTo(7*s+(y<-120?10*s:6*s),y*s-4*s); ctx.stroke();}
+    ctx.translate(4*s,-232*s); for(let i=0;i<10;i++){const a=-Math.PI+0.1+i*(Math.PI-0.2)/9+Math.sin(G.t*0.6+i+tr.x)*0.03; leafFrond(a,110*s,i%2?'#4f8a43':'#3f7438','#86bb6a');}
+  } else { // 阔叶树
+    g=ctx.createLinearGradient(-12*s,0,12*s,0); g.addColorStop(0,'#8d6a45'); g.addColorStop(1,'#4e3824'); ctx.fillStyle=g;
+    ctx.beginPath(); ctx.moveTo(-14*s,0); ctx.lineTo(-7*s,-150*s); ctx.lineTo(7*s,-150*s); ctx.lineTo(14*s,0); ctx.closePath(); ctx.fill();
+    const R=seeded(Math.floor(tr.x));
+    for(let i=0;i<12;i++){const a=R()*Math.PI*2, r=R()*70*s; blob(Math.cos(a)*r*1.2, -190*s+Math.sin(a)*r*0.7, (34+R()*22)*s, (30+R()*18)*s, '#3e6d39','#8cc070');}
+  }
+  ctx.restore();
+}
+function blob(x,y,rx,ry,dark,light){const g=ctx.createRadialGradient(x-rx*0.35,y-ry*0.45,1,x,y,Math.max(rx,ry)*1.1); g.addColorStop(0,light); g.addColorStop(0.55,shade(dark,1.25)); g.addColorStop(1,dark); ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2); ctx.fill();}
+function leafFrond(a,len,col,hl){const ex=Math.cos(a)*len, ey=Math.sin(a)*len+len*0.35, cx=ex*0.5, cy=Math.sin(a)*len*0.5-len*0.15;
+  ctx.strokeStyle=col; ctx.lineWidth=Math.max(1.5,len*0.03); ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(cx,cy,ex,ey); ctx.stroke();
+  for(let k=1;k<14;k++){const t=k/14, px=2*(1-t)*t*cx+t*t*ex, py=2*(1-t)*t*cy+t*t*ey, l=len*0.2*(1-t*0.6);
+    ctx.strokeStyle=k%3?col:hl; ctx.lineWidth=Math.max(1.2,len*0.025); ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px+l*0.5,py+l*0.9); ctx.moveTo(px,py); ctx.lineTo(px-l*0.5,py+l*0.9); ctx.stroke();}}
+
+/* --- 食物绘制（都有体积光） --- */
+function sphere(x,y,r,col,spec=true){const g=ctx.createRadialGradient(x-r*0.35,y-r*0.4,r*0.1,x,y,r); g.addColorStop(0,shade(col,1.55)); g.addColorStop(0.5,col); g.addColorStop(1,shade(col,0.55)); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  if(spec){ctx.fillStyle='rgba(255,255,255,.75)'; ctx.beginPath(); ctx.ellipse(x-r*0.35,y-r*0.42,r*0.22,r*0.14,-0.6,0,Math.PI*2); ctx.fill();}}
+function drawFood(it,x,y,k){
+  const t=G.t, s=k; ctx.save(); ctx.translate(x,y);
+  if(!FOOD[it.type].air){const g=ctx.createRadialGradient(0,0,1,0,0,26*s*it.sz); g.addColorStop(0,'rgba(20,35,15,.35)'); g.addColorStop(1,'rgba(20,35,15,0)'); ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(0,1,26*s*it.sz,8*s*it.sz,0,0,Math.PI*2); ctx.fill();}
+  ctx.scale(s*it.sz,s*it.sz);
+  switch(it.type){
+    case 'berry': ctx.strokeStyle='#5a7a3a'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,-26); ctx.lineTo(-4,-10); ctx.moveTo(0,-26); ctx.lineTo(6,-12); ctx.stroke();
+      [[-6,-6,7],[6,-7,7],[0,-14,7],[1,-2,6]].forEach(([a,b,r])=>sphere(a,b,r,'#d6455a')); blob(4,-27,7,4,'#4f8a3c','#9fd27a'); break;
+    case 'beetle': { const w=Math.sin(t*8+it.x)*1.5; ctx.translate(w,0); ctx.strokeStyle='#2c2a26'; ctx.lineWidth=1.8; for(let i=-1;i<=1;i++){ctx.beginPath(); ctx.moveTo(i*6,-6); ctx.lineTo(i*9-3,0); ctx.stroke();}
+      const g=ctx.createLinearGradient(-12,-20,12,0); g.addColorStop(0,'#5fd0b6'); g.addColorStop(0.5,'#2f8f86'); g.addColorStop(1,'#1d4f6a'); ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(0,-9,13,9,0,Math.PI,0); ctx.ellipse(0,-9,13,3,0,0,Math.PI); ctx.fill();
+      ctx.fillStyle='#22302e'; ctx.beginPath(); ctx.arc(13,-8,4.5,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(-2,-10,8,-2.6,-1.7); ctx.stroke(); ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(2,-18); ctx.lineTo(2,-6); ctx.stroke(); break; }
+    case 'fly': case 'drag': { const big=it.type==='drag'?1.6:1; ctx.scale(big,big); ctx.translate(0,-30+Math.sin(t*2+it.x)*6); const fl=Math.sin(t*30+it.x)*0.4;
+      ctx.fillStyle='rgba(210,235,255,.55)'; ctx.strokeStyle='rgba(120,160,190,.7)'; ctx.lineWidth=0.8;
+      [[-1,1],[1,1]].forEach(([a])=>{ctx.save(); ctx.rotate(a*0.15+fl); ctx.beginPath(); ctx.ellipse(-2,-10,5,15,0.3,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(4,-9,4,13,-0.3,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore();});
+      const g=ctx.createLinearGradient(-20,0,10,0); g.addColorStop(0,'#2f6fb2'); g.addColorStop(1,'#56b6d8'); ctx.strokeStyle=g; ctx.lineWidth=4; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(-22,2); ctx.lineTo(6,0); ctx.stroke(); sphere(9,-1,4.5,'#3b8fc4'); break; }
+    case 'fern': for(let i=0;i<7;i++){const a=-Math.PI+0.35+i*(Math.PI-0.7)/6+Math.sin(t+it.x)*0.04; leafFrond(a,34,i%2?'#4c8a3d':'#3f7836','#9ccf72');} break;
+    case 'mush': { const g=ctx.createLinearGradient(-5,0,5,0); g.addColorStop(0,'#fff8ea'); g.addColorStop(1,'#d8ccb4'); ctx.fillStyle=g; ctx.beginPath(); ctx.roundRect(-5,-20,10,20,4); ctx.fill();
+      const c=ctx.createRadialGradient(-6,-30,2,0,-22,20); c.addColorStop(0,'#ffb07a'); c.addColorStop(0.6,'#e0663f'); c.addColorStop(1,'#a8402a'); ctx.fillStyle=c; ctx.beginPath(); ctx.ellipse(0,-20,17,13,0,Math.PI,0); ctx.quadraticCurveTo(0,-15,-17,-20); ctx.fill();
+      ctx.fillStyle='rgba(255,250,235,.9)'; [[-7,-26,2.6],[4,-29,2.2],[9,-22,2],[-1,-22,1.8]].forEach(([a,b,r])=>{ctx.beginPath(); ctx.arc(a,b,r,0,Math.PI*2); ctx.fill();}); break; }
+    case 'cone': for(let i=0;i<6;i++){const a=-Math.PI+0.4+i*(Math.PI-0.8)/5; leafFrond(a,40,'#3f7836','#8cc46a');}
+      { const g=ctx.createRadialGradient(-6,-26,2,0,-18,22); g.addColorStop(0,'#ffd98a'); g.addColorStop(0.6,'#d99a3a'); g.addColorStop(1,'#8d5a22'); ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(0,-17,12,18,0,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='rgba(110,60,20,.45)'; ctx.lineWidth=1.2; for(let k=-2;k<=2;k++){ctx.beginPath(); ctx.moveTo(-12,-17+k*6); ctx.lineTo(0,-23+k*6); ctx.lineTo(12,-17+k*6); ctx.stroke();} } break;
+    case 'milli': { const segs=10; for(let i=segs-1;i>=0;i--){const xx=-i*6+Math.sin(t*3)*1, yy=-6-Math.sin(i*0.6+t*4)*2; ctx.strokeStyle='#3a2a1c'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(xx,yy); ctx.lineTo(xx-2+Math.sin(t*12+i)*2,0); ctx.stroke(); sphere(xx,yy,5.5,i%2?'#9a5a2e':'#b46a34',i===0);} ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(3,-8,1.3,0,Math.PI*2); ctx.fill(); break; }
+    case 'melon': blob(-12,-6,16,7,'#3f7836','#8cc46a'); sphere(0,-18,17,'#d9b23a'); ctx.strokeStyle='rgba(120,90,20,.35)'; ctx.lineWidth=1.5; for(let k=-1;k<=1;k++){ctx.beginPath(); ctx.ellipse(k*6,-18,4,16,0,0,Math.PI*2); ctx.stroke();} break;
+    case 'roach': { const w=Math.sin(t*6+it.x); ctx.strokeStyle='#2a1d12'; ctx.lineWidth=2; for(let i=-1;i<=1;i++){ctx.beginPath(); ctx.moveTo(i*9,-7); ctx.lineTo(i*13-4+w*2,0); ctx.stroke();}
+      const g=ctx.createLinearGradient(0,-24,0,-2); g.addColorStop(0,'#c98a4a'); g.addColorStop(1,'#6b3e1c'); ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(0,-11,22,11,0,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='rgba(255,230,190,.5)'; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(-2,-15,13,4,0,Math.PI,0); ctx.stroke();
+      ctx.strokeStyle='rgba(60,30,10,.5)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0,-22); ctx.lineTo(0,-2); ctx.stroke(); ctx.strokeStyle='#2a1d12'; ctx.beginPath(); ctx.moveTo(20,-12); ctx.quadraticCurveTo(34,-26,40,-20); ctx.stroke(); break; }
+    case 'tree': { const g=ctx.createLinearGradient(-6,0,6,0); g.addColorStop(0,'#8d6a45'); g.addColorStop(1,'#4e3824'); ctx.fillStyle=g; ctx.fillRect(-5,-60,10,60);
+      const R=seeded(Math.floor(it.x)); for(let i=0;i<9;i++){blob((R()-0.5)*44,-74+(R()-0.5)*30,14+R()*8,12+R()*6,'#c79a2a','#ffe27a');} break; }
+  }
+  ctx.restore();
+  if(it.lock && it.lockA>0.01){ctx.globalAlpha=it.lockA; ctx.font=`${Math.round(20*k)}px sans-serif`; ctx.textAlign='center'; ctx.fillText('🔒',x,y-48*k*it.sz); ctx.globalAlpha=1;}
+}
+
+/* ================== 生成世界 ================== */
+function initWorld(){
+  const R=seeded(5);
+  G.trees=[]; for(let x=0;x<G.W;x+=rnd(160,320)){G.trees.push({x, d:Math.random()<0.5?rnd(-0.05,0.12):rnd(0.92,1.05), type:['palm','broad','conifer','palm'][Math.floor(Math.random()*4)], s:rnd(0.75,1.05)});}
+  G.tufts=[]; for(let i=0;i<G.W/9;i++) G.tufts.push({x:Math.random()*G.W, d:Math.random(), c:Math.random()});
+  G.flowers=[]; for(let i=0;i<G.W/45;i++) G.flowers.push({x:Math.random()*G.W, d:Math.random(), c:['#f6d36b','#f3a6b7','#ffffff','#c7a6e8'][Math.floor(Math.random()*4)]});
+  G.rocks=[]; for(let i=0;i<G.W/300;i++) G.rocks.push({x:Math.random()*G.W, d:Math.random(), r:rnd(10,22)});
+  G.items=[]; for(let i=0;i<G.W/55;i++) spawnItem();
+  G.npcs=[]; ['sino','raptor','anky','para','spino','mamen','tri','steg'].forEach(id=>G.npcs.push({sp:SP[id], x:rnd(300,G.W-300), d:Math.random(), dir:Math.random()<0.5?1:-1, phase:Math.random()*6, tx:0, st:'walk', timer:0, t0:Math.random()*20}));
+  G.npcs.forEach(n=>n.tx=n.x+rnd(-400,400));
+  G.ptero={x:rnd(0,G.W), y:0.18, dir:1, t0:3};
+  G.motes=[]; for(let i=0;i<40;i++) G.motes.push({x:Math.random(), y:Math.random(), s:rnd(1,2.5), v:rnd(0.005,0.02)});
+}
+function spawnItem(near){
+  // 让食物的种类跟着玩家阶段走：总有能吃的，也能看到更大的目标
+  const st=SV.stage+1, w=FOOD_KEYS.map(k=>{const tr=FOOD[k].tier; return tr<=st? (tr===st?3:tr===st-1?2:0.6) : (tr===st+1?1:0.25);});
+  let r=Math.random()*w.reduce((a,b)=>a+b), k=0; while(r>w[k]){r-=w[k]; k++;}
+  let x=near? PL.x+(Math.random()<0.5?-1:1)*rnd(W*0.6,W*1.2) : rnd(80,G.W-80); x=Math.max(60,Math.min(G.W-60,x));
+  G.items.push({type:FOOD_KEYS[k], x, d:rnd(0.05,0.97), sz:rnd(0.85,1.1), lockA:0, bob:Math.random()*6});
+}
+
+/* ================== 玩家 ================== */
+const curSp=()=>SP[SV.path[SV.stage]];
+function pScale(){return U()*STAGE_SIZE[SV.stage]*(0.82+0.18*Math.min(1,SV.xp/NEED[SV.stage]))*(1+PL.grow*0.06)*gs(PL.d);}
+function mouth(){const sp=curSp(), b=bbox(sp), k=pScale(); const mx=PL.x+PL.dir*(b.x+b.w-6)*k; return {x:mx, y:gy(PL.d)+(b.y+b.h*0.25)*k};}
+let input={on:false,sx:0,sy:0,x:0,y:0}, keys={};
+cv.addEventListener('pointerdown',e=>{if(G.paused) return; input={on:true,sx:e.clientX,sy:e.clientY,x:e.clientX,y:e.clientY}; const j=$('joy'); j.style.left=e.clientX+'px'; j.style.top=e.clientY+'px'; j.style.display='block'; j.firstElementChild.style.transform=''; cv.setPointerCapture(e.pointerId); if(actx&&actx.state==='suspended') actx.resume();});
+cv.addEventListener('pointermove',e=>{if(!input.on) return; input.x=e.clientX; input.y=e.clientY; let dx=input.x-input.sx, dy=input.y-input.sy; const l=Math.hypot(dx,dy), m=50; if(l>m){dx*=m/l; dy*=m/l;} $('joy').firstElementChild.style.transform=`translate(${dx}px,${dy}px)`;});
+const endIn=()=>{input.on=false; $('joy').style.display='none';};
+cv.addEventListener('pointerup',endIn); cv.addEventListener('pointercancel',endIn);
+addEventListener('keydown',e=>keys[e.key]=true); addEventListener('keyup',e=>keys[e.key]=false);
+
+function updatePlayer(dt){
+  let ax=0, ad=0;
+  if(input.on){const dx=input.x-input.sx, dy=input.y-input.sy, l=Math.hypot(dx,dy); if(l>8){ax=dx/Math.max(l,50); ad=dy/Math.max(l,50);}}
+  if(keys.ArrowLeft||keys.a) ax=-1; if(keys.ArrowRight||keys.d) ax=1; if(keys.ArrowUp||keys.w) ad=-1; if(keys.ArrowDown||keys.s) ad=1;
+  const sp=curSp(), spd=(150+STAGE_SIZE[SV.stage]*90)*(sp.id==='coelo'||sp.id==='guan'?1.2:1)*(Math.min(H,W*0.85)/800);
+  PL.vx+=(ax*spd-PL.vx)*Math.min(1,dt*5); PL.vd+=(ad*0.5-PL.vd)*Math.min(1,dt*5);
+  PL.x+=PL.vx*dt; PL.d=Math.max(0,Math.min(1,PL.d+PL.vd*dt)); PL.x=Math.max(80,Math.min(G.W-80,PL.x));
+  if(Math.abs(PL.vx)>8) PL.dir=PL.vx>0?1:-1;
+  const moving=Math.hypot(PL.vx,PL.vd*400)>14; PL.moving=moving;
+  const legL=(sp.legs[0].l1+sp.legs[0].l2)*pScale(); if(moving) PL.phase+=dt*Math.max(Math.abs(PL.vx),Math.abs(PL.vd)*300)/(legL*0.55);
+  PL.grow=Math.max(0,PL.grow-dt*1.5); PL.munch=Math.max(0,PL.munch-dt*3); PL.bump=Math.max(0,PL.bump-dt);
+  // 吃东西
+  const m=mouth(), tierNow=SV.stage+1, reach=Math.max(26,40*pScale()/U()*0.6);
+  for(let i=G.items.length-1;i>=0;i--){const it=G.items[i], f=FOOD[it.type];
+    const near=Math.abs(it.x-m.x)<reach+20*it.sz && Math.abs(it.d-PL.d)<0.09;
+    if(f.tier>tierNow){ it.lock=true; it.lockA += ((near||Math.abs(it.x-m.x)<reach*2.5&&Math.abs(it.d-PL.d)<0.15)?1:-1)*dt*2; it.lockA=Math.max(0,Math.min(1,it.lockA));
+      if(near && !it.told){it.told=true; tip(`${f.name}太大了，要长大一点才能吃 🌱`);} continue; }
+    it.lock=false;
+    if(near){ eat(it,i); }
+  }
+  // 碰到比自己大的恐龙：被轻轻推开
+  for(const n of G.npcs){ if(n.sp.size*0.9<=STAGE_SIZE[SV.stage]) continue; const b=bbox(n.sp), k=U()*n.sp.size*0.8*gs(n.d); const cx=n.x+n.dir*(b.x+b.w*0.5)*k;
+    if(Math.abs(cx-PL.x)<b.w*k*0.35 && Math.abs(n.d-PL.d)<0.06 && PL.bump<=0){PL.bump=1.2; PL.vx=(PL.x<cx?-1:1)*260; tip(`${n.sp.name}：“小家伙，小心哦！” 😊`); tone([330,392],0.04);} }
+}
+function eat(it,i){
+  const f=FOOD[it.type], sp=curSp(); let xp=f.xp, bonus=false;
+  if((f.kind==='bug'&&meatEater(sp))||(f.kind==='plant'&&plantEater(sp))){xp=Math.round(xp*1.5+0.5); bonus=true;}
+  G.items.splice(i,1); spawnItem(true);
+  PL.munch=1; PL.grow=1;
+  const m=mouth();
+  for(let k=0;k<7;k++) G.parts.push({x:m.x,y:m.y,vx:rnd(-60,60),vy:rnd(-110,-40),life:rnd(0.6,1),c:f.kind==='bug'?'#ffe28a':'#c6f08f',r:rnd(2,4)});
+  G.parts.push({x:m.x,y:m.y-20,vx:0,vy:-40,life:1.4,text:`+${xp}${bonus?' ⭐':''}`});
+  tone(bonus?[660,880]:[587],0.045,'sine',0.07);
+  if(SV.stage<STAGES.length-1){ SV.xp+=xp; if(SV.xp>=NEED[SV.stage]){SV.xp=NEED[SV.stage]; save(); updHud(); evolveOffer(); return;} }
+  else SV.xp+=xp;
+  save(); updHud();
+}
+
+/* ================== 进化 ================== */
+function miniCv(cv,sp,w=440,h=280,t=1){const d=Math.min(devicePixelRatio||1,2); cv.width=w*d; cv.height=h*d; const x=cv.getContext('2d'); x.scale(d,d); fitDraw(x,sp,w,h,{t,rich:true},14);}
+function evolveOffer(){
+  G.paused=true; endIn();
+  const opts=STAGES[SV.stage+1].opts;
+  $('box').innerHTML=`<h1>✨ 可以进化啦！</h1><p>你吃得饱饱的，已经长大了。选一种恐龙变身吧：</p>
+   <div class="choices">${opts.map(id=>{const s=SP[id]; return `<button class="choice" data-id="${id}"><canvas></canvas><b>${s.name}</b><div><span class="tag">🕰️ ${PERIODS[s.period].name}</span><span class="tag">📏 ${s.len}</span><span class="tag">🍽️ ${s.dietTxt}</span></div><div class="tr">${TRAITS[id]}</div></button>`;}).join('')}</div>`;
+  $('overlay').classList.add('show');
+  document.querySelectorAll('.choice').forEach(b=>{miniCv(b.querySelector('canvas'),SP[b.dataset.id]); b.onclick=()=>evolveTo(b.dataset.id);});
+  tone([523,659,784,1046],0.05,'sine',0.14); say('可以进化啦，选一种恐龙吧');
+}
+function evolveTo(id){
+  const from=curSp(); SV.stage++; SV.path[SV.stage]=id; SV.path.length=SV.stage+1; SV.xp=0; if(!SV.done.includes(id)) SV.done.push(id); save();
+  const sp=SP[id];
+  $('box').innerHTML=`<h1>🎉 变成${sp.name}了！</h1><canvas id="evoCv" style="width:100%;max-width:520px;aspect-ratio:22/13;border-radius:20px;background:linear-gradient(#dfeef0,#eef2dc)"></canvas>
+    <p>💡 ${sp.facts[0]}</p><p style="color:#6c7563">${TRAITS[id]}</p>
+    ${SV.stage===STAGES.length-1?'<p><b>这是最终形态！</b>继续在世界里散步、吃东西吧。想换一条路线，可以在菜单里“重新长大”。</p>':''}
+    <button class="btn" id="goOn">继续冒险 ➜</button>`;
+  // 变身动画：旧恐龙淡出，新恐龙淡入
+  const c=$('evoCv'), d=Math.min(devicePixelRatio||1,2), w=520, h=307; c.width=w*d; c.height=h*d; const x=c.getContext('2d'); x.scale(d,d); const t0=performance.now();
+  const loop=ts=>{ if(!$('overlay').classList.contains('show')||!c.isConnected) return; const k=Math.min(1,(ts-t0)/1600); x.clearRect(0,0,w,h);
+    if(k<1){x.globalAlpha=1-k; fitDraw(x,from,w,h,{t:ts/1000,rich:true},30+k*40);} x.globalAlpha=k; fitDraw(x,sp,w,h,{t:ts/1000,rich:true},70-k*50); x.globalAlpha=1;
+    if(k<1){const g=x.createRadialGradient(w/2,h/2,5,w/2,h/2,w*0.5); g.addColorStop(0,`rgba(255,248,210,${0.55*Math.sin(k*Math.PI)})`); g.addColorStop(1,'rgba(255,248,210,0)'); x.fillStyle=g; x.fillRect(0,0,w,h);}
+    requestAnimationFrame(loop);}; requestAnimationFrame(loop);
+  say('变成'+sp.name+'了');
+  $('goOn').onclick=()=>{$('overlay').classList.remove('show'); G.paused=false; G.items.forEach(it=>it.told=false); for(let i=0;i<20;i++) spawnItem(true); updHud();};
+}
+
+/* ================== HUD / 菜单 ================== */
+function updHud(){
+  const sp=curSp(); $('whoName').textContent=(SV.stage===0?sp.name+'宝宝':sp.name);
+  $('whoSub').textContent=SV.stage<STAGES.length-1?`第 ${SV.stage+1} 阶段 · 成长 ${SV.xp}/${NEED[SV.stage]}`:`最终形态 · 已吃 ${SV.xp}`;
+  $('xpBar').style.width=(SV.stage<STAGES.length-1? SV.xp/NEED[SV.stage]*100 : 100)+'%';
+  $('stages').innerHTML=STAGES.map((_,i)=>`<i class="${i<=SV.stage?'on':''}"></i>`).join('');
+  const c=$('whoCv'), d=Math.min(devicePixelRatio||1,2); c.width=76*d; c.height=52*d; const x=c.getContext('2d'); x.scale(d,d); fitDraw(x,sp,76,52,{t:1,rich:true},2);
+}
+function intro(){
+  G.paused=true;
+  $('box').innerHTML=`<h1>🥚 恐龙长大记</h1><p>你是一只刚出生的小恐龙。在大陆上走来走去，<b>吃东西长大</b>，吃饱了就能<b>进化</b>成更大的恐龙！</p>
+   <div class="legend"><span>👆 按住屏幕拖动 = 走路</span><span>⌨️ 电脑可用方向键</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span></div>
+   <p>每次进化都可以二选一：吃虫子的猎手，还是吃植物的巨人？一共 5 个阶段。</p>
+   <p style="color:#6c7563">这里没有时间限制，也不会输。碰到大恐龙只会被轻轻推开。</p>
+   <button class="btn" id="startBtn">${SV.seen?'继续冒险':'出发！'}</button>`;
+  $('overlay').classList.add('show');
+  $('startBtn').onclick=()=>{SV.seen=true; save(); $('overlay').classList.remove('show'); G.paused=false;};
+}
+$('menuBtn').onclick=()=>{
+  G.paused=true;
+  $('box').innerHTML=`<h1>☰ 菜单</h1>
+   <p>我的进化路线：${SV.path.map(id=>SP[id].name).join(' → ')}</p>
+   <p style="color:#6c7563">变过的恐龙：${['eorap',...SV.done.filter(i=>i!=='eorap')].map(id=>SP[id].name).join('、')}</p>
+   <button class="btn" id="resume">继续</button><button class="btn light" id="howBtn">怎么玩</button><button class="btn light" id="restart">重新长大</button>`;
+  $('overlay').classList.add('show');
+  $('resume').onclick=()=>{$('overlay').classList.remove('show'); G.paused=false;};
+  $('howBtn').onclick=intro;
+  let armed=false; $('restart').onclick=e=>{if(!armed){armed=true; e.target.textContent='再按一次确认'; return;} SV.stage=0; SV.path=['eorap']; SV.xp=0; save(); initWorld(); PL.x=600; PL.d=0.5; updHud(); $('overlay').classList.remove('show'); G.paused=false; tip('又变回小恐龙宝宝啦，这次试试另一条路线吧！');};
+};
+
+/* ================== 主循环 ================== */
+let last=0;
+function frame(ts){
+  requestAnimationFrame(frame);
+  const dt=Math.min(0.05,(ts-(last||ts))/1000); last=ts; G.t=ts/1000;
+  if(!G.paused) updatePlayer(dt);
+  // NPC
+  for(const n of G.npcs){ const k=U()*n.sp.size*0.8*gs(n.d), spd=(30+n.sp.size*18)*(Math.min(H,W*0.85)/800);
+    if(n.st==='walk'){const dx=n.tx-n.x; n.dir=dx>0?1:-1; n.x+=n.dir*Math.min(Math.abs(dx),spd*dt); n.phase+=dt*spd/(k*(n.sp.legs[0].l1+n.sp.legs[0].l2)*0.55); if(Math.abs(dx)<2){n.st='idle'; n.timer=rnd(2,6);}}
+    else {n.timer-=dt; if(n.timer<=0){n.st='walk'; n.tx=Math.max(150,Math.min(G.W-150,n.x+rnd(-500,500)));}} }
+  G.ptero.x+=G.ptero.dir*70*dt; if(G.ptero.x>G.W+300) G.ptero.dir=-1; if(G.ptero.x<-300) G.ptero.dir=1;
+  // 相机
+  const target=PL.x-W*0.5+PL.dir*W*0.08; G.camX+=(target-G.camX)*Math.min(1,dt*3); G.camX=Math.max(0,Math.min(G.W-W,G.camX));
+  draw(dt);
+}
+function draw(dt){
+  const hz=HZ(), cx=G.camX, t=G.t;
+  // 天空
+  let g=ctx.createLinearGradient(0,0,0,hz); g.addColorStop(0,'#6fa9d2'); g.addColorStop(0.55,'#b9d8e2'); g.addColorStop(1,'#f3e6c6'); ctx.fillStyle=g; ctx.fillRect(0,0,W,hz+H*0.15);
+  const sx=W*0.78-cx*0.03, sy=H*0.13; g=ctx.createRadialGradient(sx,sy,6,sx,sy,H*0.3); g.addColorStop(0,'rgba(255,250,225,1)'); g.addColorStop(0.08,'rgba(255,244,205,.9)'); g.addColorStop(0.3,'rgba(255,236,190,.25)'); g.addColorStop(1,'rgba(255,236,190,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H*0.6);
+  // 云（有明暗）
+  for(let i=0;i<6;i++){const span=W+500; const x=((i*380+t*(6+i)-cx*0.08)%span+span)%span-250, y=H*(0.07+(i%3)*0.07), s=0.8+(i%2)*0.5;
+    [[0,0,46],[40,8,34],[-40,10,32],[14,-18,32]].forEach(([dx,dy,r])=>{const gg=ctx.createRadialGradient(x+dx*s-r*0.3*s,y+dy*s-r*0.4*s,2,x+dx*s,y+dy*s,r*s*1.2); gg.addColorStop(0,'rgba(255,255,255,.95)'); gg.addColorStop(1,'rgba(220,230,240,.0)'); ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(x+dx*s,y+dy*s,r*s*1.2,0,Math.PI*2); ctx.fill();});}
+  // 远景
+  const bo=(cx*0.25)%Math.max(1,(back.w-W)); ctx.drawImage(back.c,-bo,0,back.w,back.h);
+  // 火山烟
+  G.smoke=G.smoke||[]; if(Math.random()<dt*0.8) G.smoke.push({x:back.vx,y:back.vy,r:8,a:0.45});
+  G.smoke.forEach(p=>{p.y-=dt*8; p.x+=dt*5; p.r+=dt*3; p.a-=dt*0.04; const gg=ctx.createRadialGradient(p.x-bo,p.y,1,p.x-bo,p.y,p.r); gg.addColorStop(0,`rgba(240,236,232,${p.a})`); gg.addColorStop(1,'rgba(240,236,232,0)'); ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(p.x-bo,p.y,p.r,0,Math.PI*2); ctx.fill();}); G.smoke=G.smoke.filter(p=>p.a>0);
+  // 地面
+  const g0=gy(-0.2); g=ctx.createLinearGradient(0,g0,0,H); g.addColorStop(0,'#9cc277'); g.addColorStop(0.4,'#8fbb63'); g.addColorStop(1,'#6f9f4a'); ctx.fillStyle=g; ctx.fillRect(0,back.h-2,W,H);
+  g=ctx.createLinearGradient(0,back.h-4,0,back.h+H*0.08); g.addColorStop(0,'rgba(220,232,210,.65)'); g.addColorStop(1,'rgba(220,232,210,0)'); ctx.fillStyle=g; ctx.fillRect(0,back.h-4,W,H*0.08);
+  // 光斑（树影）
+  for(let i=0;i<14;i++){const x=((i*397-cx)%(W+400)+W+400)%(W+400)-200, y=gy((i*0.137)%1); ctx.fillStyle='rgba(60,90,40,.10)'; ctx.beginPath(); ctx.ellipse(x,y,120,26,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='rgba(255,250,210,.07)'; ctx.beginPath(); ctx.ellipse(x+90,y+30,60,14,0,0,Math.PI*2); ctx.fill();}
+  // 小路
+  ctx.fillStyle='rgba(214,196,150,.45)'; ctx.beginPath(); for(let x=-20;x<=W+20;x+=20){const wx=x+cx; const y=gy(0.55+Math.sin(wx*0.0025)*0.25)-6; x===-20?ctx.moveTo(x,y):ctx.lineTo(x,y);} for(let x=W+20;x>=-20;x-=20){const wx=x+cx; ctx.lineTo(x,gy(0.55+Math.sin(wx*0.0025)*0.25)+10);} ctx.closePath(); ctx.fill();
+  // 草和石头
+  ctx.lineCap='round';
+  for(const r of G.rocks){const x=r.x-cx; if(x<-40||x>W+40) continue; const y=gy(r.d), k=gs(r.d); sphereRock(x,y,r.r*k);}
+  for(const u of G.tufts){const x=u.x-cx; if(x<-10||x>W+10) continue; const y=gy(u.d), k=gs(u.d)*1.1; ctx.strokeStyle=u.c<0.5?'#6f9e48':'#5d8c3e'; ctx.lineWidth=1.8*k;
+    for(let j=-1;j<=1;j++){ctx.beginPath(); ctx.moveTo(x+j*3*k,y); ctx.quadraticCurveTo(x+j*4*k,y-7*k,x+j*7*k+Math.sin(t+u.x)*1.5,y-13*k); ctx.stroke();}}
+  for(const f of G.flowers){const x=f.x-cx; if(x<-10||x>W+10) continue; sphere(x,gy(f.d)-3,3*gs(f.d),f.c,false);}
+  // 按深度排序绘制：树、食物、恐龙、玩家
+  const list=[];
+  for(const tr of G.trees){const x=tr.x-cx; if(x<-250||x>W+250) continue; list.push({y:gy(tr.d),f:()=>drawTree(x,{...tr,y:gy(tr.d)},Math.min(H,W*0.85)/800*gs(Math.max(0,tr.d)))});}
+  for(const it of G.items){const x=it.x-cx; if(x<-80||x>W+80) continue; const y=gy(it.d); list.push({y,f:()=>drawFood(it,x,y-Math.abs(Math.sin(t*2+it.bob))*0,gs(it.d)*Math.min(H,W*0.85)/800*1.45)});}
+  for(const n of G.npcs){const k=U()*n.sp.size*0.8*gs(n.d), x=n.x-cx; if(x<-400||x>W+400) continue; list.push({y:gy(n.d),f:()=>drawDinoAt(n.sp,x,gy(n.d),k,n.dir,{t:t+n.t0,moving:n.st==='walk',phase:n.phase})});}
+  { const k=pScale(), x=PL.x-cx, y=gy(PL.d); list.push({y:y+0.1,f:()=>{
+      if(PL.grow>0){const gg=ctx.createRadialGradient(x,y-40*k/U()*0.5,4,x,y-40*k/U()*0.5,180*k/U()*0.5); gg.addColorStop(0,`rgba(255,245,200,${0.35*PL.grow})`); gg.addColorStop(1,'rgba(255,245,200,0)'); ctx.fillStyle=gg; ctx.fillRect(x-300,y-300,600,400);}
+      const bump=PL.bump>0?Math.sin(PL.bump*20)*2*PL.bump:0;
+      drawDinoAt(curSp(),x+bump,y,k*(1+PL.munch*0.03),PL.dir,{t:t,moving:PL.moving,phase:PL.phase},true);
+      // 小箭头标出自己
+      ctx.fillStyle='rgba(255,252,240,.9)'; const b=bbox(curSp()); const ax=x+PL.dir*(b.x+b.w*0.55)*k, ay=y+b.y*k-16+Math.sin(t*3)*3; ctx.beginPath(); ctx.moveTo(ax-9,ay-10); ctx.lineTo(ax+9,ay-10); ctx.lineTo(ax,ay); ctx.closePath(); ctx.fill();
+    }}); }
+  list.sort((a,b)=>a.y-b.y).forEach(o=>o.f());
+  // 翼龙
+  { const pt=G.ptero, x=pt.x-cx*1.0; if(x>-200&&x<W+200){ctx.save(); ctx.translate(x,H*pt.y+Math.sin(t*0.7)*14); const k=U()*0.55; ctx.scale(pt.dir*k,k); drawDino(ctx,SP.ptero,{t:t+pt.t0,rich:true}); ctx.restore();} }
+  // 粒子
+  G.parts.forEach(p=>{p.life-=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=200*dt*(p.text?0:1); const x=p.x-cx; ctx.globalAlpha=Math.max(0,Math.min(1,p.life*1.5));
+    if(p.text){ctx.font='bold 22px sans-serif'; ctx.textAlign='center'; ctx.lineWidth=4; ctx.strokeStyle='rgba(60,50,30,.6)'; ctx.strokeText(p.text,x,p.y); ctx.fillStyle='#fff6d0'; ctx.fillText(p.text,x,p.y);}
+    else {ctx.fillStyle=p.c; ctx.beginPath(); ctx.arc(x,p.y,p.r,0,Math.PI*2); ctx.fill();} ctx.globalAlpha=1;});
+  G.parts=G.parts.filter(p=>p.life>0);
+  // 飘浮的花粉光点
+  G.motes.forEach(m=>{m.y-=m.v*dt; m.x+=Math.sin(t*0.5+m.s)*0.0006; if(m.y<0) m.y=1; ctx.fillStyle='rgba(255,250,215,.55)'; ctx.beginPath(); ctx.arc(((m.x*W*1.3-cx*0.6)%W+W)%W, H*0.25+m.y*H*0.7, m.s,0,Math.PI*2); ctx.fill();});
+  // 柔和暗角
+  g=ctx.createRadialGradient(W/2,H*0.55,Math.min(W,H)*0.45,W/2,H*0.55,Math.max(W,H)*0.85); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(20,30,15,.28)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+}
+function sphereRock(x,y,r){const g=ctx.createRadialGradient(x-r*0.4,y-r*0.6,1,x,y-r*0.2,r*1.4); g.addColorStop(0,'#d8d0bd'); g.addColorStop(0.6,'#a79c86'); g.addColorStop(1,'#7c725f'); ctx.fillStyle='rgba(30,40,20,.25)'; ctx.beginPath(); ctx.ellipse(x+3,y+1,r*1.5,r*0.35,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(x,y-r*0.3,r*1.4,r*0.8,0,Math.PI,0); ctx.quadraticCurveTo(x,y+r*0.15,x-r*1.4,y-r*0.3); ctx.fill();}
+function drawDinoAt(sp,x,y,k,dir,o,isPlayer){
+  const b=bbox(sp); ctx.save(); ctx.translate(x,y);
+  const cxs=dir*(b.x+b.w*0.55)*k, rx=b.w*0.42*k, ry=Math.max(6,b.w*0.06*k);
+  const g=ctx.createRadialGradient(cxs,0,1,cxs,0,rx); g.addColorStop(0,'rgba(20,35,15,.42)'); g.addColorStop(0.6,'rgba(20,35,15,.18)'); g.addColorStop(1,'rgba(20,35,15,0)'); ctx.fillStyle=g; ctx.save(); ctx.scale(1,ry/rx); ctx.beginPath(); ctx.arc(cxs,0,rx,0,Math.PI*2); ctx.restore(); ctx.save(); ctx.translate(cxs,2); ctx.scale(1,ry/rx); ctx.beginPath(); ctx.arc(0,0,rx,0,Math.PI*2); ctx.fillStyle=g; ctx.restore();
+  ctx.fillStyle='rgba(20,35,15,.25)'; ctx.beginPath(); ctx.ellipse(cxs,2,rx*0.8,ry,0,0,Math.PI*2); ctx.fill();
+  ctx.scale(dir*k,k); drawDino(ctx,sp,Object.assign({rich:true},o)); ctx.restore();
+}
+
+/* ================== 启动 ================== */
+addEventListener('resize',()=>{clearTimeout(window._r); window._r=setTimeout(resize,200);});
+resize(); initWorld(); updHud();
+requestAnimationFrame(frame);
+intro();
+</script>
+</body>
+</html>
