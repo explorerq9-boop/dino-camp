@@ -12,7 +12,7 @@ button{font-family:inherit; color:inherit; border:none; cursor:pointer;}
 #cv{position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none;}
 #hud{position:fixed; top:10px; left:12px; right:12px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; pointer-events:none; z-index:5;}
 #hud > *{pointer-events:auto;}
-.panel{background:rgba(255,252,242,.9); border-radius:22px; padding:10px 16px; box-shadow:0 6px 18px rgba(0,0,0,.18); backdrop-filter:blur(6px);}
+.panel{background:rgba(255,252,242,.9); border-radius:22px; padding:10px 16px; box-shadow:0 6px 18px rgba(0,0,0,.18);}
 #who{display:flex; align-items:center; gap:12px; min-width:250px;}
 #who canvas{width:76px; height:52px;}
 #who b{font-size:20px;} #who small{display:block; color:#7a8470; font-size:14px;}
@@ -29,6 +29,7 @@ button{font-family:inherit; color:inherit; border:none; cursor:pointer;}
 .box{background:linear-gradient(#fffdf5,#f4ecd8); border-radius:30px; padding:22px 24px; max-width:760px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,.35); text-align:center; max-height:94vh; overflow-y:auto;}
 .box h1{font-size:32px; margin:4px 0 6px; color:#4f6e3f;} .box p{font-size:18px; line-height:1.7; margin:6px 0;}
 .choices{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0 6px;}
+.wait .choice,.wait .btn{pointer-events:none; opacity:.55;}
 .choice{background:#fff; border-radius:24px; padding:10px 10px 14px; box-shadow:0 6px 0 #e3d8bd, 0 10px 20px rgba(0,0,0,.08); display:flex; flex-direction:column; align-items:center; transition:transform .2s;}
 .choice:active{transform:translateY(3px);}
 .choice canvas{width:100%; aspect-ratio:22/14; border-radius:16px; background:linear-gradient(#dfeef0,#eef2dc);}
@@ -597,7 +598,7 @@ let tipT=0; function tip(t,ms=2600){const e=$('tip'); e.innerHTML=t; e.classList
 const cv=$('cv'); let ctx, W=0, H=0, DPR=1;
 const G={W:10800, camX:0, items:[], npcs:[], trees:[], parts:[], motes:[], t:0, paused:false};
 const PL={x:600, d:0.5, vx:0, vd:0, dir:1, phase:0, grow:0, bump:0, munch:0};
-let maxDPR=1.5;
+let maxDPR=(Math.min(innerWidth,innerHeight)>=700?1:1.5);
 function resize(){DPR=Math.min(window.devicePixelRatio||1,maxDPR); W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx=cv.getContext('2d'); ctx.setTransform(DPR,0,0,DPR,0,0); buildBack(); }
 const HZ=()=>H*0.40;                         // 地平线
 const gy=d=>HZ()+H*0.10+d*H*0.48;            // 深度 -> 屏幕 y
@@ -653,10 +654,33 @@ function buildBack(){
     x.fillStyle=c1; x.fillRect(0,base,w,h-base);});
   const g=x.createLinearGradient(0,0,0,h); g.addColorStop(0,'rgba(225,235,225,.45)'); g.addColorStop(1,'rgba(225,235,225,.1)'); x.fillStyle=g; x.fillRect(0,0,w,h);
   band={c,w,h};
-  layer=document.createElement('canvas'); layer.width=W*DPR; layer.height=H*DPR; lctx=layer.getContext('2d'); lctx.scale(DPR,DPR);
-  PAT.grass=ctx.createPattern(IMG.grass,'repeat'); PAT.dirt=ctx.createPattern(IMG.dirt,'repeat');
+  GCH={}; buildVig();
 }
 let layer=null, lctx=null; const PAT={};
+/* 地面分块缓存：地面贴图、泥土、色调、雾、草丛都预先画进 1024 宽的块里，走路时只需贴图，电脑上更流畅 */
+let GCH={}; const GCW=1024;
+function groundChunk(i){ if(GCH[i]) return GCH[i];
+  const top=HZ()+H*0.02, gh=Math.ceil(H-top), x0=i*GCW, gd=Math.min(DPR,1);
+  const c=document.createElement('canvas'); c.width=Math.ceil(GCW*gd); c.height=Math.ceil(gh*gd); const x=c.getContext('2d'); x.scale(gd,gd); x.translate(0,-top);
+  const strips=16, ts=Math.min(H,W*0.85)/800*0.55;
+  const paint=(cx2,pat,scale)=>{for(let k=0;k<strips;k++){const d0=-0.22+k*(1.3/strips), y0=Math.max(top,gy(d0)), y1=gy(d0+1.3/strips)+1; if(y1<=top) continue; const s=gs(Math.max(-0.2,d0))*scale; const tw=512*s;
+      pat.setTransform(new DOMMatrix([s,0,0,s*0.5,-(((x0)%tw)+tw)%tw,y0])); cx2.fillStyle=pat; cx2.fillRect(0,y0,GCW,y1-y0);}};
+  const pg=x.createPattern(IMG.grass,'repeat'); paint(x,pg,ts);
+  let anyDirt=0; for(let k=0;k<=10;k++) anyDirt=Math.max(anyDirt,bval(x0+GCW*k/10,'dirt'));
+  if(anyDirt>0.02){ const l=document.createElement('canvas'); l.width=c.width; l.height=c.height; const lx=l.getContext('2d'); lx.scale(gd,gd); lx.translate(0,-top);
+    paint(lx,lx.createPattern(IMG.dirt,'repeat'),ts*0.9);
+    lx.globalCompositeOperation='destination-in'; const g=lx.createLinearGradient(0,0,GCW,0); for(let k=0;k<=10;k++) g.addColorStop(k/10,`rgba(0,0,0,${bval(x0+GCW*k/10,'dirt')})`); lx.fillStyle=g; lx.fillRect(0,top,GCW,gh);
+    x.save(); x.setTransform(1,0,0,1,0,0); x.drawImage(l,0,0); x.restore(); }
+  x.globalCompositeOperation='multiply'; let g=x.createLinearGradient(0,0,GCW,0); for(let k=0;k<=10;k++) g.addColorStop(k/10,bcol(x0+GCW*k/10,'tint')); x.fillStyle=g; x.fillRect(0,top,GCW,gh); x.globalCompositeOperation='source-over';
+  g=x.createLinearGradient(0,top,0,H); g.addColorStop(0,'rgba(228,236,226,.5)'); g.addColorStop(0.15,'rgba(228,236,226,.08)'); g.addColorStop(0.6,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(20,30,10,.22)'); x.fillStyle=g; x.fillRect(0,top,GCW,gh);
+  x.lineCap='round';
+  for(const u of G.tufts){const tx=u.x-x0; if(tx<-12||tx>GCW+12) continue; const y=gy(u.d), k=gs(u.d)*1.15; if(bval(u.x,'dirt')>0.9) continue;
+    x.strokeStyle=u.c<0.5?'rgba(96,140,60,.85)':'rgba(80,120,50,.85)'; x.lineWidth=1.7*k;
+    for(let j=-1;j<=1;j++){x.beginPath(); x.moveTo(tx+j*3*k,y); x.quadraticCurveTo(tx+j*4*k,y-7*k,tx+j*7*k+Math.sin(u.x)*1.5,y-13*k); x.stroke();}}
+  GCH[i]=c; return c;}
+let VIG=null;
+function buildVig(){const w=Math.ceil(W/4), h=Math.ceil(H/4), c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d');
+  const g=x.createRadialGradient(w/2,h*0.55,Math.min(w,h)*0.45,w/2,h*0.55,Math.max(w,h)*0.85); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(20,30,15,.3)'); x.fillStyle=g; x.fillRect(0,0,w,h); VIG=c;}
 
 /* ================== 生成世界 ================== */
 function initWorld(){
@@ -675,7 +699,7 @@ function initWorld(){
   G.npcs=npcPlan.map(([id,bi])=>({sp:SP[id], x:bi*BW+rnd(200,BW-200), d:rnd(0.05,0.95), dir:Math.random()<0.5?1:-1, phase:Math.random()*6, tx:0, st:'idle', timer:rnd(0,3), t0:Math.random()*20, home:bi}));
   G.ptero=[{x:rnd(0,G.W), y:0.16, dir:1, t0:3},{x:rnd(0,G.W), y:0.24, dir:-1, t0:7}];
   G.motes=[]; for(let i=0;i<46;i++) G.motes.push({x:Math.random(), y:Math.random(), s:rnd(1,2.6), v:rnd(0.005,0.02)});
-  G.curBiome=-1;
+  G.curBiome=-1; GCH={};
 }
 function spawnItem(near){
   let x=near? PL.x+(Math.random()<0.5?-1:1)*rnd(W*0.6,W*1.3) : rnd(320,G.W-320); x=Math.max(320,Math.min(G.W-320,x));
@@ -780,7 +804,7 @@ function updatePlayer(dt){
     if(f.tier>tierNow){ it.lock=true; it.lockA += ((near||Math.abs(it.x-m.x)<reach*2.5&&Math.abs(it.d-PL.d)<0.15)?1:-1)*dt*2; it.lockA=Math.max(0,Math.min(1,it.lockA));
       if(near && !it.told){it.told=true; tip(`${f.name}太大了，要长大一点才能吃 🌱`);} continue; }
     it.lock=false;
-    if(near){ eat(it,i); }
+    if(near){ eat(it,i); if(G.paused) return; }
   }
   // 碰到比自己大的恐龙：被轻轻推开
   for(const n of G.npcs){ if(n.sp.size*0.9<=STAGE_SIZE[SV.stage]) continue; const b=bbox(n.sp), k=U()*n.sp.size*0.8*gs(n.d); const cx=n.x+n.dir*(b.x+b.w*0.5)*k;
@@ -802,16 +826,19 @@ function eat(it,i){
 
 /* ================== 进化 ================== */
 function miniCv(cv,sp,w=440,h=280,t=1){const d=Math.min(devicePixelRatio||1,2); cv.width=w*d; cv.height=h*d; const x=cv.getContext('2d'); x.scale(d,d); fitDraw(x,sp,w,h,{t,rich:true},14);}
+function holdOff(ms=1300){const b=$('box'); b.classList.add('wait'); clearTimeout(holdOff.t); holdOff.t=setTimeout(()=>b.classList.remove('wait'),ms);} // 防止走路时手指误点到选项
+let evolving=false;
 function evolveOffer(){
   G.paused=true; clearInput();
   const opts=STAGES[SV.stage+1].opts;
   $('box').innerHTML=`<h1>✨ 可以进化啦！</h1><p>你吃得饱饱的，已经长大了。选一种恐龙变身吧：</p>
    <div class="choices">${opts.map(id=>{const s=SP[id]; return `<button class="choice" data-id="${id}"><canvas></canvas><b>${s.name}</b><div><span class="tag">🕰️ ${PERIODS[s.period].name}</span><span class="tag">📏 ${s.len}</span><span class="tag">🍽️ ${s.dietTxt}</span></div><div class="tr">${TRAITS[id]}</div></button>`;}).join('')}</div>`;
-  $('overlay').classList.add('show');
+  $('overlay').classList.add('show'); holdOff();
   document.querySelectorAll('.choice').forEach(b=>{miniCv(b.querySelector('canvas'),SP[b.dataset.id]); b.onclick=()=>evolveTo(b.dataset.id);});
   tone([523,659,784,1046],0.05,'sine',0.14); say('可以进化啦，选一种恐龙吧');
 }
 function evolveTo(id){
+  if(evolving||SV.stage>=STAGES.length-1) return; evolving=true; setTimeout(()=>evolving=false,600); holdOff(1600);
   const from=curSp(); SV.stage++; SV.path[SV.stage]=id; SV.path.length=SV.stage+1; SV.xp=0; if(!SV.done.includes(id)) SV.done.push(id); save();
   const sp=SP[id];
   $('box').innerHTML=`<h1>🎉 变成${sp.name}了！</h1><canvas id="evoCv" style="width:100%;max-width:520px;aspect-ratio:22/13;border-radius:20px;background:linear-gradient(#dfeef0,#eef2dc)"></canvas>
@@ -823,9 +850,9 @@ function evolveTo(id){
   const loop=ts=>{ if(!$('overlay').classList.contains('show')||!c.isConnected) return; const k=Math.min(1,(ts-t0)/1600); x.clearRect(0,0,w,h);
     if(k<1){x.globalAlpha=1-k; fitDraw(x,from,w,h,{t:ts/1000,rich:true},30+k*40);} x.globalAlpha=k; fitDraw(x,sp,w,h,{t:ts/1000,rich:true},70-k*50); x.globalAlpha=1;
     if(k<1){const g=x.createRadialGradient(w/2,h/2,5,w/2,h/2,w*0.5); g.addColorStop(0,`rgba(255,248,210,${0.55*Math.sin(k*Math.PI)})`); g.addColorStop(1,'rgba(255,248,210,0)'); x.fillStyle=g; x.fillRect(0,0,w,h);}
-    requestAnimationFrame(loop);}; requestAnimationFrame(loop);
+    if(k<1) requestAnimationFrame(loop);}; requestAnimationFrame(loop);
   say('变成'+sp.name+'了');
-  $('goOn').onclick=()=>{$('overlay').classList.remove('show'); G.paused=false; G.items.forEach(it=>it.told=false); for(let i=0;i<20;i++) spawnItem(true); updHud();};
+  $('goOn').onclick=()=>{$('overlay').classList.remove('show'); G.paused=false; G.items.forEach(it=>it.told=false); G.items=G.items.filter(it=>FOOD[it.type].tier>=SV.stage); while(G.items.length<G.W/50) spawnItem(Math.random()<0.4); updHud();};
 }
 
 /* ================== HUD / 菜单 ================== */
@@ -875,6 +902,7 @@ function frame(ts){
   const bi=biomeAt(PL.x); if(bi!==G.curBiome){const b=BIOMES[bi]; if(!G.paused) tip(`${b.icon} 来到了<b>${b.name}</b><br><span style="font-weight:400;font-size:16px">${b.fact}</span>`,4200); G.curBiome=bi;}
   // 相机
   const target=PL.x-W*0.5+PL.dir*W*0.08; G.camX+=(target-G.camX)*Math.min(1,dt*3); G.camX=Math.max(0,Math.min(G.W-W,G.camX));
+  if(G.paused){ if(G.pd) return; G.pd=true; } else G.pd=false;
   draw(dt);
 }
 function hexA(h,a){const n=parseInt(h.slice(1),16); return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`;}
@@ -900,22 +928,9 @@ function draw(dt){
   // 森林带
   const ba=bval(mid,'band'); if(ba>0.05){ctx.globalAlpha=Math.min(1,ba); const bo=((cx*0.45)%band.w+band.w)%band.w; for(let x=-bo;x<W;x+=band.w) ctx.drawImage(band.c,x,hz-band.h*0.55,band.w,band.h); ctx.globalAlpha=1;}
   // ---- 地面：ambientCG 照片贴图 + 透视条带 ----
-  const top=hz+H*0.02, strips=16;
-  const paint=(c,pat,scale)=>{for(let i=0;i<strips;i++){const d0=-0.22+i*(1.3/strips), y0=Math.max(top,gy(d0)), y1=gy(d0+1.3/strips)+1; if(y1<=top) continue; const s=gs(Math.max(-0.2,d0))*scale; const tw=512*s;
-      pat.setTransform(new DOMMatrix([s,0,0,s*0.5,-(((cx)%tw)+tw)%tw,y0])); c.fillStyle=pat; c.fillRect(0,y0,W,y1-y0);}};
-  const ts=Math.min(H,W*0.85)/800*0.55;
-  paint(ctx,PAT.grass,ts);
-  // 泥土层：按区域混合
-  let anyDirt=0; for(let k=0;k<=10;k++) anyDirt=Math.max(anyDirt,bval(cx+W*k/10,'dirt'));
-  if(anyDirt>0.02){
-  lctx.globalCompositeOperation='source-over'; lctx.clearRect(0,0,W,H); paint(lctx,PAT.dirt,ts*0.9);
-  lctx.globalCompositeOperation='destination-in'; g=lctx.createLinearGradient(0,0,W,0); for(let k=0;k<=10;k++){g.addColorStop(k/10,`rgba(0,0,0,${bval(cx+W*k/10,'dirt')})`);} lctx.fillStyle=g; lctx.fillRect(0,0,W,H);
-  ctx.drawImage(layer,0,0,W,H);
-  }
-  // 区域色调
-  ctx.globalCompositeOperation='multiply'; g=ctx.createLinearGradient(0,0,W,0); for(let k=0;k<=10;k++) g.addColorStop(k/10,bcol(cx+W*k/10,'tint')); ctx.fillStyle=g; ctx.fillRect(0,top,W,H); ctx.globalCompositeOperation='source-over';
-  // 远处地面雾 + 前景加深
-  g=ctx.createLinearGradient(0,top,0,H); g.addColorStop(0,'rgba(228,236,226,.5)'); g.addColorStop(0.15,'rgba(228,236,226,.08)'); g.addColorStop(0.6,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(20,30,10,.22)'); ctx.fillStyle=g; ctx.fillRect(0,top,W,H-top);
+  const top=hz+H*0.02;
+  { const i0=Math.floor(cx/GCW), i1=Math.floor((cx+W)/GCW); for(let i=i0;i<=i1;i++) ctx.drawImage(groundChunk(i),i*GCW-cx,top,GCW,Math.ceil(H-top));
+    const pre=PL.dir>0?i1+1:i0-1; if(pre>=0&&pre*GCW<G.W&&!GCH[pre]&&!G.built){groundChunk(pre); G.built=true;} else G.built=false; }
   // 云影慢慢飘过
   if(!G.lowFx) for(let i=0;i<5;i++){const x=((i*620+t*12-cx)%(W+900)+W+900)%(W+900)-450, y=gy((i*0.23)%1); const gg=ctx.createRadialGradient(x,y,10,x,y,260); gg.addColorStop(0,'rgba(30,50,30,.12)'); gg.addColorStop(1,'rgba(30,50,30,0)'); ctx.fillStyle=gg; ctx.save(); ctx.translate(x,y); ctx.scale(1,0.25); ctx.translate(-x,-y); ctx.beginPath(); ctx.arc(x,y,260,0,Math.PI*2); ctx.fill(); ctx.restore();}
   // ---- 湖 ----
@@ -924,11 +939,6 @@ function draw(dt){
   if(cx+W>5*BW){ const pulse=0.65+0.2*Math.sin(t*0.9); ctx.lineCap='round'; ctx.lineJoin='round';
     for(const cr of G.cracks){ if(cr[0][0]-cx>W+100||cr[cr.length-1][0]-cx<-100) continue; const pts=cr.map(([x,d])=>[x-cx,gy(d)]), k=gs(cr[0][1]);
       [[10*k,`rgba(255,120,40,${0.18*pulse})`],[4.5*k,`rgba(255,140,50,${0.7*pulse})`],[1.6*k,`rgba(255,230,140,${pulse})`]].forEach(([lw,c])=>{ctx.strokeStyle=c; ctx.lineWidth=lw; ctx.beginPath(); pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y)); ctx.stroke();}); } }
-  // 草丛
-  ctx.lineCap='round';
-  for(const u of G.tufts){const x=u.x-cx; if(x<-10||x>W+10) continue; const y=gy(u.d), k=gs(u.d)*1.15, lava=bval(u.x,'dirt'); if(lava>0.9) continue;
-    ctx.strokeStyle=u.c<0.5?'rgba(96,140,60,.85)':'rgba(80,120,50,.85)'; ctx.lineWidth=1.7*k;
-    for(let j=-1;j<=1;j++){ctx.beginPath(); ctx.moveTo(x+j*3*k,y); ctx.quadraticCurveTo(x+j*4*k,y-7*k,x+j*7*k+Math.sin(t+u.x)*1.5,y-13*k); ctx.stroke();}}
   // ---- 按深度排序：植物、食物、恐龙 ----
   const list=[], U0=Math.min(H,W*0.85)/800;
   for(const f of G.flora){const x=f.x-cx; if(x<-420||x>W+420) continue; const y=gy(f.d); list.push({y,f:()=>drawFlora(f,x,y,U0)});}
@@ -953,7 +963,7 @@ function draw(dt){
   const ash=bval(mid,'dirt')>0.8;
   if(!G.lowFx) G.motes.forEach(m=>{m.y-=m.v*dt; m.x+=Math.sin(t*0.5+m.s)*0.0006; if(m.y<0) m.y=1; ctx.fillStyle=ash?'rgba(255,190,140,.6)':'rgba(255,250,215,.55)'; ctx.beginPath(); ctx.arc(((m.x*W*1.3-cx*0.6)%W+W)%W, H*0.25+m.y*H*0.7, m.s,0,Math.PI*2); ctx.fill();});
   // 暗角
-  g=ctx.createRadialGradient(W/2,H*0.55,Math.min(W,H)*0.45,W/2,H*0.55,Math.max(W,H)*0.85); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(20,30,15,.3)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.drawImage(VIG,0,0,W,H);
   drawMap();
 }
 function drawFlora(f,x,y,U0){
