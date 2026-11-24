@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
-import {SPECIES, prepDino, makeDino, setAnim, playOnce} from './dinos.js';
-import {RNG, BOUND, WATER_Y, H, riverZ, riverD, biomeAt, BIOMES, MESAS, buildTerrain, buildWater, buildMesas, buildSky, makeInstancer, buildFlowerField, cullChunks} from './world.js';
+import {SPECIES, prepDino, makeDino, measureGait, locomote, bite, headTurn, DINO} from './dinos.js';
+import {RNG, BOUND, WATER_Y, H, riverZ, riverD, biomeAt, BIOMES, MESAS, buildTerrain, buildWater, buildMesas, buildSky, makeInstancer, buildFlowerField, cullChunks, WIND, NEAR} from './world.js';
 import {FOOD, FOOD_KEYS, makeFood} from './food.js';
 
 const $ = id => document.getElementById(id);
@@ -60,7 +60,7 @@ async function init() {
   buildTerrain(scene); G.water = buildWater(scene); buildMesas(scene); buildFlowerField(scene); G.clouds = buildSky(scene);
   for (const M of MESAS) G.solids.push({x: M.x, z: M.z, r: M.r * 1.15 + 0.5});
   prog('正在请恐龙们过来…');
-  for (const id of Object.keys(SPECIES)) prepDino(id, await loadGLB('dino/' + SPECIES[id].file + '.glb'));
+  for (const id of Object.keys(SPECIES)) { prepDino(id, await loadGLB('dino/' + SPECIES[id].file + '.glb')); measureGait(id); }
   prog('正在种树和种花…');
   await plantFlora();
   prog('正在准备食物…');
@@ -72,7 +72,7 @@ async function init() {
   for (const [id, home] of plan) { const p = randomSpot(home, 6); const D = makeDino(id, NPC_LEN[id]); D.holder.position.set(p.x, H(p.x, p.z), p.z); D.mixer.update(Math.random() * 3); scene.add(D.holder);
     G.npcs.push({D, id, home, x: p.x, z: p.z, dir: Math.random() * 6, st: 'idle', timer: Math.random() * 4, tx: 0, tz: 0, speed: 1.2 + NPC_LEN[id] * 0.12}); }
   for (let i = 0; i < 90; i++) spawnFood(false);
-  buildMinimap(); updHud();
+  makeButterflies(); buildMinimap(); updHud();
   $('loading').style.display = 'none';
   intro();
   requestAnimationFrame(frame);
@@ -101,19 +101,19 @@ async function plantFlora() {
     return out; };
   const L = async (p, h, opt) => makeInstancer(scene, (await loadGLB(p)).scene, h, opt);
   const sets = [
-    ['nat/CommonTree_1.glb', 11, {shadow: 1, saturate: 1.25}, ['fern'], 22, 2.5, 1.2], ['nat/CommonTree_2.glb', 12, {shadow: 1, saturate: 1.25}, ['fern', 'flower'], 20, 2.5, 1.2],
-    ['nat/CommonTree_3.glb', 9, {shadow: 1, saturate: 1.25}, ['fern', 'flower'], 18, 2.5, 1.2], ['nat/CommonTree_4.glb', 9, {shadow: 1, saturate: 1.25}, ['fern', 'edge'], 40, 2.5, 1.2],
-    ['nat/CommonTree_5.glb', 10, {shadow: 1, saturate: 1.25}, ['fern', 'edge'], 40, 2.5, 1.2],
-    ['nat/PalmTree_1.glb', 11, {shadow: 1, saturate: 1.3}, ['palm'], 22, 2, 0.8], ['nat/PalmTree_2.glb', 10, {shadow: 1, saturate: 1.3}, ['palm', 'river'], 22, 2, 0.8],
-    ['nat/PalmTree_3.glb', 12, {shadow: 1, saturate: 1.3}, ['palm'], 18, 2, 0.8], ['nat/PalmTree_4.glb', 9, {shadow: 1, saturate: 1.3}, ['palm', 'mesa'], 16, 2, 0.8],
-    ['nat/Willow_1.glb', 10, {shadow: 1, saturate: 1.2}, ['river'], 12, 3, 1.2], ['nat/Willow_3.glb', 8, {shadow: 1, saturate: 1.2}, ['river'], 10, 3, 1.2],
-    ['mega/Fern.glb', 1.6, {bright: 1.7}, ['fern', 'palm', 'river'], 220, 0.5], ['mega/Flower Group.glb', 1.1, {far: 80}, ['flower'], 140, 0.3], ['mega/Bush with Flowers.glb', 1.6, {far: 100}, ['flower', 'fern'], 60, 0.6],
-    ['mega/Tall Grass.glb', 1.3, {bright: 1.4, far: 80}, ['river', 'flower', 'fern'], 200, 0.2], ['mega/Mushroom.glb', 0.6, {far: 70}, ['fern'], 40, 0.3], ['mega/Plant Big.glb', 0.4, {bright: 1.5}, ['fern', 'river'], 90, 0.3],
-    ['nat/Flowers.glb', 0.9, {saturate: 1.4, far: 80}, ['flower', 'river'], 160, 0.2], ['nat/Plant_1.glb', 1.2, {saturate: 1.3}, ['fern', 'palm'], 80, 0.3], ['nat/Plant_4.glb', 1.6, {saturate: 1.3}, ['fern', 'palm', 'river'], 70, 0.4],
+    ['nat/CommonTree_1.glb', 11, {shadow: 1, saturate: 1.25, sway: 0.005}, ['fern'], 22, 2.5, 1.2], ['nat/CommonTree_2.glb', 12, {shadow: 1, saturate: 1.25, sway: 0.005}, ['fern', 'flower'], 20, 2.5, 1.2],
+    ['nat/CommonTree_3.glb', 9, {shadow: 1, saturate: 1.25, sway: 0.005}, ['fern', 'flower'], 18, 2.5, 1.2], ['nat/CommonTree_4.glb', 9, {shadow: 1, saturate: 1.25, sway: 0.005}, ['fern', 'edge'], 40, 2.5, 1.2],
+    ['nat/CommonTree_5.glb', 10, {shadow: 1, saturate: 1.25, sway: 0.005}, ['fern', 'edge'], 40, 2.5, 1.2],
+    ['nat/PalmTree_1.glb', 11, {shadow: 1, saturate: 1.3, sway: 0.006}, ['palm'], 22, 2, 0.8], ['nat/PalmTree_2.glb', 10, {shadow: 1, saturate: 1.3, sway: 0.006}, ['palm', 'river'], 22, 2, 0.8],
+    ['nat/PalmTree_3.glb', 12, {shadow: 1, saturate: 1.3, sway: 0.006}, ['palm'], 18, 2, 0.8], ['nat/PalmTree_4.glb', 9, {shadow: 1, saturate: 1.3, sway: 0.006}, ['palm', 'mesa'], 16, 2, 0.8],
+    ['nat/Willow_1.glb', 10, {shadow: 1, saturate: 1.2, sway: 0.008}, ['river'], 12, 3, 1.2], ['nat/Willow_3.glb', 8, {shadow: 1, saturate: 1.2, sway: 0.008}, ['river'], 10, 3, 1.2],
+    ['mega/Fern.glb', 1.25, {bright: 1.7, sway: 0.05}, ['fern', 'palm', 'river'], 220, 0.5], ['mega/Flower Group.glb', 1.1, {far: 80, sway: 0.12}, ['flower'], 140, 0.3], ['mega/Bush with Flowers.glb', 1.6, {far: 100}, ['flower', 'fern'], 60, 0.6],
+    ['mega/Tall Grass.glb', 1.3, {bright: 1.4, far: 80, sway: 0.12}, ['river', 'flower', 'fern'], 200, 0.2], ['mega/Mushroom.glb', 0.6, {far: 70}, ['fern'], 40, 0.3], ['mega/Plant Big.glb', 0.4, {bright: 1.5}, ['fern', 'river'], 90, 0.3],
+    ['nat/Flowers.glb', 0.9, {saturate: 1.4, far: 80, sway: 0.14}, ['flower', 'river'], 160, 0.2], ['nat/Plant_1.glb', 1.2, {saturate: 1.3, sway: 0.05}, ['fern', 'palm'], 80, 0.3], ['nat/Plant_4.glb', 1.6, {saturate: 1.3, sway: 0.05}, ['fern', 'palm', 'river'], 70, 0.4],
     ['nat/Bush_1.glb', 0.9, {saturate: 1.2, bright: 1.35}, ['mesa', 'palm'], 40, 0.8], ['nat/BushBerries_1.glb', 1.6, {saturate: 1.3}, ['fern', 'flower'], 40, 0.8],
     ['nat/Rock_Moss_2.glb', 1.4, {shadow: 1}, ['fern', 'river'], 40, 0.8, 0.7], ['nat/Rock_3.glb', 1.8, {shadow: 1, saturate: 0.6}, ['mesa', 'palm'], 40, 0.8, 0.8], ['nat/Rock_6.glb', 2.6, {shadow: 1}, ['mesa'], 25, 1, 1.2],
     ['nat/CactusFlowers_2.glb', 1.6, {saturate: 1.3, far: 90}, ['mesa'], 30, 0.6], ['nat/CactusFlowers_4.glb', 1.3, {saturate: 1.3, far: 90}, ['mesa'], 25, 0.6],
-    ['nat/WoodLog_Moss.glb', 0.9, {shadow: 1}, ['fern'], 12, 1], ['nat/Grass_Short.glb', 0.6, {saturate: 1.3, far: 70}, ['fern', 'flower', 'river'], 300, 0.1],
+    ['nat/WoodLog_Moss.glb', 0.9, {shadow: 1}, ['fern'], 12, 1], ['nat/Grass_Short.glb', 0.6, {saturate: 1.3, far: 70, sway: 0.2}, ['fern', 'flower', 'river'], 300, 0.1],
   ];
   for (const [p, h, opt, biomes, n, margin, solidR] of sets) {
     const inst = await L(p, h, opt); const list = pick(biomes, n, margin);
@@ -147,29 +147,34 @@ function spawnPlayer(first) {
   const old = PL.D; if (old) scene.remove(old.holder);
   PL.len = LEN[curId()]; PL.D = makeDino(modelOf(curId()), PL.len); scene.add(PL.D.holder);
   if (first) { if (SV.px !== undefined && Math.abs(SV.px) < 125) { PL.x = SV.px; PL.z = SV.pz; } PL.dir = 0; }
-  PL.speed = 4.2 + PL.len * 0.55;
+  const g = DINO[modelOf(curId())].gait, RM = {baby: 1.55, raptor: 1.15, para: 1.0, steg: 1.25, tri: 1.15, trex: 1.0, apato: 1.45};
+  PL.walkSpd = g.Walk * PL.len * 1.35; PL.runSpd = g.Run * PL.len * RM[curId()]; PL.spd = 0; PL.holdT = 0; PL.look = 0; PL.lean = 0; PL.pitch = 0;
 }
 const keys = {};
 const keyName = e => (e.key || '').length === 1 ? e.key.toLowerCase() : e.key;
-addEventListener('keydown', e => { keys[keyName(e)] = true; if (e.key.startsWith('Arrow')) e.preventDefault(); if (keyName(e) !== 'Enter') PL.tx = null; });
+addEventListener('keydown', e => { const k = keyName(e); keys[k] = true; if (e.key.startsWith('Arrow') || k === ' ') e.preventDefault(); if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(k)) { PL.tx = null; marker.visible = false; } });
 addEventListener('keyup', e => { keys[keyName(e)] = false; });
-const clearInput = () => { for (const k in keys) keys[k] = false; ptr.down = false; };
+const clearInput = () => { for (const k in keys) keys[k] = false; ptr.down = false; ptr.drag = false; };
 addEventListener('blur', clearInput); document.addEventListener('visibilitychange', clearInput);
-// 鼠标/手指：点哪里就走到哪里；按住拖动也可以
-const ptr = {down: false, last: 0, x: 0, y: 0};
+// 鼠标/手指：轻点地面 = 走过去；按住拖动 = 转动视角
+const ptr = {down: false, drag: false, x: 0, y: 0, sx: 0, sy: 0};
+const CAM = {yaw: 0, pitch: 0.42, manualT: -10};
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 function groundPoint(cx, cy) {
   ndc.set(cx / innerWidth * 2 - 1, -(cy / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
-  // 沿射线步进找到地面
   const o = ray.ray.origin, d = ray.ray.direction; let t = 0;
   for (let i = 0; i < 300; i++) { t += 0.8 + t * 0.02; const x = o.x + d.x * t, y = o.y + d.y * t, z = o.z + d.z * t; if (y <= Math.max(H(x, z), WATER_Y)) return {x, z}; }
   return null;
 }
-renderer.domElement.addEventListener('pointerdown', e => { if (G.paused) return; ptr.down = true; ptr.x = e.clientX; ptr.y = e.clientY; setTarget(); });
-addEventListener('pointermove', e => { if (!ptr.down) return; ptr.x = e.clientX; ptr.y = e.clientY; });
-addEventListener('pointerup', () => { ptr.down = false; }); addEventListener('pointercancel', () => { ptr.down = false; });
+renderer.domElement.addEventListener('pointerdown', e => { if (G.paused) return; ptr.down = true; ptr.drag = false; ptr.x = ptr.sx = e.clientX; ptr.y = ptr.sy = e.clientY; renderer.domElement.setPointerCapture && renderer.domElement.setPointerCapture(e.pointerId); });
+addEventListener('pointermove', e => { if (!ptr.down) return;
+  const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y; ptr.x = e.clientX; ptr.y = e.clientY;
+  if (!ptr.drag && Math.hypot(ptr.x - ptr.sx, ptr.y - ptr.sy) > 8) ptr.drag = true;
+  if (ptr.drag) { CAM.yaw -= dx * 0.006; CAM.pitch = Math.max(0.12, Math.min(0.95, CAM.pitch + dy * 0.004)); CAM.manualT = G.t; } });
+const endPtr = e => { if (ptr.down && !ptr.drag && !G.paused) setTarget(); ptr.down = false; ptr.drag = false; };
+addEventListener('pointerup', endPtr); addEventListener('pointercancel', () => { ptr.down = false; ptr.drag = false; });
 function setTarget() { const p = groundPoint(ptr.x, ptr.y); if (p) { PL.tx = Math.max(BOUND.x0, Math.min(BOUND.x1, p.x)); PL.tz = Math.max(BOUND.z0, Math.min(BOUND.z1, p.z)); marker.position.set(PL.tx, Math.max(H(PL.tx, PL.tz), WATER_Y) + 0.08, PL.tz); marker.visible = true; marker.userData.t = 0; } }
-renderer.domElement.addEventListener('wheel', e => { G.zoom = Math.max(0.6, Math.min(1.6, (G.zoom || 1) * (e.deltaY > 0 ? 1.08 : 0.93))); e.preventDefault(); }, {passive: false});
+renderer.domElement.addEventListener('wheel', e => { G.zoom = Math.max(0.55, Math.min(1.7, (G.zoom || 1) * (e.deltaY > 0 ? 1.08 : 0.93))); e.preventDefault(); }, {passive: false});
 const marker = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.75, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({color: '#fff6c0', transparent: true, opacity: 0.8, depthWrite: false}));
 marker.visible = false; scene.add(marker);
 
@@ -179,33 +184,58 @@ function blocked(x, z, r) {
   for (const s of G.solids) { const rr = s.r + r * 0.6; if (Math.abs(s.x - x) < rr && Math.abs(s.z - z) < rr && Math.hypot(s.x - x, s.z - z) < rr) return s; }
   return false;
 }
+const wrapA = a => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
 function updatePlayer(dt) {
-  let ax = 0, az = 0;
-  if (keys.ArrowLeft || keys.a) ax -= 1; if (keys.ArrowRight || keys.d) ax += 1; if (keys.ArrowUp || keys.w) az -= 1; if (keys.ArrowDown || keys.s) az += 1;
-  if (ptr.down && G.t - ptr.last > 0.1) { ptr.last = G.t; setTarget(); }
-  if (!ax && !az && PL.tx !== null) { const dx = PL.tx - PL.x, dz = PL.tz - PL.z, l = Math.hypot(dx, dz); if (l > 0.6 + PL.len * 0.1) { ax = dx / l; az = dz / l; } else { PL.tx = null; marker.visible = false; } }
-  const l = Math.hypot(ax, az); if (l > 1) { ax /= l; az /= l; }
-  const sp = PL.speed * (PL.eatT > 0 ? 0.35 : 1);
-  PL.vx += (ax * sp - PL.vx) * Math.min(1, dt * 6); PL.vz += (az * sp - PL.vz) * Math.min(1, dt * 6);
+  // 键盘：←→ 转身，↑ 往前走（走一会儿会自己跑起来），↓ 往后退
+  let turn = 0, fwd = 0;
+  if (keys.ArrowLeft || keys.a) turn += 1; if (keys.ArrowRight || keys.d) turn -= 1;
+  if (keys.ArrowUp || keys.w) fwd = 1; else if (keys.ArrowDown || keys.s) fwd = -0.6;
+  if (keys.q) { CAM.yaw += dt * 1.8; CAM.manualT = G.t; } if (keys.e) { CAM.yaw -= dt * 1.8; CAM.manualT = G.t; }
+  let wantTurn = turn * 2.4;
+  // 点地面：转向目标再走过去，远的地方会跑过去
+  if (!fwd && !turn && PL.tx !== null) { const dx = PL.tx - PL.x, dz = PL.tz - PL.z, l = Math.hypot(dx, dz);
+    if (l > 0.5 + PL.len * 0.12) { const da = wrapA(Math.atan2(dx, dz) - PL.dir); wantTurn = Math.max(-3, Math.min(3, da * 4)); fwd = Math.abs(da) < 1.2 ? 1 : 0.15; if (l < PL.len * 1.5) fwd *= 0.5; PL.far = l > PL.len * 3; }
+    else { PL.tx = null; marker.visible = false; } }
+  const moving = fwd !== 0;
+  PL.holdT = moving && fwd > 0 ? PL.holdT + dt : 0;
+  const run = fwd > 0 && (keys.Shift || PL.holdT > 0.9 || (PL.tx !== null && PL.far && PL.holdT > 0.3));
+  let target = fwd > 0 ? (run ? PL.runSpd : PL.walkSpd) * fwd : fwd < 0 ? -PL.walkSpd : 0;
+  if (PL.eatT > 0) target *= 0.3;
+  const acc = target > PL.spd ? (run ? 1.6 : 4) : 5; PL.spd += (target - PL.spd) * Math.min(1, dt * acc);
+  // 跑得越快转得越慢一点，看起来更有重量
+  const turnK = 1 / (1 + Math.abs(PL.spd) / (PL.len * 1.2));
+  PL.turnV = (PL.turnV || 0) + (wantTurn * (0.45 + 0.55 * turnK) - (PL.turnV || 0)) * Math.min(1, dt * 7);
+  PL.dir = wrapA(PL.dir + PL.turnV * dt);
   if (PL.bump > 0) PL.bump -= dt;
+  PL.vx = Math.sin(PL.dir) * PL.spd + (PL.pushX || 0); PL.vz = Math.cos(PL.dir) * PL.spd + (PL.pushZ || 0);
+  PL.pushX = (PL.pushX || 0) * Math.max(0, 1 - dt * 4); PL.pushZ = (PL.pushZ || 0) * Math.max(0, 1 - dt * 4);
   // 移动 + 碰撞（沿障碍物滑开，不会卡住）
   const r = PL.len * 0.25;
-  let nx = PL.x + PL.vx * dt, nz = PL.z + PL.vz * dt;
+  let nx = PL.x + PL.vx * dt, nz = PL.z + PL.vz * dt; const ox = PL.x, oz = PL.z;
   if (!blocked(nx, nz, r)) { PL.x = nx; PL.z = nz; }
-  else if (!blocked(nx, PL.z, r)) { PL.x = nx; PL.vz *= 0.5; }
-  else if (!blocked(PL.x, nz, r)) { PL.z = nz; PL.vx *= 0.5; }
-  else { const s = blocked(nx, nz, r); if (s && s.x !== undefined) { const dx = PL.x - s.x, dz = PL.z - s.z, d = Math.hypot(dx, dz) || 1; const tx = -dz / d, tz = dx / d, dot = PL.vx * tx + PL.vz * tz; const mx = PL.x + tx * dot * dt, mz = PL.z + tz * dot * dt; if (!blocked(mx, mz, r)) { PL.x = mx; PL.z = mz; } } if (PL.tx !== null && G.t - (PL.stuckT || 0) > 1.5) { PL.stuckT = G.t; } }
-  // 万一卡在障碍物里，轻轻推出来
+  else if (!blocked(nx, PL.z, r)) { PL.x = nx; }
+  else if (!blocked(PL.x, nz, r)) { PL.z = nz; }
+  else { const s = blocked(nx, nz, r); if (s && s.x !== undefined) { const dx = PL.x - s.x, dz = PL.z - s.z, d = Math.hypot(dx, dz) || 1; const tx = -dz / d, tz = dx / d, dot = PL.vx * tx + PL.vz * tz; const mx = PL.x + tx * dot * dt, mz = PL.z + tz * dot * dt; if (!blocked(mx, mz, r)) { PL.x = mx; PL.z = mz; } } }
   const inS = blocked(PL.x, PL.z, r); if (inS && inS.x !== undefined) { const dx = PL.x - inS.x, dz = PL.z - inS.z, d = Math.hypot(dx, dz) || 1; PL.x += dx / d * dt * 4; PL.z += dz / d * dt * 4; }
-  const v = Math.hypot(PL.vx, PL.vz);
-  if (v > 0.4) { const want = Math.atan2(PL.vx, PL.vz); let dd = want - PL.dir; while (dd > Math.PI) dd -= Math.PI * 2; while (dd < -Math.PI) dd += Math.PI * 2; PL.dir += dd * Math.min(1, dt * 8); }
+  // 真实移动的速度（被挡住时脚步也跟着慢下来，不会原地踏步滑行）
+  const realV = ((PL.x - ox) * Math.sin(PL.dir) + (PL.z - oz) * Math.cos(PL.dir)) / Math.max(dt, 1e-4);
+  PL.animV = (PL.animV || 0) + (realV - (PL.animV || 0)) * Math.min(1, dt * 10);
   const D = PL.D, y = H(PL.x, PL.z);
-  D.holder.position.set(PL.x, y, PL.z); D.holder.rotation.y = PL.dir;
+  // 身体：顺着坡度抬头低头，转弯时往里侧倾
+  const fy = H(PL.x + Math.sin(PL.dir) * PL.len * 0.35, PL.z + Math.cos(PL.dir) * PL.len * 0.35), by = H(PL.x - Math.sin(PL.dir) * PL.len * 0.35, PL.z - Math.cos(PL.dir) * PL.len * 0.35);
+  PL.pitch += (Math.atan2(by - fy, PL.len * 0.7) * 0.8 - PL.pitch) * Math.min(1, dt * 6);
+  PL.lean += (-PL.turnV * Math.min(1, Math.abs(PL.spd) / (PL.len * 0.8)) * 0.09 - PL.lean) * Math.min(1, dt * 6);
+  D.holder.rotation.order = 'YXZ'; D.holder.position.set(PL.x, y, PL.z); D.holder.rotation.set(PL.pitch, PL.dir, PL.lean);
   PL.scaleAnim += (1 - PL.scaleAnim) * Math.min(1, dt * 3); D.holder.scale.setScalar(PL.scaleAnim);
-  if (D.onceUntil && performance.now() < D.onceUntil) {} else {
-    D.onceUntil = 0;
-    if (v > 0.6) { setAnim(D, 'Walk'); D.acts.Walk.timeScale = Math.max(0.6, Math.min(2.4, v / (PL.len * 0.42))); } else setAnim(D, 'Idle');
-  }
+  locomote(D, PL.animV, dt);
+  // 跑步扬起尘土
+  if (Math.abs(PL.animV) > PL.walkSpd * 1.6 && (PL.dustT = (PL.dustT || 0) - dt) < 0) { PL.dustT = 0.09; dust(PL.x - Math.sin(PL.dir) * PL.len * 0.15, y, PL.z - Math.cos(PL.dir) * PL.len * 0.15, PL.len); }
+  // 扭头看最近的食物
+  let la = 0, best = 1e9;
+  for (const it of G.items) { if (it.eaten) continue; const dx = it.x - PL.x, dz = it.z - PL.z, d = dx * dx + dz * dz; const R = PL.len * 2.2 + 5; if (d > R * R || d > best) continue;
+    const a = wrapA(Math.atan2(dx, dz) - PL.dir); if (Math.abs(a) > 1.9) continue; best = d; la = a; }
+  if (best === 1e9) la = Math.sin(G.t * 0.4) * 0.25 * (Math.abs(PL.spd) < 0.3 ? 1 : 0);
+  PL.look += (Math.max(-0.9, Math.min(0.9, la)) - PL.look) * Math.min(1, dt * 4);
   PL.eatT = Math.max(0, PL.eatT - dt);
   // 吃东西
   const mx = PL.x + Math.sin(PL.dir) * PL.len * 0.42, mz = PL.z + Math.cos(PL.dir) * PL.len * 0.42;
@@ -219,7 +249,7 @@ function updatePlayer(dt) {
   }
   // 碰到比自己大的恐龙：被轻轻推开
   for (const n of G.npcs) { const nl = NPC_LEN[n.id]; if (nl <= PL.len * 1.15) continue;
-    const d = Math.hypot(n.x - PL.x, n.z - PL.z); if (d < nl * 0.35 + PL.len * 0.25) { const dx = (PL.x - n.x) / (d || 1), dz = (PL.z - n.z) / (d || 1); PL.vx += dx * 6; PL.vz += dz * 6;
+    const d = Math.hypot(n.x - PL.x, n.z - PL.z); if (d < nl * 0.35 + PL.len * 0.25) { const dx = (PL.x - n.x) / (d || 1), dz = (PL.z - n.z) / (d || 1); PL.pushX = dx * 6; PL.pushZ = dz * 6;
       if (PL.bump <= 0) { PL.bump = 6; tip(`${spInfo(n.id).name}：“小家伙，小心哦！” 😊`); tone([330, 392], 0.04); } } }
   // 地区提示
   const b = biomeAt(PL.x, PL.z); if (b !== G.curBiome) { if (G.curBiome !== null) { const B = BIOMES[b]; tip(`${B.icon} 来到了<b>${B.name}</b><br><span class="small">${B.fact}</span>`, 4500); } G.curBiome = b; }
@@ -253,7 +283,7 @@ function eat(it, i) {
   const f = FOOD[it.type], sp = spInfo(curId()); let xp = f.xp, bonus = false;
   if ((f.kind === 'meat' && sp.diet === 'meat') || (f.kind === 'plant' && sp.diet === 'plant')) { xp = Math.round(xp * 1.5 + 0.4); bonus = true; }
   it.eaten = 0.0001; it.told = true;
-  playOnce(PL.D, 'Attack'); PL.eatT = 0.45;
+  bite(PL.D); PL.eatT = 0.45;
   burstAt(it.x, it.y + f.r, it.z, f.kind === 'meat' ? '#ffd76a' : '#b8f27a', 10);
   floatText(`+${xp}${bonus ? ' ⭐' : ''}`, it.x, it.y + f.r + 1, it.z);
   tone(bonus ? [660, 880] : [587], 0.045, 0.07);
@@ -288,24 +318,72 @@ function floatText(t, x, y, z) {
 function updateParts(dt) {
   const v = new THREE.Vector3();
   for (let i = G.parts.length - 1; i >= 0; i--) { const p = G.parts[i]; p.life -= dt;
-    if (p.m) { p.vy -= 6 * dt; p.m.position.x += p.vx * dt; p.m.position.y += p.vy * dt; p.m.position.z += p.vz * dt; p.m.material.opacity = Math.min(1, p.life * 2); }
+    if (p.sp) { p.sp.position.y += p.vy * dt; p.k += dt * 1.2; p.sp.scale.setScalar(p.k); p.sp.material.opacity = Math.max(0, p.life * 0.65); }
+    else if (p.m) { p.vy -= 6 * dt; p.m.position.x += p.vx * dt; p.m.position.y += p.vy * dt; p.m.position.z += p.vz * dt; p.m.material.opacity = Math.min(1, p.life * 2); }
     else { p.y += dt * 1.2; v.set(p.x, p.y, p.z).project(camera); p.el.style.transform = `translate(${(v.x * 0.5 + 0.5) * innerWidth}px,${(-v.y * 0.5 + 0.5) * innerHeight}px) translate(-50%,-50%)`; p.el.style.opacity = Math.min(1, p.life * 1.5); }
-    if (p.life <= 0) { if (p.m) { scene.remove(p.m); p.m.material.dispose(); } else p.el.remove(); G.parts.splice(i, 1); } }
+    if (p.life <= 0) { if (p.sp) { scene.remove(p.sp); p.sp.material.dispose(); } else if (p.m) { scene.remove(p.m); p.m.material.dispose(); } else p.el.remove(); G.parts.splice(i, 1); } }
+}
+
+/* ---------- 生气：尘土、蝴蝶、找食物的箭头 ---------- */
+let puffTex = null;
+function dust(x, y, z, len) {
+  if (!puffTex) { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 2, 32, 32, 30); gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); puffTex = new THREE.CanvasTexture(c); }
+  const b = biomeAt(x, z), col = b === 'mesa' ? '#e7a77a' : b === 'palm' ? '#f2e2b8' : '#d9d2b0';
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: puffTex, color: col, transparent: true, opacity: 0.6, depthWrite: false}));
+  const k = 0.35 + len * 0.12; sp.position.set(x + (Math.random() - 0.5) * len * 0.2, y + k * 0.4, z + (Math.random() - 0.5) * len * 0.2); sp.scale.setScalar(k); scene.add(sp);
+  G.parts.push({sp, life: 0.9, k, vy: 0.4});
+}
+const BUGS = [];
+function makeButterflies() {
+  const cols = ['#ffb13b', '#62c3ff', '#ff6fb1', '#fff27a', '#b98cff'];
+  const wg = new THREE.CircleGeometry(0.22, 8, 0, Math.PI).rotateX(-Math.PI / 2).translate(0, 0, 0);
+  for (let i = 0; i < 16; i++) { const m = new THREE.MeshStandardMaterial({color: cols[i % cols.length], side: THREE.DoubleSide, roughness: 0.6});
+    const b = new THREE.Group(), l = new THREE.Mesh(wg, m), r = new THREE.Mesh(wg, m); l.rotation.y = Math.PI / 2; r.rotation.y = -Math.PI / 2; const wl = new THREE.Group(), wr = new THREE.Group(); wl.add(l); wr.add(r); b.add(wl, wr);
+    b.add(new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.25, 4).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({color: '#333'})));
+    scene.add(b); BUGS.push({b, wl, wr, cx: 0, cz: 0, ph: Math.random() * 6, sp: 0.6 + Math.random() * 0.5, init: false}); }
+}
+function updateLife(dt) {
+  WIND.value = G.t; NEAR.value = camPos.distanceTo(camLook) * 0.72;
+  for (const u of BUGS) {
+    if (!u.init || Math.hypot(u.cx - PL.x, u.cz - PL.z) > 45) { const a = Math.random() * 6.28, d = 8 + Math.random() * 25; u.cx = PL.x + Math.cos(a) * d; u.cz = PL.z + Math.sin(a) * d; u.init = true; }
+    const t = G.t * u.sp + u.ph, x = u.cx + Math.sin(t * 0.7) * 4 + Math.sin(t * 1.9) * 1.2, z = u.cz + Math.cos(t * 0.5) * 4, y = Math.max(H(x, z), WATER_Y) + 1.1 + Math.sin(t * 2.3) * 0.4;
+    const ox = u.b.position.x, oz = u.b.position.z; u.b.position.set(x, y, z); u.b.rotation.y = Math.atan2(x - ox, z - oz);
+    const f = Math.sin(G.t * 18 + u.ph) * 0.9; u.wl.rotation.z = f; u.wr.rotation.z = -f;
+    u.b.visible = biomeAt(x, z) !== 'mesa';
+  }
+  // 屏幕边上的小箭头：指向最近的、能吃的食物
+  let best = null, bd = 70 * 70;
+  for (const it of G.items) { if (it.eaten || FOOD[it.type].tier > SV.stage + 1) continue; const d = (it.x - PL.x) ** 2 + (it.z - PL.z) ** 2; if (d < bd) { bd = d; best = it; } }
+  const el = $('foodArrow');
+  if (best && !G.paused) { const v = new THREE.Vector3(best.x, best.y + 0.5, best.z).project(camera); const behind = v.z > 1;
+    let sx = v.x, sy = v.y; if (behind) { sx = -sx; sy = -sy; }
+    const on = !behind && Math.abs(sx) < 0.9 && Math.abs(sy) < 0.85;
+    if (on) el.style.display = 'none';
+    else { const ang = Math.atan2(sy, sx), m = Math.max(Math.abs(Math.cos(ang)) / 0.88, Math.abs(Math.sin(ang)) / 0.8); const ex = Math.cos(ang) / m, ey = Math.sin(ang) / m;
+      el.style.display = 'flex'; el.style.left = ((ex * 0.5 + 0.5) * innerWidth) + 'px'; el.style.top = ((-ey * 0.5 + 0.5) * innerHeight) + 'px';
+      el.firstChild.style.transform = `rotate(${-ang}rad)`; el.lastChild.textContent = FOOD[best.type].icon; } }
+  else el.style.display = 'none';
 }
 
 /* ---------- 其他恐龙 ---------- */
 function updateNPCs(dt) {
   for (const n of G.npcs) {
-    const far = Math.hypot(n.x - PL.x, n.z - PL.z) > 140;
+    const dPl = Math.hypot(n.x - PL.x, n.z - PL.z), far = dPl > 140, g = DINO[n.id].gait, walkV = g.Walk * NPC_LEN[n.id] * 1.25;
+    let v = 0;
     if (n.st === 'walk') { const dx = n.tx - n.x, dz = n.tz - n.z, l = Math.hypot(dx, dz);
-      if (l < 1) { n.st = 'idle'; n.timer = 3 + Math.random() * 6; setAnim(n.D, 'Idle', 0.5); }
-      else { const want = Math.atan2(dx, dz); let dd = want - n.dir; while (dd > Math.PI) dd -= Math.PI * 2; while (dd < -Math.PI) dd += Math.PI * 2; n.dir += dd * Math.min(1, dt * 2);
-        const nx = n.x + Math.sin(n.dir) * n.speed * dt, nz = n.z + Math.cos(n.dir) * n.speed * dt;
-        if (H(nx, nz) < -0.6 || G.solids.some(s => s.r > 3 && Math.hypot(s.x - nx, s.z - nz) < s.r + NPC_LEN[n.id] * 0.3)) { n.st = 'idle'; n.timer = 1; setAnim(n.D, 'Idle', 0.5); }
+      if (l < 1) { n.st = 'idle'; n.timer = 3 + Math.random() * 6; }
+      else { const da = wrapA(Math.atan2(dx, dz) - n.dir); n.dir = wrapA(n.dir + Math.max(-1, Math.min(1, da * 2)) * dt * 0.9);
+        v = walkV * (Math.abs(da) < 1 ? 1 : 0.3); const nx = n.x + Math.sin(n.dir) * v * dt, nz = n.z + Math.cos(n.dir) * v * dt;
+        if (H(nx, nz) < -0.6 || G.solids.some(s => s.r > 3 && Math.hypot(s.x - nx, s.z - nz) < s.r + NPC_LEN[n.id] * 0.3)) { n.st = 'idle'; n.timer = 1; v = 0; }
         else { n.x = nx; n.z = nz; } } }
-    else { n.timer -= dt; if (n.timer <= 0) { const p = randomSpotNear(n); n.tx = p.x; n.tz = p.z; n.st = 'walk'; setAnim(n.D, 'Walk', 0.5); n.D.acts.Walk.timeScale = Math.max(0.5, n.speed / (NPC_LEN[n.id] * 0.42)); } }
+    else { n.timer -= dt; if (n.timer <= 0) { const p = randomSpotNear(n); n.tx = p.x; n.tz = p.z; n.st = 'walk'; } }
+    n.v = (n.v || 0) + (v - (n.v || 0)) * Math.min(1, dt * 4);
     n.D.holder.position.set(n.x, H(n.x, n.z), n.z); n.D.holder.rotation.y = n.dir;
-    n.D.holder.visible = !far; if (!far) n.D.mixer.update(dt);
+    n.D.holder.visible = !far;
+    if (!far) { locomote(n.D, n.v, dt); n.D.mixer.update(dt);
+      // 玩家走近时，扭头看看你
+      let la = 0; if (dPl < NPC_LEN[n.id] * 2.5 + 6) la = wrapA(Math.atan2(PL.x - n.x, PL.z - n.z) - n.dir); if (Math.abs(la) > 1.8) la = 0;
+      n.look = (n.look || 0) + (Math.max(-0.8, Math.min(0.8, la)) - (n.look || 0)) * Math.min(1, dt * 3); if (Math.abs(n.look) > 0.01) headTurn(n.D, n.look); }
   }
 }
 function randomSpotNear(n) { for (let i = 0; i < 30; i++) { const a = Math.random() * 6.28, d = 8 + Math.random() * 25, x = n.x + Math.cos(a) * d, z = n.z + Math.sin(a) * d;
@@ -364,16 +442,17 @@ function buildMinimap() {
 function drawMinimap() {
   const c = $('map'), x = c.getContext('2d'), S = c.width, W = BOUND.x1 - BOUND.x0, Hh = BOUND.z1 - BOUND.z0;
   x.clearRect(0, 0, S, S); x.drawImage(mapBg, 0, 0, S, S);
+  x.fillStyle = '#ffd23f'; for (const it of G.items) { if (it.eaten || FOOD[it.type].tier > SV.stage + 1) continue; x.fillRect((it.x - BOUND.x0) / W * S - 1.5, (it.z - BOUND.z0) / Hh * S - 1.5, 3, 3); }
   x.fillStyle = 'rgba(255,255,255,.85)'; for (const n of G.npcs) { x.beginPath(); x.arc((n.x - BOUND.x0) / W * S, (n.z - BOUND.z0) / Hh * S, 2.2, 0, 7); x.fill(); }
   const px = (PL.x - BOUND.x0) / W * S, pz = (PL.z - BOUND.z0) / Hh * S;
-  x.save(); x.translate(px, pz); x.rotate(-PL.dir + Math.PI); x.fillStyle = '#ff5a3c'; x.strokeStyle = '#fff'; x.lineWidth = 2; x.beginPath(); x.moveTo(0, -7); x.lineTo(5, 5); x.lineTo(-5, 5); x.closePath(); x.stroke(); x.fill(); x.restore();
+  x.save(); x.translate(px, pz); x.fillStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, 22, -Math.PI / 2 - CAM.yaw - 0.5, -Math.PI / 2 - CAM.yaw + 0.5); x.closePath(); x.fill(); x.rotate(-PL.dir + Math.PI); x.fillStyle = '#ff5a3c'; x.strokeStyle = '#fff'; x.lineWidth = 2; x.beginPath(); x.moveTo(0, -7); x.lineTo(5, 5); x.lineTo(-5, 5); x.closePath(); x.stroke(); x.fill(); x.restore();
 }
 
 /* ---------- 菜单 / 开场 ---------- */
 function intro() {
   G.paused = true;
   $('box').innerHTML = `<h1>🥚 恐龙长大记</h1><p>你是一只刚出生的小恐龙。在大陆上走来走去，<b>吃东西长大</b>，吃饱了就能<b>进化</b>成更大的恐龙！</p>
-   <div class="legend"><span>🖱️ 点地面 = 走过去</span><span>⌨️ 方向键 / WASD 也能走</span><span>🔍 滚轮 = 拉近拉远</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span></div>
+   <div class="legend"><span>🖱️ 点地面 = 走过去</span><span>🖱️ 按住拖动 = 转动视角</span><span>⌨️ ↑ 往前走（走久了会跑）← → 转身</span><span>⌨️ Q / E 转视角</span><span>🔍 滚轮 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span></div>
    <p>大陆上有 5 个地方：🌿蕨类森林、🌼开花草原、💧大河湿地、🌴苏铁海岸、🏜️红岩台地。</p>
    <p style="color:#6c7563">这里没有时间限制，也不会输。碰到大恐龙只会被轻轻推开。</p>
    <button class="btn" id="startBtn">${SV.seen ? '继续冒险' : '出发！'}</button>`;
@@ -404,15 +483,22 @@ function frame(ts) {
   if (G.paused && G.drawnPaused) return; // 弹窗时不重画，省电
   G.t += dt;
   if (!G.paused) { updatePlayer(dt); updateNPCs(dt); updateItems(dt); }
-  PL.D.mixer.update(G.paused ? 0 : dt);
+  PL.D.mixer.update(G.paused ? 0 : dt); if (Math.abs(PL.look) > 0.01) headTurn(PL.D, PL.look);
+  updateLife(dt);
   updateParts(dt);
   if (G.water) G.water.uT.value = G.t;
   if (marker.visible) { marker.userData.t += dt; marker.scale.setScalar(1 + 0.15 * Math.sin(marker.userData.t * 5)); }
-  // 相机：跟在恐龙后上方，固定朝北，不会转晕
+  // 相机：在恐龙身后，走路时慢慢转到身后；拖动鼠标或 Q/E 可以自己转
+  const behind = PL.dir + Math.PI;
+  if (G.t - CAM.manualT > 2.5 && (Math.abs(PL.spd) > 0.5 || PL.tx !== null)) CAM.yaw += wrapA(behind - CAM.yaw) * Math.min(1, dt * (PL.spd < 0 ? 0.3 : 1.4));
+  if (!G.camInit) CAM.yaw = behind;
   const dist = (5 + PL.len * 1.35) * (G.zoom || 1), y0 = H(PL.x, PL.z);
-  camLook.set(PL.x, y0 + PL.len * 0.3 + dist * 0.12, PL.z - dist * 0.25);
-  const want = new THREE.Vector3(PL.x, y0 + dist * 0.42, PL.z + dist * 0.95);
-  if (!G.camInit) { camPos.copy(want); G.camInit = true; } else camPos.lerp(want, Math.min(1, dt * 3));
+  const cp = Math.cos(CAM.pitch), spch = Math.sin(CAM.pitch);
+  const fx = -Math.sin(CAM.yaw), fz = -Math.cos(CAM.yaw); // 镜头朝向
+  camLook.set(PL.x + fx * dist * 0.22, y0 + PL.len * 0.32 + dist * 0.1, PL.z + fz * dist * 0.22);
+  const want = new THREE.Vector3(PL.x + Math.sin(CAM.yaw) * dist * cp, y0 + PL.len * 0.3 + dist * spch, PL.z + Math.cos(CAM.yaw) * dist * cp);
+  want.y = Math.max(want.y, H(want.x, want.z) + 1.2, WATER_Y + 1.2);
+  if (!G.camInit) { camPos.copy(want); G.camInit = true; } else camPos.lerp(want, Math.min(1, dt * 5));
   camera.position.copy(camPos); camera.lookAt(camLook);
   // 阴影跟着玩家
   const sr = 18 + PL.len * 2.5; const sc = sun.shadow.camera; if (sc.right !== sr) { sc.left = -sr; sc.right = sr; sc.top = sr; sc.bottom = -sr; sc.near = 1; sc.far = 220; sc.updateProjectionMatrix(); }
@@ -425,7 +511,7 @@ function frame(ts) {
   if (dt > 0.034) { slowT += dt; fastT = 0; } else { fastT += dt; slowT = Math.max(0, slowT - dt * 0.5); }
   if (slowT > 2) { slowT = 0; if (PR > 1) { PR = 1; renderer.setPixelRatio(PR); } else if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => m.needsUpdate = true); }); } else if (PR > 0.7) { PR = 0.7; renderer.setPixelRatio(PR); } }
 }
-window.__G = {G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene};
+window.__G = {G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene, CAM, keys};
 const unpause = () => { G.drawnPaused = false; };
 new MutationObserver(unpause).observe($('overlay'), {attributes: true});
 init().catch(e => { $('loadTxt').textContent = '加载出错了：' + e.message; console.error(e); });

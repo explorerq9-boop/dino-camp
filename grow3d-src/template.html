@@ -22,6 +22,10 @@ button{font-family:inherit;border:0;cursor:pointer}
 #map{display:block;width:150px;height:150px;border-radius:12px}
 #tip{position:fixed;left:50%;top:96px;transform:translateX(-50%);font-size:21px;font-weight:700;text-align:center;opacity:0;transition:opacity .5s;pointer-events:none;z-index:4;max-width:min(680px,90vw);line-height:1.5}
 #tip.show{opacity:1} #tip .small{font-weight:400;font-size:16px}
+#foodArrow{position:fixed;display:none;align-items:center;justify-content:center;width:64px;height:64px;margin:-32px 0 0 -32px;z-index:2;pointer-events:none}
+#foodArrow i{position:absolute;inset:-14px}
+#foodArrow i::after{content:'';position:absolute;right:0;top:50%;margin-top:-12px;border:12px solid transparent;border-left:18px solid #fff6c8;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+#foodArrow b{width:40px;height:40px;border-radius:50%;background:rgba(255,252,242,.95);box-shadow:0 3px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:24px}
 #fx{position:fixed;inset:0;pointer-events:none;z-index:2}
 .ftxt{position:absolute;left:0;top:0;font-size:26px;font-weight:800;color:#fff6d0;text-shadow:0 2px 0 #6b5a2c,0 0 8px rgba(80,60,20,.6)}
 #overlay{position:fixed;inset:0;background:radial-gradient(ellipse at center,rgba(30,40,25,.3),rgba(20,25,15,.62));display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
@@ -44,6 +48,7 @@ img.big{width:100%;max-width:460px;border-radius:20px;background:linear-gradient
 </style></head><body>
 <div id="game"></div>
 <div id="fx"></div>
+<div id="foodArrow"><i></i><b></b></div>
 <div id="hud">
   <div class="panel" id="who"><img id="whoImg" alt=""><div><b id="whoName">恐龙宝宝</b><small id="whoSub">第 1 阶段</small><div class="xp"><i id="xpBar"></i></div><div class="stages" id="stages"></div></div></div>
   <div class="btns"><button class="ib" id="soundBtn" title="声音">🔇</button><button class="ib" id="menuBtn" title="菜单">☰</button></div>

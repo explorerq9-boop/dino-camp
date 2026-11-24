@@ -151,6 +151,30 @@ export function buildSky(scene) {
 }
 
 export const CHUNKS = [];
+export const WIND = {value: 0};
+// 风：让草、花、树叶轻轻摆动
+export const NEAR = {value: 2.5};
+export function addSway(mat, amp) {
+  mat.onBeforeCompile = sh => { sh.uniforms.uWind = WIND; sh.uniforms.uNear = NEAR;
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vSWP; uniform float uNear;')
+      .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n if (distance(vSWP, cameraPosition) < uNear) discard;');
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uWind; varying vec3 vSWP;')
+      .replace('#include <project_vertex>', `#include <project_vertex>
+      { vec4 wp = vec4(transformed, 1.0);
+      #ifdef USE_INSTANCING
+        wp = instanceMatrix * wp;
+      #endif
+        vSWP = (modelMatrix * wp).xyz; }`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+      { vec3 ip = vec3(0.0);
+      #ifdef USE_INSTANCING
+        ip = instanceMatrix[3].xyz;
+      #endif
+        float ph = uWind * 1.7 + ip.x * 0.31 + ip.z * 0.27; float hgt = max(position.y, 0.0);
+        transformed.x += (sin(ph) * 0.7 + sin(ph * 2.3) * 0.3) * hgt * ${amp.toFixed(4)};
+        transformed.z += cos(ph * 0.8) * 0.5 * hgt * ${amp.toFixed(4)}; }`); };
+  mat.customProgramCacheKey = () => 'sway' + amp;
+}
 export function cullChunks(px, pz) { for (const m of CHUNKS) { const dx = m.userData.cx - px, dz = m.userData.cz - pz; m.visible = dx * dx + dz * dz < m.userData.far * m.userData.far; } }
 // 植物：把模型转成 InstancedMesh，一次画很多棵，电脑上很省力
 export function makeInstancer(scene, gltfScene, targetH, opt = {}) {
@@ -164,7 +188,7 @@ export function makeInstancer(scene, gltfScene, targetH, opt = {}) {
       const n = mm.clone(); if (n.map) { n.alphaTest = 0.45; n.transparent = false; n.side = THREE.DoubleSide; }
       if (opt.bright && n.color) n.color.multiplyScalar(opt.bright);
       if (opt.saturate && n.color) { const hsl = {}; n.color.getHSL(hsl); n.color.setHSL(hsl.h, Math.min(1, hsl.s * opt.saturate), Math.min(0.8, hsl.l * (opt.bright || 1))); }
-      n.roughness = 0.85; n.metalness = 0; return n; });
+      n.roughness = 0.85; n.metalness = 0; addSway(n, opt.sway || 0); return n; });
     parts.push({g, mats});
   });
   return {parts, k, size, add(list) {
@@ -196,7 +220,7 @@ export function buildFlowerField(scene) {
     const f = fbm(x * 0.05 + 7, z * 0.05 - 3); if (f < 0.5 && RR() > 0.08) continue; const h = H(x, z); if (h < 0) continue;
     list.push({x, y: h, z, c: FLOWERCOLS[Math.floor(hash(Math.floor(x * 0.15), Math.floor(z * 0.15)) * 6 + RR() * 1.6) % 6], s: 0.6 + RR() * 0.7});
   }
-  const sm = new THREE.MeshStandardMaterial({color: '#4f9a3a', roughness: 0.9}), hm = new THREE.MeshStandardMaterial({color: '#ffffff', roughness: 0.5, flatShading: true});
+  const sm = new THREE.MeshStandardMaterial({color: '#4f9a3a', roughness: 0.9}), hm = new THREE.MeshStandardMaterial({color: '#ffffff', roughness: 0.5, flatShading: true}); addSway(sm, 0.18); addSway(hm, 0.18);
   const cells = {}; for (const p of list) { const k = Math.floor(p.x / 30) + ',' + Math.floor(p.z / 30); (cells[k] = cells[k] || []).push(p); }
   const M = new THREE.Matrix4();
   for (const k in cells) { const L = cells[k]; const ims = new THREE.InstancedMesh(stem, sm, L.length), imh = new THREE.InstancedMesh(head, hm, L.length);

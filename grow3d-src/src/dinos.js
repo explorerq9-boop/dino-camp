@@ -89,3 +89,58 @@ export function playOnce(D, name, then = 'Idle') {
   const o = D.acts[D.cur]; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = false; a.play(); if (o && o !== a) a.crossFadeFrom(o, 0.15, false);
   D.cur = name; D.onceUntil = performance.now() + a.getClip().duration * 1000 / (a.timeScale || 1) - 120; D.after = then;
 }
+
+// 测量每种恐龙的步幅：动画在原地播放，算出脚踩地时向后移动的速度，
+// 这样就能让动画速度和真实移动速度一致，脚不会“打滑”
+export function measureGait(id) {
+  const D = makeDino(id, 1), out = {};
+  const feet = []; D.obj.traverse(o => { if (o.isBone && /^BackFoot[RL]$/.test(o.name)) feet.push(o); });
+  for (const name of ['Walk', 'Run']) {
+    const a = D.acts[name]; if (!a) continue;
+    D.mixer.stopAllAction(); a.reset().play(); const dur = a.getClip().duration, N = 90, samples = [];
+    for (let i = 0; i <= N; i++) { D.mixer.setTime(dur * i / N); D.holder.updateMatrixWorld(true);
+      samples.push(feet.map(f => { const p = f.getWorldPosition(new THREE.Vector3()); return [p.y, p.z]; })); }
+    const vs = [];
+    feet.forEach((_, fi) => { const ys = samples.map(s => s[fi][0]), minY = Math.min(...ys), maxY = Math.max(...ys);
+      for (let i = 0; i < N; i++) { const y = samples[i][fi][0]; if (y < minY + (maxY - minY) * 0.15) { const dz = samples[i + 1][fi][1] - samples[i][fi][1]; vs.push(-dz / (dur / N)); } } });
+    vs.sort((a, b) => a - b); out[name] = Math.max(0.05, vs[Math.floor(vs.length / 2)] || 0.3);
+  }
+  D.mixer.stopAllAction();
+  DINO[id].gait = out; return out;
+}
+
+// 走/跑/站 三种动画按速度混合，每种动画的播放速度跟真实速度对齐（不打滑）
+export function locomote(D, v, dt) {
+  const g = DINO[D.id].gait, len = D.len, A = D.acts;
+  if (!D.loco) { D.mixer.stopAllAction(); for (const n of ['Idle', 'Walk', 'Run']) { A[n].reset().play(); A[n].setEffectiveWeight(0); A[n].setLoop(THREE.LoopRepeat, Infinity); } D.loco = {w: {Idle: 1, Walk: 0, Run: 0}, att: 0}; D.cur = 'loco'; }
+  const av = Math.abs(v), walkV = g.Walk * len, runV = g.Run * len;
+  const tw = {Idle: 0, Walk: 0, Run: 0};
+  if (av < walkV * 0.25) tw.Idle = 1;
+  else { const r = Math.max(0, Math.min(1, (av - walkV * 1.4) / (runV * 0.7 - walkV * 1.4))); tw.Walk = 1 - r; tw.Run = r; const idle = Math.max(0, 1 - av / (walkV * 0.6)); tw.Idle = idle; tw.Walk *= 1 - idle; tw.Run *= 1 - idle; }
+  const k = Math.min(1, dt * 8), L = D.loco;
+  const att = D.acts.Attack;
+  if (L.att > 0) L.att = Math.max(0, L.att - dt);
+  const aw = L.att > 0 ? Math.min(1, L.att * 6, (L.attDur - L.att) * 8 + 0.2) : 0;
+  for (const n of ['Idle', 'Walk', 'Run']) { L.w[n] += (tw[n] - L.w[n]) * k; A[n].setEffectiveWeight(L.w[n] * (1 - aw)); }
+  const sgn = v < 0 ? -1 : 1;
+  A.Walk.timeScale = sgn * Math.max(0.35, Math.min(2.2, av / walkV));
+  A.Run.timeScale = sgn * Math.max(0.5, Math.min(1.8, av / runV));
+  if (att) att.setEffectiveWeight(aw);
+  return L.w;
+}
+export function bite(D) {
+  const a = D.acts.Attack; if (!a || !D.loco) return; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; a.play();
+  D.loco.attDur = Math.min(1.0, a.getClip().duration); D.loco.att = D.loco.attDur; a.timeScale = a.getClip().duration / D.loco.attDur;
+}
+
+// 扭头：把脖子和头绕竖直方向转一个角度（看食物、看玩家）
+const _q = new THREE.Quaternion(), _pq = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0);
+export function headTurn(D, angle, pitch = 0) {
+  if (!D.neck) { D.obj.traverse(o => { if (o.isBone && o.name === 'Neck') D.neck = o; if (o.isBone && o.name === 'Head') D.head = o; }); if (!D.neck) return; }
+  D.holder.updateMatrixWorld(true);
+  for (const [b, share] of [[D.neck, 0.45], [D.head, 0.55]]) {
+    if (!b) continue; b.parent.getWorldQuaternion(_pq);
+    _q.setFromAxisAngle(_up, angle * share); const loc = _pq.clone().invert().multiply(_q).multiply(_pq); b.quaternion.premultiply(loc);
+    b.updateMatrixWorld(true);
+  }
+}
