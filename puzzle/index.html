@@ -154,7 +154,14 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
 <script src="pictures.js"></script>
 <script>
 const IMGS={},THUMBS={};
-const PICS=(window.PUZZLE_PICS||[]).map(p=>{IMGS[p.id]='images/'+p.id+'.webp';THUMBS[p.id]='thumbs/'+p.id+'.webp';return p;});
+const PICS=(window.PUZZLE_PICS||[]).map(p=>{if(p.file){p.pending=true;}else{IMGS[p.id]='images/'+p.id+'.webp';THUMBS[p.id]='thumbs/'+p.id+'.webp';}return p;});
+const visible=p=>!p.pending&&p.ok!==false;
+// images listed by file name (e.g. AI pictures) appear automatically once the file exists in images/
+function probe(p){const base='images/'+p.file.replace(/\.[a-z]+$/i,'');const c=[...new Set(['images/'+p.file,base+'.png',base+'.jpg',base+'.jpeg',base+'.webp'])];
+  return new Promise(res=>{let i=0;const next=()=>{if(i>=c.length){p.pending=false;p.ok=false;return res();}const im=new Image(),u=c[i++];
+    im.onload=()=>{IMGS[p.id]=THUMBS[p.id]=u;p.ar=Math.max(1.2,Math.min(2.2,im.naturalWidth/im.naturalHeight));p.pending=false;p.ok=true;res();};im.onerror=next;im.src=u;};next();});}
+function probeAll(){const ps=PICS.filter(p=>p.pending);let k=0;const lim=6;return new Promise(done=>{if(!ps.length)return done();let active=0,fin=0;
+  const go=()=>{while(active<lim&&k<ps.length){active++;probe(ps[k++]).then(()=>{active--;fin++;if(fin===ps.length)done();else go();});}};go();});}
 const SETS=(window.PUZZLE_SETS||[]).concat([['mine','📷 我的图片']]);
 const LEVELS=[4,9,16,24,36,48];
 const LVHINT=['刚开始','简单','中等','有点难','难','很难'];
@@ -218,14 +225,14 @@ function buildHome(){
   LEVELS.forEach((n,i)=>{const b=document.createElement('button');b.className='sz'+(S.lv===i?' sel':'');
     b.innerHTML=`<div>${n} 块<small>${LVHINT[i]}</small></div>`;b.onclick=()=>{S.lv=i;save();buildHome();sfx.pick();};sz.appendChild(b);});
   $('sizeHint').textContent=S.lv<=1?'4、9 块会在拼图板上画出每块的位置':'16 块以上：拼图板是空的，拼块打乱放在旁边，可以先把几块拼在一起';
-  if(!S.cat||!SETS.some(t=>t[0]===S.cat))S.cat=SETS[0][0];
+  if(!S.cat||!SETS.some(t=>t[0]===S.cat&&(t[0]==='mine'||PICS.some(p=>p.set===t[0]&&visible(p)))))S.cat=(SETS.find(t=>PICS.some(p=>p.set===t[0]&&visible(p)))||SETS[0])[0];
   const tb=$('tabs');tb.innerHTML='';
   for(const [set,title] of SETS){const b=document.createElement('button');b.className='tab'+(S.cat===set?' sel':'');
-    b.innerHTML=`${title}<small>${PICS.filter(p=>p.set===set).length||''}</small>`;b.onclick=()=>{S.cat=set;save();buildHome();$('home').querySelector('.wrap').scrollTop=0;};tb.appendChild(b);}
+    const nv=PICS.filter(p=>p.set===set&&visible(p)).length;if(!nv&&set!=='mine'&&set!==S.cat)continue;b.innerHTML=`${title}<small>${nv||''}</small>`;b.onclick=()=>{S.cat=set;save();buildHome();$('home').querySelector('.wrap').scrollTop=0;};tb.appendChild(b);}
   const G=$('galleries');G.innerHTML='';
   {const set=S.cat;
     const g=document.createElement('div');g.className='gallery';G.appendChild(g);
-    PICS.filter(p=>p.set===set).forEach(p=>{
+    PICS.filter(p=>p.set===set&&visible(p)).forEach(p=>{
       const i=PICS.indexOf(p);const d=document.createElement('div');d.className='card';
       const got=LEVELS.filter((n,k)=>S.stickers[p.id+'_'+k]).length;
       const sv=S.saves[p.id+'_'+S.lv];
@@ -255,7 +262,7 @@ function edge(ctx,x1,y1,x2,y2,sign,s){
  a group whose origin is (0,0) is placed on the board. */
 let G=null,hitCtx=document.createElement('canvas').getContext('2d');
 async function startGame(pi,fresh){
-  const p=PICS[pi];const lv=S.lv;const [c,r]=gridFor(LEVELS[lv],p.ar);
+  const p=PICS[pi];if(!visible(p))return;const lv=S.lv;const [c,r]=gridFor(LEVELS[lv],p.ar);
   let im;try{im=await loadImg(p.id);}catch(e){alert('这张图片没找到。请确认 images 文件夹和网页放在一起。');return;}
   $('pieces').innerHTML='';$('fx').innerHTML='';$('doneBox').classList.remove('show');
   ['home','book'].forEach(s=>$(s).classList.remove('show'));$('play').classList.add('show');
@@ -423,14 +430,14 @@ function sparkle(x,y,n){const em=['⭐','✨','🌟','💛'];for(let i=0;i<n;i++
 /* ---------- sticker book ---------- */
 function buildBook(){
   const w=$('bookWrap');w.innerHTML='';let got=0;
-  for(const [set,title] of SETS){const ps=PICS.filter(p=>p.set===set);if(!ps.length)continue;
+  for(const [set,title] of SETS){const ps=PICS.filter(p=>p.set===set&&visible(p));if(!ps.length)continue;
     const h=document.createElement('div');h.className='sec';h.textContent=title;w.appendChild(h);
     const r=document.createElement('div');r.className='bgrid';w.appendChild(r);
     ps.forEach(p=>{const ks=LEVELS.map((n,k)=>k).filter(k=>S.stickers[p.id+'_'+k]);const d=document.createElement('div');d.className='bcell';
       if(ks.length){got++;const best=Math.max(...ks);d.innerHTML=`<div class="sticker" style="background-image:url('${THUMBS[p.id]}')"><b>${LEVELS[best]}</b></div><span>${p.name}</span>`;}
       else d.innerHTML=`<div class="slot">?</div><span>${p.name}</span>`;
       r.appendChild(d);});}
-  $('bookCount').textContent=`已收集 ${got} / ${PICS.length}`;
+  $('bookCount').textContent=`已收集 ${got} / ${PICS.filter(visible).length}`;
 }
 /* ---------- wiring ---------- */
 function goHome(){if(G)G=null;$('doneBox').classList.remove('show');$('play').classList.remove('show');$('book').classList.remove('show');$('home').classList.add('show');buildHome();}
@@ -438,7 +445,7 @@ $('backBtn').onclick=goHome;
 $('bookBtn').onclick=()=>{buildBook();$('home').classList.remove('show');$('book').classList.add('show');};
 $('bookBack').onclick=goHome;
 $('againBtn').onclick=()=>startGame(G.pi,true);
-$('nextBtn').onclick=()=>{const p=G.p,list=PICS.filter(q=>q.set===p.set),i=list.indexOf(p);startGame(PICS.indexOf(list[(i+1)%list.length]));};
+$('nextBtn').onclick=()=>{const p=G.p,list=PICS.filter(q=>q.set===p.set&&visible(q)),i=list.indexOf(p);startGame(PICS.indexOf(list[(i+1)%list.length]));};
 $('harderBtn').onclick=()=>{S.lv=Math.min(LEVELS.length-1,G.lv+1);save();startGame(G.pi);};
 $('hintBtn').onclick=hint;$('undoBtn').onclick=undo;
 $('refBtn').onclick=()=>{const on=!$('ref').classList.contains('show');$('ref').classList.toggle('show',on);$('refBtn').classList.toggle('on',on);};
@@ -454,5 +461,6 @@ addEventListener('contextmenu',e=>e.preventDefault());
 $('credits').innerHTML=(window.PUZZLE_CREDITS||'')+'<br>· 「我的图片」只保存在这台电脑的浏览器里，不会上传。';
 applySettings();buildHome();
 DB.open().then(loadMine).then(buildHome);
+probeAll().then(buildHome);
 </script>
 </body></html>

@@ -66,6 +66,9 @@
 ### 文件
 游戏在 `puzzle/`：`index.html` 是游戏，`pictures.js` 是图片清单（每张图的名字、分类、来源、授权），图片在 `images/`，缩略图在 `thumbs/`。加新图只要把图片放进去、在 `pictures.js` 里加一行。离线玩时把整个 `puzzle` 文件夹拷走，双击 `index.html`。
 
+### 用 AI 加更多图
+`puzzle/ai-art/PROMPTS.md` 里有 6 种风格、108 条画图提示词，每条都有固定文件名。画好的图按文件名放进 `puzzle/images/`（PNG/JPG/WEBP 都行），游戏会自动显示，不用改代码。
+
 ### 图片来源
 - 「手绘恐龙」6 张：[Universal Blue / Bluefin 壁纸](https://github.com/ublue-os/artwork)（ublue-os/artwork 仓库，Apache License 2.0），裁剪为 2:1 并缩小。
 - 「3D 小恐龙」8 张：用 three.js 自己渲染，模型来自 Quaternius（CC0），渲染源码在 `puzzle-src/`，原图在 `puzzle-wallpapers/`。

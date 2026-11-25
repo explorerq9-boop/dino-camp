@@ -1,0 +1,1003 @@
+{
+ "common": "Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle.",
+ "styles": [
+  [
+   "ai-3d",
+   "🧸 3D 卡通"
+  ],
+  [
+   "ai-watercolor",
+   "🖌️ 水彩绘本"
+  ],
+  [
+   "ai-flat",
+   "🔷 扁平插画"
+  ],
+  [
+   "ai-paper",
+   "✂️ 剪纸纸艺"
+  ],
+  [
+   "ai-clay",
+   "🧱 黏土手工"
+  ],
+  [
+   "ai-nature",
+   "🌿 写实自然"
+  ]
+ ],
+ "items": [
+  {
+   "file": "ai-3d-01.png",
+   "id": "ai-3d-01",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "三角龙宝宝过生日",
+   "praise": "三角龙宝宝在花草地上过生日，好开心！",
+   "prompt": "A baby triceratops celebrating a birthday in a flower meadow with a cake made of leaves and berries, balloons tied to ferns, butterflies, distant volcano puffing harmless white cloud. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-02.png",
+   "id": "ai-3d-02",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "长脖子龙的早餐",
+   "praise": "腕龙一大早就在吃新鲜的树叶！",
+   "prompt": "A gentle brachiosaurus eating leaves from a tall tree at sunrise, little birds on its back, misty valley with a winding river below. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-03.png",
+   "id": "ai-3d-03",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "剑龙和蝴蝶",
+   "praise": "好多蝴蝶停在剑龙背上！",
+   "prompt": "A stegosaurus smiling at colorful butterflies landing on its back plates, sunny forest clearing with mushrooms and ferns. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-04.png",
+   "id": "ai-3d-04",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "小霸王龙堆沙堡",
+   "praise": "小霸王龙在海边堆沙堡！",
+   "prompt": "A small friendly T-rex with tiny arms building a sandcastle on a tropical beach, palm trees, turquoise sea, shells and starfish. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-05.png",
+   "id": "ai-3d-05",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "迅猛龙踢足球",
+   "praise": "迅猛龙宝宝们在踢球！",
+   "prompt": "Three fluffy feathered velociraptor kids playing with a big round fruit like a ball on a green field, wooden logs as goals, afternoon sun. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-06.png",
+   "id": "ai-3d-06",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "副栉龙的音乐会",
+   "praise": "副栉龙用头冠吹出好听的歌！",
+   "prompt": "A parasaurolophus blowing a happy tune through its crest, small dinosaurs dancing around in a forest glade, musical notes as glowing fireflies. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-07.png",
+   "id": "ai-3d-07",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "恐龙蛋孵出来啦",
+   "praise": "小恐龙从蛋里钻出来啦！",
+   "prompt": "Several colorful dinosaur eggs hatching in a cozy nest, baby dinosaurs peeking out, a proud mother maiasaura watching, warm morning light. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-08.png",
+   "id": "ai-3d-08",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "甲龙过小桥",
+   "praise": "甲龙慢慢走过小石桥！",
+   "prompt": "An ankylosaurus carefully walking across a small stone bridge over a sparkling stream, flowers on both sides, dragonflies. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-09.png",
+   "id": "ai-3d-09",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "翼龙放风筝",
+   "praise": "翼龙在天上飞，像风筝一样！",
+   "prompt": "Pteranodons gliding in a blue sky with fluffy clouds over green hills, a small dinosaur on a hill holding a leaf kite. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-10.png",
+   "id": "ai-3d-10",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "雨后彩虹",
+   "praise": "下过雨，天上出现了彩虹！",
+   "prompt": "Dinosaur friends (triceratops, stegosaurus, small sauropod) looking at a big rainbow after rain, puddles reflecting the sky, wet shiny leaves. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-11.png",
+   "id": "ai-3d-11",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "秋天的恐龙森林",
+   "praise": "秋天到了，树叶变成了红色和黄色！",
+   "prompt": "A duck-billed dinosaur family walking through an autumn forest with orange and red leaves falling, pumpkins-like gourds, golden light. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-12.png",
+   "id": "ai-3d-12",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "雪地里的小恐龙",
+   "praise": "小恐龙在雪地里堆雪恐龙！",
+   "prompt": "Fluffy feathered baby dinosaurs playing in soft snow, building a snow-dinosaur, pine trees, gentle snowfall, cozy cave with warm glow. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-13.png",
+   "id": "ai-3d-13",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "星空下睡觉",
+   "praise": "恐龙妈妈和宝宝在星空下睡觉。",
+   "prompt": "A mother sauropod and baby sleeping under a starry night sky with a big moon, fireflies, calm lake reflecting stars (bright and colorful, not dark). Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-14.png",
+   "id": "ai-3d-14",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "恐龙野餐",
+   "praise": "恐龙好朋友们在野餐！",
+   "prompt": "Dinosaur friends having a picnic on a checkered blanket of leaves with fruits and berries, hills, windmill-like giant flowers. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-15.png",
+   "id": "ai-3d-15",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "棘龙钓鱼",
+   "praise": "棘龙在小河里看小鱼！",
+   "prompt": "A friendly spinosaurus standing in a shallow river watching colorful fish swim by, water lilies, frogs, waterfall in background. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-16.png",
+   "id": "ai-3d-16",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "肿头龙爬山",
+   "praise": "肿头龙爬到了山顶！",
+   "prompt": "Pachycephalosaurus climbing a rocky hill with wildflowers, reaching the top to see a wide colorful valley, small clouds. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-17.png",
+   "id": "ai-3d-17",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "恐龙火车",
+   "praise": "小恐龙坐着小火车穿过丛林！",
+   "prompt": "Small dinosaurs riding a wooden toy train through a jungle with giant leaves, a sauropod acting as a bridge over a river. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-3d-18.png",
+   "id": "ai-3d-18",
+   "set": "ai-3d",
+   "setTitle": "🧸 3D 卡通",
+   "name": "水下的蛇颈龙",
+   "praise": "蛇颈龙在清清的海水里游泳！",
+   "prompt": "A smiling plesiosaur swimming in clear turquoise water with coral, sea turtles and schools of colorful fish, sun rays from above. Style: bright 3D animated-film style, soft rounded shapes, glossy subsurface lighting, cheerful saturated colors, cute big-eyed friendly dinosaurs, like a family animated movie still. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-01.png",
+   "id": "ai-watercolor-01",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "清晨的湖边",
+   "praise": "清晨，长脖子恐龙在湖边喝水。",
+   "prompt": "Long-necked dinosaurs drinking at a calm lake at dawn, pink and gold sky reflected in the water, reeds and herons. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-02.png",
+   "id": "ai-watercolor-02",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "花海里的三角龙",
+   "praise": "三角龙在花海里休息。",
+   "prompt": "A triceratops resting in a huge field of poppies and daisies, bees, distant blue mountains. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-03.png",
+   "id": "ai-watercolor-03",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "蘑菇森林",
+   "praise": "小恐龙在大蘑菇森林里探险。",
+   "prompt": "Small dinosaurs exploring a forest of giant colorful mushrooms, moss, tiny snails, soft green light. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-04.png",
+   "id": "ai-watercolor-04",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "春天的樱花",
+   "praise": "春天来了，花瓣飘下来！",
+   "prompt": "Hadrosaurs walking under blooming cherry-blossom-like trees with petals falling, a small stream and stepping stones. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-05.png",
+   "id": "ai-watercolor-05",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "恐龙小镇",
+   "praise": "恐龙们住的小村子。",
+   "prompt": "A cozy village of round leaf-roofed huts where friendly dinosaurs live, gardens, laundry of leaves, smoke from chimneys. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-06.png",
+   "id": "ai-watercolor-06",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "雨天的散步",
+   "praise": "剑龙用大叶子当雨伞！",
+   "prompt": "A stegosaurus holding a giant leaf as an umbrella in gentle rain, puddles, frogs, wet flowers. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-07.png",
+   "id": "ai-watercolor-07",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "海边的贝壳",
+   "praise": "小恐龙在沙滩上捡贝壳。",
+   "prompt": "Baby dinosaurs collecting seashells on a sandy beach, gentle waves, a lighthouse-like rock, seagull-like pterosaurs. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-08.png",
+   "id": "ai-watercolor-08",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "夏夜萤火虫",
+   "praise": "夏天的晚上，好多萤火虫！",
+   "prompt": "Dinosaur friends watching fireflies in a meadow on a summer evening, warm lanterns of glowing fruit, purple sky. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-09.png",
+   "id": "ai-watercolor-09",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "大树下讲故事",
+   "praise": "大恐龙在大树下讲故事。",
+   "prompt": "A wise old sauropod telling stories to little dinosaurs under a huge tree, picnic of berries, dappled sunlight. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-10.png",
+   "id": "ai-watercolor-10",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "风车山坡",
+   "praise": "绿绿的山坡上，风轻轻地吹。",
+   "prompt": "Rolling green hills with flower patches, a gentle brachiosaurus and a hot-air-balloon-shaped cloud, kites. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-11.png",
+   "id": "ai-watercolor-11",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "河上的小船",
+   "praise": "小恐龙坐着叶子船漂流！",
+   "prompt": "Small dinosaurs floating down a calm river on a big leaf boat, waterlilies, willow trees, ducks. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-12.png",
+   "id": "ai-watercolor-12",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "果园丰收",
+   "praise": "恐龙们在果园里摘果子！",
+   "prompt": "Dinosaurs harvesting fruits in an orchard, baskets of apples and pears, ladder made of branches, autumn colors. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-13.png",
+   "id": "ai-watercolor-13",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "雪山脚下",
+   "praise": "长羽毛的恐龙走向雪山。",
+   "prompt": "Fluffy feathered dinosaurs walking in a line toward snowy mountains, pine forest, clear blue sky. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-14.png",
+   "id": "ai-watercolor-14",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "恐龙的花园",
+   "praise": "副栉龙在给花浇水！",
+   "prompt": "A parasaurolophus watering a flower garden with water from its crest, sunflowers and tulips, bees. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-15.png",
+   "id": "ai-watercolor-15",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "月亮船",
+   "praise": "小恐龙坐在月亮船上睡着了。",
+   "prompt": "A baby dinosaur sleeping in a crescent moon boat floating over a dreamy sky of soft clouds and stars. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-16.png",
+   "id": "ai-watercolor-16",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "沼泽里的青蛙",
+   "praise": "鸭嘴龙在沼泽里玩水！",
+   "prompt": "Duck-billed dinosaurs wading in a sunny marsh with frogs, dragonflies, cattails and water lilies. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-17.png",
+   "id": "ai-watercolor-17",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "彩色的鸟龙",
+   "praise": "彩色羽毛的小恐龙站在树枝上。",
+   "prompt": "Small colorful feathered dinosaurs perched on branches like birds, berries, blossoms, morning light. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-watercolor-18.png",
+   "id": "ai-watercolor-18",
+   "set": "ai-watercolor",
+   "setTitle": "🖌️ 水彩绘本",
+   "name": "瀑布彩虹",
+   "praise": "瀑布下面有一道彩虹！",
+   "prompt": "A tall waterfall with a rainbow in the mist, sauropods bathing in the pool below, lush ferns. Style: soft watercolor children's picture book illustration, gentle washes, visible paper texture, delicate ink outlines, pastel but rich colors, cozy and calm. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-01.png",
+   "id": "ai-flat-01",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "日落草原",
+   "praise": "恐龙群在日落时走过草原。",
+   "prompt": "Silhouettes of a dinosaur herd crossing a savanna at sunset, layered hills in warm oranges and purples, big sun. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-02.png",
+   "id": "ai-flat-02",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "火山岛",
+   "praise": "火山岛上住着长脖子恐龙。",
+   "prompt": "A tropical volcano island with gentle smoke, palm trees, sauropods on the beach, teal sea, simple waves. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-03.png",
+   "id": "ai-flat-03",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "蓝色森林",
+   "praise": "剑龙走在蓝色的森林小路上。",
+   "prompt": "A deep layered forest in blues and greens with a stegosaurus walking on a path, glowing mushrooms. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-04.png",
+   "id": "ai-flat-04",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "山谷里的河",
+   "praise": "山谷里有一条弯弯的河。",
+   "prompt": "A winding river through a valley with layered mountains, triceratops drinking, birds in V-formation. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-05.png",
+   "id": "ai-flat-05",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "沙漠绿洲",
+   "praise": "沙漠里的小绿洲。",
+   "prompt": "Desert dunes in peach tones with an oasis of palms and a pond, a group of small dinosaurs resting. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-06.png",
+   "id": "ai-flat-06",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "极光之夜",
+   "praise": "天上出现了彩色的极光！",
+   "prompt": "Northern lights over a snowy plain with feathered dinosaurs looking up, colorful green and pink sky. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-07.png",
+   "id": "ai-flat-07",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "热带丛林",
+   "praise": "副栉龙从大叶子后面探出头。",
+   "prompt": "Dense tropical jungle with giant monstera leaves in many greens, a parasaurolophus peeking out, toucans-like pterosaurs. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-08.png",
+   "id": "ai-flat-08",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "海底世界",
+   "praise": "海底有蛇颈龙和菊石。",
+   "prompt": "Underwater scene with layered coral reefs, plesiosaurs and ammonites, light rays, bubbles. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-09.png",
+   "id": "ai-flat-09",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "秋日山丘",
+   "praise": "甲龙在秋天的山丘上散步。",
+   "prompt": "Rolling hills in autumn oranges, yellows and reds, an ankylosaurus walking among round trees. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-10.png",
+   "id": "ai-flat-10",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "恐龙城市天际线",
+   "praise": "长脖子恐龙像高楼一样高！",
+   "prompt": "Whimsical skyline where sauropod necks form shapes alongside tall trees, morning pastel sky, balloons. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-11.png",
+   "id": "ai-flat-11",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "湖面倒影",
+   "praise": "湖面上有恐龙的倒影。",
+   "prompt": "A calm lake perfectly reflecting mountains and a long-necked dinosaur, pastel pink and blue palette. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-12.png",
+   "id": "ai-flat-12",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "雨林瀑布",
+   "praise": "雨林里有好几条瀑布。",
+   "prompt": "Layered rainforest cliffs with multiple waterfalls, tiny dinosaurs on ledges, mist. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-13.png",
+   "id": "ai-flat-13",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "星空露营",
+   "praise": "小恐龙在星空下露营。",
+   "prompt": "Small dinosaurs around a cozy campfire under a starry sky with a crescent moon, tents of leaves. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-14.png",
+   "id": "ai-flat-14",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "樱花小径",
+   "praise": "鸭嘴龙走在樱花小路上。",
+   "prompt": "A path lined with pink blossom trees, hadrosaurs walking, petals in the air, soft pink palette. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-15.png",
+   "id": "ai-flat-15",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "冰河时期",
+   "praise": "冰天雪地里的猛犸象。",
+   "prompt": "Icy blue landscape with glaciers and woolly mammoths, friendly and calm, sun peeking through. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-16.png",
+   "id": "ai-flat-16",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "翼龙海岸",
+   "praise": "翼龙在海边的悬崖上飞。",
+   "prompt": "Cliffs by the sea with many pteranodons flying, waves, lighthouse-like rock pillars. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-17.png",
+   "id": "ai-flat-17",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "恐龙游乐园",
+   "praise": "恐龙游乐园，太好玩了！",
+   "prompt": "A playful park where dinosaurs act as slides and swings for baby dinosaurs, bright primary colors. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-flat-18.png",
+   "id": "ai-flat-18",
+   "set": "ai-flat",
+   "setTitle": "🔷 扁平插画",
+   "name": "彩虹山",
+   "praise": "五颜六色的彩虹山！",
+   "prompt": "Striped rainbow-colored mountains, a triceratops family walking on a trail, clear sky. Style: modern flat vector illustration, clean geometric shapes, layered landscape, bold harmonious color palette, subtle gradients and grain texture, no outlines, poster style. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-01.png",
+   "id": "ai-paper-01",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "纸做的丛林",
+   "praise": "纸做的丛林里住着小霸王龙。",
+   "prompt": "Layered papercut jungle with many shades of green leaves framing a T-rex (friendly, smiling) in the center. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-02.png",
+   "id": "ai-paper-02",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "海浪和蛇颈龙",
+   "praise": "蛇颈龙从纸海浪里冒出来！",
+   "prompt": "Layered paper ocean waves in blues with a plesiosaur popping up, paper sun and clouds. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-03.png",
+   "id": "ai-paper-03",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "花朵山谷",
+   "praise": "腕龙站在纸花山谷里。",
+   "prompt": "Paper flowers in pinks and yellows covering a valley, a brachiosaurus standing tall. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-04.png",
+   "id": "ai-paper-04",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "秋叶剑龙",
+   "praise": "纸剑龙走在秋天的落叶里。",
+   "prompt": "A stegosaurus made of paper walking among layered autumn paper leaves in orange and red. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-05.png",
+   "id": "ai-paper-05",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "夜空的翼龙",
+   "praise": "纸翼龙在星空下飞。",
+   "prompt": "Layered paper night sky with stars and moon, paper pteranodons flying over paper hills (bright navy and gold). Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-06.png",
+   "id": "ai-paper-06",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "恐龙蛋窝",
+   "praise": "纸做的恐龙蛋窝！",
+   "prompt": "A paper nest with colorful patterned eggs and a baby triceratops hatching, paper leaves around. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-07.png",
+   "id": "ai-paper-07",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "火山和熔岩花",
+   "praise": "纸火山里喷出来的是花！",
+   "prompt": "A papercut volcano with paper flowers instead of lava, dinosaurs around it, warm colors. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-08.png",
+   "id": "ai-paper-08",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "冰雪纸世界",
+   "praise": "白色的纸雪世界。",
+   "prompt": "White and pale blue layered paper snowy landscape with paper pine trees and a fluffy dinosaur. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-09.png",
+   "id": "ai-paper-09",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "沙漠仙人掌",
+   "praise": "纸沙漠里的仙人掌开花了。",
+   "prompt": "Layered paper desert with cacti in bloom, mesas, a small ankylosaurus, sunset sky in paper bands. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-10.png",
+   "id": "ai-paper-10",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "河边的鸭嘴龙",
+   "praise": "鸭嘴龙一家在纸小河边。",
+   "prompt": "Paper river with paper fish and a duck-billed dinosaur family on the bank, reeds. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-11.png",
+   "id": "ai-paper-11",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "彩虹桥",
+   "praise": "小恐龙走过纸彩虹桥！",
+   "prompt": "A paper rainbow arching over paper hills, small dinosaurs walking across it, paper clouds. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-12.png",
+   "id": "ai-paper-12",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "蘑菇村",
+   "praise": "小恐龙住在纸蘑菇房子里。",
+   "prompt": "Paper mushroom houses with windows, tiny dinosaurs living inside, paper grass and flowers. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-13.png",
+   "id": "ai-paper-13",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "海底珊瑚",
+   "praise": "纸做的海底珊瑚。",
+   "prompt": "Layered paper coral reef in vivid colors with ammonites and a sea turtle, paper bubbles. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-14.png",
+   "id": "ai-paper-14",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "春天的风筝",
+   "praise": "恐龙在春天放风筝！",
+   "prompt": "Paper kites shaped like pterosaurs flying over paper meadows with dinosaurs watching. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-15.png",
+   "id": "ai-paper-15",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "森林小屋",
+   "praise": "森林里的纸树屋。",
+   "prompt": "A paper forest with a cozy tree house where small dinosaurs play, lanterns. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-16.png",
+   "id": "ai-paper-16",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "恐龙游行",
+   "praise": "纸恐龙排队游行！",
+   "prompt": "A parade of paper dinosaurs of many species in a line across layered hills, flags of leaves. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-17.png",
+   "id": "ai-paper-17",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "月光湖",
+   "praise": "月亮照在纸湖上。",
+   "prompt": "Paper moon reflected in a layered paper lake, a sauropod drinking, fireflies (bright, colorful). Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-paper-18.png",
+   "id": "ai-paper-18",
+   "set": "ai-paper",
+   "setTitle": "✂️ 剪纸纸艺",
+   "name": "热气球旅行",
+   "praise": "小恐龙坐热气球去旅行！",
+   "prompt": "Small dinosaurs flying in paper hot-air balloons over layered paper landscape. Style: layered paper-cut craft art, many stacked paper layers with soft drop shadows creating depth, papercraft dinosaurs and plants, bright colors, handmade texture. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-01.png",
+   "id": "ai-clay-01",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "黏土三角龙",
+   "praise": "胖乎乎的黏土三角龙在吃花！",
+   "prompt": "A chubby clay triceratops munching on clay flowers in a miniature meadow diorama. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-02.png",
+   "id": "ai-clay-02",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "黏土海滩",
+   "praise": "黏土小霸王龙在海边玩球。",
+   "prompt": "A clay beach diorama with a small T-rex in sunglasses-free, playing with a clay beach ball, palm trees. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-03.png",
+   "id": "ai-clay-03",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "积木城堡",
+   "praise": "黏土恐龙在搭城堡！",
+   "prompt": "Clay dinosaurs building a castle out of colorful blocks in a playroom-like prehistoric landscape. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-04.png",
+   "id": "ai-clay-04",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "黏土雨林",
+   "praise": "黏土雨林里有好多颜色！",
+   "prompt": "A dense clay rainforest diorama with a parasaurolophus and colorful clay birds and flowers. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-05.png",
+   "id": "ai-clay-05",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "冰淇淋火山",
+   "praise": "火山喷出了彩色的云朵！",
+   "prompt": "A cute clay volcano that looks like it erupts ice-cream colored clouds, dinosaurs cheering. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-06.png",
+   "id": "ai-clay-06",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "黏土雪人",
+   "praise": "黏土恐龙在堆雪人！",
+   "prompt": "Clay feathered dinosaurs building a snowman in a snowy clay diorama, pine trees. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-07.png",
+   "id": "ai-clay-07",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "小池塘",
+   "praise": "小长脖子恐龙在池塘里玩水。",
+   "prompt": "A clay pond with lily pads, clay frogs and a baby sauropod splashing. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-08.png",
+   "id": "ai-clay-08",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "恐龙面包店",
+   "praise": "恐龙开了一家面包店！",
+   "prompt": "A clay dinosaur bakery stall in a prehistoric village with fruit pies and leaf bread. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-09.png",
+   "id": "ai-clay-09",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "黏土花园",
+   "praise": "剑龙在种菜！",
+   "prompt": "A stegosaurus gardener in a clay garden with carrots, pumpkins and sunflowers. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-10.png",
+   "id": "ai-clay-10",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "蛋形热气球",
+   "praise": "坐着恐龙蛋热气球去飞！",
+   "prompt": "Clay dinosaurs flying in a hot-air balloon shaped like a dinosaur egg over clay hills. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-11.png",
+   "id": "ai-clay-11",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "黏土秋天",
+   "praise": "小恐龙跳进落叶堆里！",
+   "prompt": "A clay autumn forest with orange clay leaves piled up and baby dinosaurs jumping in them. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-12.png",
+   "id": "ai-clay-12",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "海底黏土",
+   "praise": "黏土海底世界。",
+   "prompt": "An underwater clay diorama with a smiling plesiosaur, starfish, shells and seaweed. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-13.png",
+   "id": "ai-clay-13",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "恐龙生日派对",
+   "praise": "恐龙的生日派对！",
+   "prompt": "Clay dinosaurs at a birthday party with a fruit cake, party hats and balloons in a cave decorated with flowers. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-14.png",
+   "id": "ai-clay-14",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "翼龙邮递员",
+   "praise": "翼龙在送信！",
+   "prompt": "A clay pteranodon delivering leaf letters to dinosaurs in a tiny village. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-15.png",
+   "id": "ai-clay-15",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "彩虹瀑布",
+   "praise": "彩虹色的瀑布！",
+   "prompt": "A clay waterfall with rainbow layers, dinosaurs watching from rocks. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-16.png",
+   "id": "ai-clay-16",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "夜晚的营火",
+   "praise": "恐龙们围着营火讲故事。",
+   "prompt": "Clay dinosaurs sitting around a warm campfire telling stories, clay stars hanging above. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-17.png",
+   "id": "ai-clay-17",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "黏土沙漠",
+   "praise": "甲龙在仙人掌旁边休息。",
+   "prompt": "A clay desert diorama with blooming cacti and an ankylosaurus resting in shade. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-clay-18.png",
+   "id": "ai-clay-18",
+   "set": "ai-clay",
+   "setTitle": "🧱 黏土手工",
+   "name": "恐龙火车站",
+   "praise": "恐龙火车站！",
+   "prompt": "A clay train station where baby dinosaurs wait for a wooden train, flowers on platform. Style: claymation / plasticine style, handmade clay figures with fingerprint texture, miniature diorama, tilt-shift soft focus background, warm studio lighting, vibrant colors. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-01.png",
+   "id": "ai-nature-01",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "平原上的三角龙群",
+   "praise": "一群三角龙在平原上吃草。",
+   "prompt": "A herd of triceratops grazing on a vast green floodplain under a big sky with cumulus clouds. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-02.png",
+   "id": "ai-nature-02",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "河边的腕龙",
+   "praise": "腕龙在金色的阳光下过河。",
+   "prompt": "Brachiosaurus wading across a wide shallow river at golden hour, conifer forest on banks. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-03.png",
+   "id": "ai-nature-03",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "羽毛恐龙",
+   "praise": "长羽毛的小恐龙站在树枝上。",
+   "prompt": "A colorful feathered dinosaur (Microraptor-like) perched on a branch in a misty forest morning. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-04.png",
+   "id": "ai-nature-04",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "剑龙在蕨类森林",
+   "praise": "剑龙在蕨类森林里吃东西。",
+   "prompt": "A stegosaurus browsing among tree ferns and cycads in dappled forest light. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-05.png",
+   "id": "ai-nature-05",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "海边的鸭嘴龙",
+   "praise": "鸭嘴龙沿着海边走。",
+   "prompt": "A herd of Edmontosaurus walking along a beach with gentle waves at sunrise. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-06.png",
+   "id": "ai-nature-06",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "甲龙和野花",
+   "praise": "甲龙在野花里休息。",
+   "prompt": "An ankylosaurus resting in a meadow of wildflowers, butterflies, distant mountains. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-07.png",
+   "id": "ai-nature-07",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "翼龙在海面上",
+   "praise": "大翼龙在海面上飞。",
+   "prompt": "Quetzalcoatlus-like pterosaurs soaring over a calm turquoise sea with islands. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-08.png",
+   "id": "ai-nature-08",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "雨后的森林",
+   "praise": "雨后，森林里有一道道阳光。",
+   "prompt": "Hadrosaurs in a lush rainforest after rain, sunbeams through mist, droplets on leaves. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-09.png",
+   "id": "ai-nature-09",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "雪中的羽毛龙",
+   "praise": "小暴龙在雪地里散步。",
+   "prompt": "Feathered tyrannosaurid juveniles calmly walking in light snow in a pine forest. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-10.png",
+   "id": "ai-nature-10",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "湖边饮水",
+   "praise": "好多恐龙一起在湖边喝水。",
+   "prompt": "A mixed group of dinosaurs drinking at a lake: sauropods, ornithomimids, ceratopsians, peaceful. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-11.png",
+   "id": "ai-nature-11",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "窃蛋龙孵蛋",
+   "praise": "窃蛋龙像小鸟一样孵蛋。",
+   "prompt": "An oviraptor sitting on its nest of eggs like a bird, feathers spread, warm afternoon light. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-12.png",
+   "id": "ai-nature-12",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "沙丘上的原角龙",
+   "praise": "原角龙一家在沙丘上。",
+   "prompt": "Protoceratops family on red-orange sand dunes in late afternoon light, desert plants. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-13.png",
+   "id": "ai-nature-13",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "海里的鱼龙",
+   "praise": "鱼龙像海豚一样游泳。",
+   "prompt": "Ichthyosaurs swimming in clear blue ocean like dolphins, sunbeams, fish schools. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-14.png",
+   "id": "ai-nature-14",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "山谷里的梁龙",
+   "praise": "梁龙排成一队走过山谷。",
+   "prompt": "A line of Diplodocus walking through a wide valley with a river and distant waterfalls. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-15.png",
+   "id": "ai-nature-15",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "鹦鹉嘴龙宝宝",
+   "praise": "鹦鹉嘴龙宝宝挤在一起。",
+   "prompt": "A group of tiny Psittacosaurus babies huddled together near a parent in ferns. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-16.png",
+   "id": "ai-nature-16",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "火山远景",
+   "praise": "远处有一座冒烟的火山。",
+   "prompt": "Peaceful sauropods in the foreground with a distant volcano gently smoking, lush plain. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-17.png",
+   "id": "ai-nature-17",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "秋天的湿地",
+   "praise": "副栉龙在秋天的湿地里。",
+   "prompt": "Parasaurolophus in an autumn wetland with golden grasses and reflections. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  },
+  {
+   "file": "ai-nature-18.png",
+   "id": "ai-nature-18",
+   "set": "ai-nature",
+   "setTitle": "🌿 写实自然",
+   "name": "黄昏的剪影",
+   "praise": "黄昏时，长脖子恐龙的影子。",
+   "prompt": "Silhouettes of long-necked dinosaurs against a colorful sunset over a lake. Style: realistic natural-history paleoart, accurate dinosaur anatomy, documentary wildlife photography look, beautiful natural daylight, rich detailed environment, peaceful behavior, no fighting, no blood, no open-mouth roaring. Landscape wallpaper, 3:2 aspect ratio (1536x1024). No text, no letters, no watermark, no border. Friendly, gentle mood suitable for a young autistic child: no scary teeth close-ups, no fighting, no blood, no dark horror lighting. Rich, evenly distributed detail across the whole image with varied colors in every area (avoid big empty single-color areas) so it works well as a jigsaw puzzle."
+  }
+ ]
+}
