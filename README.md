@@ -3,6 +3,7 @@
 - **恐龙考察营**：挖化石、拼骨架、恐龙乐园 → `index.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/ ）
 - **恐龙长大记 3D**：吃东西长大、一路进化 → `grow.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/grow.html ）
 - 恐龙长大记离线单文件版（不联网、直接双击打开）→ `grow-offline.html`
+- **恐龙拼图**：8 张恐龙壁纸，4/9/16 块 → `puzzle.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/puzzle.html ）
 - 旧的 2D 版恐龙长大记 → `grow2d.html`
 
 ---
@@ -47,3 +48,18 @@
 - 3D 引擎：[three.js](https://threejs.org)（MIT 许可）
 
 旧 2D 版（grow2d.html）另外用了 [ambientCG](https://ambientcg.com) 的 Grass004、Ground037 地面贴图和 [Poly Haven](https://polyhaven.com) 的天空照片，同样是 CC0。
+
+
+## 恐龙拼图
+
+给容易紧张、喜欢规律的孩子设计的安静拼图，单个网页文件，离线也能玩。
+
+- 8 张壁纸：三角龙妈妈和宝宝、雷龙在河边喝水、剑龙在蕨类森林、副栉龙在海边散步、霸王龙在花丛里、迅猛龙三兄弟、恐龙好朋友、剑龙在沙漠绿洲（原图在 `puzzle-wallpapers/`，也可以当电脑壁纸）。
+- 4 / 9 / 16 块可选；真拼图凹凸形状（设置里可改成方块）。
+- 没有计时，不会失败：放错了拼块会轻轻滑回原位；靠近正确位置就自动吸进去（“大磁铁”可调）。
+- 底图提示可开关；“🪄帮我”按钮帮放一块。
+- 拼好后整张图慢慢显现，出现夸奖的话；可选语音夸奖。
+- 声音很轻，可一键静音；🌙 安静模式关掉所有声音和星星动画；系统设置了“减少动态效果”时默认是安静模式。
+- 完成过的图会在选图页亮星星（每种块数一颗）。
+
+壁纸是用 three.js 自己渲染的，模型全部来自 Quaternius（CC0），渲染源码在 `puzzle-src/`。

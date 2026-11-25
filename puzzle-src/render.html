@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import {mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
+
+const OW=+new URLSearchParams(location.search).get('w')||1600, OH=Math.round(OW*0.625);const SS=2,W=OW*SS,H=OH*SS;
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(1);renderer.setSize(W,H);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.NeutralToneMapping;renderer.toneMappingExposure=1.0;
+document.body.appendChild(renderer.domElement);
+
+const loader=new GLTFLoader();
+const cache={};
+async function load(name){ if(!cache[name]) cache[name]=await loader.loadAsync('/glb/'+name+'.glb'); return cache[name]; }
+
+let seed=1; const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+const R=(a,b)=>a+(b-a)*rnd();
+
+function skyMat(top,bottom){
+  return new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,uniforms:{t:{value:new THREE.Color(top)},b:{value:new THREE.Color(bottom)}},
+  vertexShader:'varying vec3 p;void main(){p=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:'uniform vec3 t;uniform vec3 b;varying vec3 p;void main(){float k=smoothstep(-0.05,0.45,p.y);gl_FragColor=vec4(mix(b,t,k),1.);}'});
+}
+
+window.renderScene=async function(cfg){
+  seed=cfg.seed||7;
+  const scene=new THREE.Scene();
+  const sky=new THREE.Mesh(new THREE.SphereGeometry(900,32,16),skyMat(cfg.skyTop||'#5fb4ee',cfg.skyBottom||'#d9f1ff'));
+  scene.add(sky);
+  scene.fog=new THREE.Fog(cfg.fog||'#cfeaf7',cfg.fogNear||60,cfg.fogFar||260);
+  const hemi=new THREE.HemisphereLight(cfg.hemiSky||'#d8f0ff',cfg.hemiGround||'#8cae5a',cfg.hemiI??1.5);scene.add(hemi);
+  const sun=new THREE.DirectionalLight(cfg.sunColor||'#fff4dc',cfg.sunI??2.6);
+  sun.position.set(...(cfg.sunPos||[40,70,30]));sun.castShadow=true;
+  sun.shadow.mapSize.set(4096,4096);const sc=sun.shadow.camera;sc.left=-45;sc.right=45;sc.top=45;sc.bottom=-45;sc.near=1;sc.far=250;
+  sun.shadow.bias=-0.0004;sun.shadow.normalBias=0.03;sun.shadow.radius=4;
+  scene.add(sun);scene.add(sun.target);
+  const tgt=new THREE.Vector3(...cfg.look);
+  sun.position.add(tgt);sun.target.position.copy(tgt);
+
+  // ---- terrain
+  const water=cfg.water; // {fn:'river'|'sea'|'lake', ...}
+  const riverZ=x=>water&&water.type==='river'?water.z+Math.sin(x*0.05+water.ph)*water.amp:0;
+  const waterDist=(x,z)=>{
+    if(!water) return 999;
+    if(water.type==='river') return Math.abs(z-riverZ(x))-water.w;
+    if(water.type==='sea') return (z - water.z) + Math.sin(x*0.08)*2;   // water for z<water.z
+    if(water.type==='lake') return Math.hypot((x-water.x)/water.rx,(z-water.z)/water.rz)*water.rx-water.rx;
+    return 999;
+  };
+  const hills=cfg.hills??1;
+  const baseH=(x,z)=>hills*(Math.sin(x*0.045)*1.6+Math.cos(z*0.05+1)*1.4+Math.sin((x+z)*0.11)*0.5+Math.sin(x*0.013+z*0.017)*4)+(cfg.backHill? Math.max(0,(-z-60)*cfg.backHill):0);
+  const height=(x,z)=>{
+    let h=baseH(x,z);
+    const d=waterDist(x,z);
+    if(water) h=Math.max(h,0.35+Math.max(0,d)*0.04);
+    if(d<6){ const k=THREE.MathUtils.smoothstep(d,-3,6); h=THREE.MathUtils.lerp(-1.6,h,k); }
+    return h;
+  };
+  const camAbs=new THREE.Vector3(cfg.cam[0],cfg.cam[1]+height(cfg.cam[0],cfg.cam[2]),cfg.cam[2]);
+  const lookAbs=new THREE.Vector3(tgt.x,tgt.y+height(tgt.x,tgt.z),tgt.z);
+  console.log('camH',height(cfg.cam[0],cfg.cam[2]).toFixed(2),'lookH',height(tgt.x,tgt.z).toFixed(2));
+  const corridors=cfg.dinos.map(d=>[d.x+tgt.x,d.z+tgt.z,d.s*(d.cw||6)]);
+  const inCorr=(x,z)=>corridors.some(([dx,dz,r])=>{const vx=dx-camAbs.x,vz=dz-camAbs.z,L=Math.hypot(vx,vz);const t=((x-camAbs.x)*vx+(z-camAbs.z)*vz)/(L*L);if(t<0||t>1)return false;const px=camAbs.x+vx*t,pz=camAbs.z+vz*t;return Math.hypot(x-px,z-pz)<r*(0.6+0.4*t);});
+  const G=new THREE.PlaneGeometry(600,600,300,300);G.rotateX(-Math.PI/2);
+  const pos=G.attributes.position;const col=[];
+  const cA=new THREE.Color(cfg.grassA||'#8fd35a'),cB=new THREE.Color(cfg.grassB||'#5fb24a'),sand=new THREE.Color(cfg.sand||'#f2dfa6'),tmp=new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i)+tgt.x,z=pos.getZ(i)+tgt.z;pos.setX(i,x);pos.setZ(i,z);
+    const h=height(x,z);pos.setY(i,h);
+    const n=0.5+0.5*Math.sin(x*0.21+Math.cos(z*0.17)*2)*Math.cos(z*0.13);
+    tmp.copy(cA).lerp(cB,n*0.7);
+    const d=waterDist(x,z); if(d<3.5) tmp.lerp(sand,THREE.MathUtils.smoothstep(3.5-d,0,2.5));
+    col.push(tmp.r,tmp.g,tmp.b);
+  }
+  G.setAttribute('color',new THREE.Float32BufferAttribute(col,3));G.computeVertexNormals();
+  const ground=new THREE.Mesh(G,new THREE.MeshLambertMaterial({vertexColors:true}));ground.receiveShadow=true;scene.add(ground);
+  if(water){
+    const wg=new THREE.PlaneGeometry(600,600,1,1);wg.rotateX(-Math.PI/2);
+    const wm=new THREE.MeshPhongMaterial({color:water.color||'#43c4dc',shininess:90,specular:'#ffffff',transparent:true,opacity:0.92});
+    const wmesh=new THREE.Mesh(wg,wm);wmesh.position.set(tgt.x,-0.5,tgt.z);wmesh.receiveShadow=true;scene.add(wmesh);
+    // soft light streaks on water
+    for(let i=0;i<120;i++){
+      const x=tgt.x+R(-80,80),z=tgt.z+R(-90,30); if(waterDist(x,z)>-1.2) continue;
+      const s=new THREE.Mesh(new THREE.PlaneGeometry(R(1,3.5),R(0.12,0.25)),new THREE.MeshBasicMaterial({color:'#e9fbff',transparent:true,opacity:0.55,fog:true}));
+      s.rotation.x=-Math.PI/2;s.position.set(x,-0.47,z);scene.add(s);
+    }
+  }
+  // clouds
+  const cm=new THREE.MeshLambertMaterial({color:'#ffffff',emissive:'#dfe9f2',emissiveIntensity:0.55,fog:false});
+  for(let c=0;c<(cfg.clouds??9);c++){
+    const g=new THREE.Group();const ang=R(-1.1,1.1)+(cfg.cloudDir||0),dist=R(330,420);
+    g.position.set(Math.sin(ang)*dist+tgt.x,R(55,120),-Math.cos(ang)*dist+tgt.z);
+    for(let k=0;k<6;k++){const s=new THREE.Mesh(new THREE.IcosahedronGeometry(R(10,18),2),cm);s.position.set(R(-25,25),R(-3,6),R(-6,6));s.scale.y=0.7;g.add(s);}
+    g.lookAt(camPos());scene.add(g);
+  }
+  function camPos(){return camAbs;}
+
+  // ---- props
+  async function place(name,x,z,s=1,ry=null,opt={}){
+    const gl=await load(name);const o=SkeletonUtils.clone(gl.scene);
+    o.position.set(x,(opt.y??height(x,z))+(opt.dy||0),z);o.scale.setScalar(s);o.rotation.y=ry??R(0,Math.PI*2);
+    o.traverse(m=>{if(m.isMesh){m.castShadow=opt.shadow!==false;m.receiveShadow=true;
+      if(!name.startsWith('dino_')&&!m.userData.br){const mats=(Array.isArray(m.material)?m.material:[m.material]).map(mt=>{const c=mt.clone();if(!c.map){const hsl={};c.color.getHSL(hsl);c.color.setHSL(hsl.h,Math.min(1,hsl.s*1.15+0.05),Math.min(0.75,hsl.l*(cfg.propL||1.45)+0.04));}else{c.color.multiplyScalar(cfg.texL||1.15);}return c;});m.material=Array.isArray(m.material)?mats:mats[0];m.userData.br=1;}
+      if(opt.tint){m.material=m.material.clone();m.material.color.multiply(new THREE.Color(opt.tint));}}});
+    scene.add(o);return {o,gl};
+  }
+  const avoid=[];// circles to keep clear
+  const blocked=(x,z)=>avoid.some(a=>Math.hypot(x-a[0],z-a[1])<a[2]);
+  for(const a of (cfg.clear||[])) avoid.push([a[0]+tgt.x,a[1]+tgt.z,a[2]]);
+  for(const d of cfg.dinos) avoid.push([d.x+tgt.x,d.z+tgt.z,d.r??(d.s*7)]);
+  for(const p of cfg.scatter||[]){
+    // p:{names:[], n, area:[x0,x1,z0,z1], s:[a,b], dry:true(avoid water), wet:true(only water), minD}
+    let placed=0,tries=0;
+    while(placed<p.n&&tries<p.n*20){tries++;
+      const x=tgt.x+R(p.area[0],p.area[1]),z=tgt.z+R(p.area[2],p.area[3]);
+      const d=waterDist(x,z);
+      if(p.wet){ if(d>-1.5) continue; } else if(d<(p.shore??1.5)) continue;
+      if(blocked(x,z)) continue;
+      if(!p.low&&inCorr(x,z)) continue;
+      const name=p.names[Math.floor(rnd()*p.names.length)];
+      await place(name,x,z,R(p.s[0],p.s[1]),null,{y:p.wet?-0.48:undefined,shadow:p.shadow,tint:p.tint});placed++;
+    }
+    console.log('scatter',p.names[0],placed,'/',p.n);
+  }
+  for(const p of cfg.props||[]) await place(p[0],tgt.x+p[1],tgt.z+p[2],p[3],p[4],p[5]||{});
+
+  // ---- dinos
+  for(const d of cfg.dinos){
+    const {o,gl}=await place('dino_'+d.kind,tgt.x+d.x,tgt.z+d.z,d.s,d.ry,{dy:d.dy||0});
+    o.traverse(m=>{if(m.isMesh&&d.smooth!==false){if(!m.geometry.userData.sm){let g=m.geometry.clone();g.deleteAttribute('normal');g=mergeVertices(g,1e-4);g.computeVertexNormals();g.userData.sm=1;m.geometry=g;}}});
+    if(d.colors){o.traverse(m=>{if(m.isMesh){const mats=Array.isArray(m.material)?m.material:[m.material];
+      const nm=mats.map(mt=>{const c=mt.clone();c.flatShading=false;c.metalness=0;c.roughness=0.75;const key=Object.keys(d.colors).find(k=>mt.name.toLowerCase().includes(k.toLowerCase()));if(key)c.color.set(d.colors[key]);return c;});
+      m.material=Array.isArray(m.material)?nm:nm[0];}});}
+    const clip=gl.animations.find(a=>a.name.toLowerCase().includes((d.anim||'idle').toLowerCase()));
+    if(clip){const mx=new THREE.AnimationMixer(o);const ac=mx.clipAction(clip);ac.play();mx.update(d.t??0.3);}
+  }
+
+  const cam=new THREE.PerspectiveCamera(cfg.fov||45,W/H,0.3,1500);cam.position.copy(camAbs);cam.lookAt(lookAbs);
+  renderer.render(scene,cam);
+  const c2=document.createElement('canvas');c2.width=OW;c2.height=OH;const x=c2.getContext('2d');
+  x.imageSmoothingQuality='high';x.drawImage(renderer.domElement,0,0,OW,OH);
+  if(cfg.glow){const g=x.createRadialGradient(OW*cfg.glow[0],OH*cfg.glow[1],0,OW*cfg.glow[0],OH*cfg.glow[1],OW*0.6);g.addColorStop(0,'rgba(255,245,210,0.35)');g.addColorStop(1,'rgba(255,245,210,0)');x.globalCompositeOperation='screen';x.fillStyle=g;x.fillRect(0,0,OW,OH);x.globalCompositeOperation='source-over';}
+  const v=x.createRadialGradient(OW/2,OH/2,OH*0.45,OW/2,OH/2,OW*0.72);v.addColorStop(0,'rgba(30,40,20,0)');v.addColorStop(1,'rgba(30,40,20,0.22)');x.fillStyle=v;x.fillRect(0,0,OW,OH);
+  return c2.toDataURL('image/png');
+};
+
+window.listMats=async function(kind){const g=await load('dino_'+kind);const s=new Set();g.scene.traverse(m=>{if(m.isMesh){(Array.isArray(m.material)?m.material:[m.material]).forEach(x=>s.add(x.name+':'+x.color.getHexString()))}});return [...s];};
+window.sizes=async function(names){const out={};for(const n of names){const g=await load(n);const b=new THREE.Box3().setFromObject(g.scene);const v=b.getSize(new THREE.Vector3());out[n]=[v.x,v.y,v.z].map(x=>+x.toFixed(2));}return out;};
+window.listAll=async function(){const out={};for(const k of ['Apatosaurus','Parasaurolophus','Stegosaurus','Trex','Triceratops','Velociraptor'])out[k]=await listMats(k);return out;};
+window.ready=true;
+</script></body></html>
