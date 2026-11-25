@@ -28,27 +28,34 @@ function say(t) { if (!SV.sound || !window.speechSynthesis) return; try { speech
 let tipT = 0; function tip(t, ms = 3000) { const e = $('tip'); e.innerHTML = t; e.classList.add('show'); clearTimeout(tipT); tipT = setTimeout(() => e.classList.remove('show'), ms); }
 
 /* ---------- 渲染器 ---------- */
+// 手机/平板：触屏操作 + 省电画质
+const MOB = (matchMedia && matchMedia('(pointer: coarse)').matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+if (MOB) document.body.classList.add('mob');
+const QF = MOB ? 0.55 : 1; // 植物数量系数
+(function checkGL() { try { const c = document.createElement('canvas'); if (!c.getContext('webgl2')) throw 0; } catch (e) {
+  document.getElementById('loadTxt').innerHTML = '这台设备的浏览器太旧，不支持 3D 画面 😢<br><a href="grow2d.html" style="color:#3a7a2a">点这里玩 2D 版恐龙长大记</a>'; throw new Error('no webgl2'); } })();
 const renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: 'high-performance'});
-let PR = Math.min(window.devicePixelRatio || 1, 1.5);
+let PR = Math.min(window.devicePixelRatio || 1, MOB ? 1.25 : 1.5);
 renderer.setPixelRatio(PR); renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08; renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = MOB ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 $('game').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog('#c4e6f8', 60, 210);
+scene.fog = new THREE.Fog('#c4e6f8', MOB ? 50 : 60, MOB ? 170 : 210);
 const camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 0.3, 1300);
 const hemi = new THREE.HemisphereLight('#dff1ff', '#c8a874', 1.35); scene.add(hemi);
-const sun = new THREE.DirectionalLight('#fff1d6', 2.5); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04;
+const sun = new THREE.DirectionalLight('#fff1d6', 2.5); sun.castShadow = true; sun.shadow.mapSize.set(MOB ? 1024 : 2048, MOB ? 1024 : 2048); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04;
 scene.add(sun); scene.add(sun.target);
 const SUN_DIR = new THREE.Vector3(0.45, 0.8, 0.5).normalize();
-addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+const fitCam = () => { camera.aspect = innerWidth / innerHeight; camera.fov = camera.aspect < 1 ? 64 : 48; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); };
+fitCam(); addEventListener('resize', fitCam); addEventListener('orientationchange', () => setTimeout(fitCam, 300));
 
 /* ---------- 资源 ---------- */
 const loader = new GLTFLoader();
 async function loadGLB(path) {
   const A = window.ASSETS;
   if (A && A[path]) { const bin = atob(A[path]), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return loader.parseAsync(u.buffer, ''); }
-  return loader.loadAsync('assets/' + path);
+  return loader.loadAsync((window.ASSET_BASE || 'assets/') + path.split('/').map(encodeURIComponent).join('/'));
 }
 
 const G = {t: 0, paused: true, items: [], npcs: [], parts: [], solids: [], curBiome: null};
@@ -57,7 +64,7 @@ const PL = {x: -40, z: -40, dir: 0, vx: 0, vz: 0, D: null, len: 2, tx: null, tz:
 async function init() {
   const prog = (t) => { $('loadTxt').textContent = t; };
   prog('正在搭建世界…');
-  buildTerrain(scene); G.water = buildWater(scene); buildMesas(scene); buildFlowerField(scene); G.clouds = buildSky(scene);
+  buildTerrain(scene); G.water = buildWater(scene); buildMesas(scene); buildFlowerField(scene, MOB ? 2000 : 4200); G.clouds = buildSky(scene);
   for (const M of MESAS) G.solids.push({x: M.x, z: M.z, r: M.r * 1.15 + 0.5});
   prog('正在请恐龙们过来…');
   for (const id of Object.keys(SPECIES)) { prepDino(id, await loadGLB('dino/' + SPECIES[id].file + '.glb')); measureGait(id); }
@@ -115,8 +122,10 @@ async function plantFlora() {
     ['nat/CactusFlowers_2.glb', 1.6, {saturate: 1.3, far: 90}, ['mesa'], 30, 0.6], ['nat/CactusFlowers_4.glb', 1.3, {saturate: 1.3, far: 90}, ['mesa'], 25, 0.6],
     ['nat/WoodLog_Moss.glb', 0.9, {shadow: 1}, ['fern'], 12, 1], ['nat/Grass_Short.glb', 0.6, {saturate: 1.3, far: 70, sway: 0.2}, ['fern', 'flower', 'river'], 300, 0.1],
   ];
+  let done = 0;
   for (const [p, h, opt, biomes, n, margin, solidR] of sets) {
-    const inst = await L(p, h, opt); const list = pick(biomes, n, margin);
+    const inst = await L(p, h, opt); const list = pick(biomes, Math.max(4, Math.round(n * (h > 5 ? Math.max(QF, 0.75) : QF))), margin); if (MOB && opt.far) opt.far *= 0.8;
+    done++; $('loadTxt').textContent = `正在种树和种花… ${Math.round(done / sets.length * 100)}%`;
     inst.add(list);
     if (solidR) for (const it of list) G.solids.push({x: it.x, z: it.z, r: solidR * it.s});
   }
@@ -154,7 +163,7 @@ const keys = {};
 const keyName = e => (e.key || '').length === 1 ? e.key.toLowerCase() : e.key;
 addEventListener('keydown', e => { const k = keyName(e); keys[k] = true; if (e.key.startsWith('Arrow') || k === ' ') e.preventDefault(); if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(k)) { PL.tx = null; marker.visible = false; } });
 addEventListener('keyup', e => { keys[keyName(e)] = false; });
-const clearInput = () => { for (const k in keys) keys[k] = false; ptr.down = false; ptr.drag = false; };
+const clearInput = () => { for (const k in keys) keys[k] = false; ptr.down = false; ptr.drag = false; if (typeof JOY !== 'undefined') { JOY.on = false; JOY.x = JOY.y = 0; const k = document.querySelector('#joy i'); if (k) k.style.transform = ''; } };
 addEventListener('blur', clearInput); document.addEventListener('visibilitychange', clearInput);
 // 鼠标/手指：轻点地面 = 走过去；按住拖动 = 转动视角
 const ptr = {down: false, drag: false, x: 0, y: 0, sx: 0, sy: 0};
@@ -166,15 +175,30 @@ function groundPoint(cx, cy) {
   for (let i = 0; i < 300; i++) { t += 0.8 + t * 0.02; const x = o.x + d.x * t, y = o.y + d.y * t, z = o.z + d.z * t; if (y <= Math.max(H(x, z), WATER_Y)) return {x, z}; }
   return null;
 }
-renderer.domElement.addEventListener('pointerdown', e => { if (G.paused) return; ptr.down = true; ptr.drag = false; ptr.x = ptr.sx = e.clientX; ptr.y = ptr.sy = e.clientY; renderer.domElement.setPointerCapture && renderer.domElement.setPointerCapture(e.pointerId); });
-addEventListener('pointermove', e => { if (!ptr.down) return;
+const touches = new Map(); let pinch0 = 0, zoom0 = 1;
+renderer.domElement.addEventListener('pointerdown', e => { touches.set(e.pointerId, {x: e.clientX, y: e.clientY}); if (touches.size === 2) { const [a, b] = [...touches.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); zoom0 = G.zoom || 1; ptr.drag = true; ptr.pinch = true; return; } });
+const touchEnd = e => { touches.delete(e.pointerId); if (touches.size < 2) ptr.pinch = false; };
+addEventListener('pointerup', touchEnd); addEventListener('pointercancel', touchEnd);
+renderer.domElement.addEventListener('pointerdown', e => { if (G.paused || touches.size > 1) return; ptr.down = true; ptr.drag = false; ptr.x = ptr.sx = e.clientX; ptr.y = ptr.sy = e.clientY; renderer.domElement.setPointerCapture && renderer.domElement.setPointerCapture(e.pointerId); });
+addEventListener('pointermove', e => { if (touches.has(e.pointerId)) touches.set(e.pointerId, {x: e.clientX, y: e.clientY});
+  if (ptr.pinch && touches.size === 2) { const [a, b] = [...touches.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); if (pinch0 > 0) G.zoom = Math.max(0.55, Math.min(1.7, zoom0 * pinch0 / d)); return; }
+  if (!ptr.down) return;
   const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y; ptr.x = e.clientX; ptr.y = e.clientY;
   if (!ptr.drag && Math.hypot(ptr.x - ptr.sx, ptr.y - ptr.sy) > 8) ptr.drag = true;
-  if (ptr.drag) { CAM.yaw -= dx * 0.006; CAM.pitch = Math.max(0.12, Math.min(0.95, CAM.pitch + dy * 0.004)); CAM.manualT = G.t; } });
-const endPtr = e => { if (ptr.down && !ptr.drag && !G.paused) setTarget(); ptr.down = false; ptr.drag = false; };
+  const sens = MOB ? 0.009 : 0.006; if (ptr.drag) { CAM.yaw -= dx * sens; CAM.pitch = Math.max(0.12, Math.min(0.95, CAM.pitch + dy * sens * 0.7)); CAM.manualT = G.t; } });
+const endPtr = e => { if (ptr.down && !ptr.drag && !ptr.pinch && !G.paused) setTarget(); ptr.down = false; ptr.drag = false; };
 addEventListener('pointerup', endPtr); addEventListener('pointercancel', () => { ptr.down = false; ptr.drag = false; });
 function setTarget() { const p = groundPoint(ptr.x, ptr.y); if (p) { PL.tx = Math.max(BOUND.x0, Math.min(BOUND.x1, p.x)); PL.tz = Math.max(BOUND.z0, Math.min(BOUND.z1, p.z)); marker.position.set(PL.tx, Math.max(H(PL.tx, PL.tz), WATER_Y) + 0.08, PL.tz); marker.visible = true; marker.userData.t = 0; } }
 renderer.domElement.addEventListener('wheel', e => { G.zoom = Math.max(0.55, Math.min(1.7, (G.zoom || 1) * (e.deltaY > 0 ? 1.08 : 0.93))); e.preventDefault(); }, {passive: false});
+// 摇杆（手机）：往哪推，恐龙就往屏幕上那个方向走；推到底会跑
+const JOY = {on: false, x: 0, y: 0, id: null};
+{ const jz = $('joy'), knob = jz.querySelector('i'), R0 = 48;
+  const upd = e => { const r = jz.getBoundingClientRect(); let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2); const l = Math.hypot(dx, dy); if (l > R0) { dx *= R0 / l; dy *= R0 / l; }
+    JOY.x = dx / R0; JOY.y = dy / R0; knob.style.transform = `translate(${dx}px,${dy}px)`; };
+  jz.addEventListener('pointerdown', e => { if (G.paused) return; JOY.on = true; JOY.id = e.pointerId; jz.setPointerCapture(e.pointerId); PL.tx = null; marker.visible = false; upd(e); e.preventDefault(); });
+  jz.addEventListener('pointermove', e => { if (JOY.on && e.pointerId === JOY.id) upd(e); });
+  const end = e => { if (e.pointerId !== JOY.id) return; JOY.on = false; JOY.x = JOY.y = 0; knob.style.transform = ''; };
+  jz.addEventListener('pointerup', end); jz.addEventListener('pointercancel', end); jz.addEventListener('lostpointercapture', end); }
 const marker = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.75, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({color: '#fff6c0', transparent: true, opacity: 0.8, depthWrite: false}));
 marker.visible = false; scene.add(marker);
 
@@ -192,14 +216,19 @@ function updatePlayer(dt) {
   if (keys.ArrowUp || keys.w) fwd = 1; else if (keys.ArrowDown || keys.s) fwd = -0.6;
   if (keys.q) { CAM.yaw += dt * 1.8; CAM.manualT = G.t; } if (keys.e) { CAM.yaw -= dt * 1.8; CAM.manualT = G.t; }
   let wantTurn = turn * 2.4;
+  const jm = Math.hypot(JOY.x, JOY.y);
+  if (JOY.on && jm > 0.15) { // 摇杆：方向相对于镜头
+    const sy = Math.sin(CAM.yaw), cy = Math.cos(CAM.yaw), wx = -sy * -JOY.y + cy * JOY.x, wz = -cy * -JOY.y - sy * JOY.x;
+    const da = wrapA(Math.atan2(wx, wz) - PL.dir); wantTurn = Math.max(-3, Math.min(3, da * 4)); fwd = (Math.abs(da) < 1.3 ? 1 : 0.2) * Math.min(1, jm * 1.15);
+    PL.joyFwd = Math.max(0, -JOY.y / jm); PL.far = jm > 0.85; }
   // 点地面：转向目标再走过去，远的地方会跑过去
   if (!fwd && !turn && PL.tx !== null) { const dx = PL.tx - PL.x, dz = PL.tz - PL.z, l = Math.hypot(dx, dz);
     if (l > 0.5 + PL.len * 0.12) { const da = wrapA(Math.atan2(dx, dz) - PL.dir); wantTurn = Math.max(-3, Math.min(3, da * 4)); fwd = Math.abs(da) < 1.2 ? 1 : 0.15; if (l < PL.len * 1.5) fwd *= 0.5; PL.far = l > PL.len * 3; }
     else { PL.tx = null; marker.visible = false; } }
   const moving = fwd !== 0;
   PL.holdT = moving && fwd > 0 ? PL.holdT + dt : 0;
-  const run = fwd > 0 && (keys.Shift || PL.holdT > 0.9 || (PL.tx !== null && PL.far && PL.holdT > 0.3));
-  let target = fwd > 0 ? (run ? PL.runSpd : PL.walkSpd) * fwd : fwd < 0 ? -PL.walkSpd : 0;
+  const run = fwd > 0 && (keys.Shift || (JOY.on ? (PL.far && PL.holdT > 0.35) : PL.holdT > 0.9) || (PL.tx !== null && PL.far && PL.holdT > 0.3));
+  let target = fwd > 0 ? (run ? PL.runSpd : PL.walkSpd * (JOY.on ? 1.6 : 1)) * fwd : fwd < 0 ? -PL.walkSpd : 0;
   if (PL.eatT > 0) target *= 0.3;
   const acc = target > PL.spd ? (run ? 1.6 : 4) : 5; PL.spd += (target - PL.spd) * Math.min(1, dt * acc);
   // 跑得越快转得越慢一点，看起来更有重量
@@ -337,7 +366,7 @@ const BUGS = [];
 function makeButterflies() {
   const cols = ['#ffb13b', '#62c3ff', '#ff6fb1', '#fff27a', '#b98cff'];
   const wg = new THREE.CircleGeometry(0.22, 8, 0, Math.PI).rotateX(-Math.PI / 2).translate(0, 0, 0);
-  for (let i = 0; i < 16; i++) { const m = new THREE.MeshStandardMaterial({color: cols[i % cols.length], side: THREE.DoubleSide, roughness: 0.6});
+  for (let i = 0; i < (MOB ? 8 : 16); i++) { const m = new THREE.MeshStandardMaterial({color: cols[i % cols.length], side: THREE.DoubleSide, roughness: 0.6});
     const b = new THREE.Group(), l = new THREE.Mesh(wg, m), r = new THREE.Mesh(wg, m); l.rotation.y = Math.PI / 2; r.rotation.y = -Math.PI / 2; const wl = new THREE.Group(), wr = new THREE.Group(); wl.add(l); wr.add(r); b.add(wl, wr);
     b.add(new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.25, 4).rotateX(Math.PI / 2), new THREE.MeshStandardMaterial({color: '#333'})));
     scene.add(b); BUGS.push({b, wl, wr, cx: 0, cz: 0, ph: Math.random() * 6, sp: 0.6 + Math.random() * 0.5, init: false}); }
@@ -452,7 +481,7 @@ function drawMinimap() {
 function intro() {
   G.paused = true;
   $('box').innerHTML = `<h1>🥚 恐龙长大记</h1><p>你是一只刚出生的小恐龙。在大陆上走来走去，<b>吃东西长大</b>，吃饱了就能<b>进化</b>成更大的恐龙！</p>
-   <div class="legend"><span>🖱️ 点地面 = 走过去</span><span>🖱️ 按住拖动 = 转动视角</span><span>⌨️ ↑ 往前走（走久了会跑）← → 转身</span><span>⌨️ Q / E 转视角</span><span>🔍 滚轮 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span></div>
+   <div class="legend">${MOB ? '<span>🕹️ 左下角摇杆 = 走路，推到底会跑</span><span>👆 轻点地面 = 走过去</span><span>☝️ 单指滑动 = 转视角</span><span>🤏 双指捏合 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span>' : `<span>🖱️ 点地面 = 走过去</span><span>🖱️ 按住拖动 = 转动视角</span><span>⌨️ ↑ 往前走（走久了会跑）← → 转身</span><span>⌨️ Q / E 转视角</span><span>🔍 滚轮 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span>`}</div>
    <p>大陆上有 5 个地方：🌿蕨类森林、🌼开花草原、💧大河湿地、🌴苏铁海岸、🏜️红岩台地。</p>
    <p style="color:#6c7563">这里没有时间限制，也不会输。碰到大恐龙只会被轻轻推开。</p>
    <button class="btn" id="startBtn">${SV.seen ? '继续冒险' : '出发！'}</button>`;
@@ -490,7 +519,7 @@ function frame(ts) {
   if (marker.visible) { marker.userData.t += dt; marker.scale.setScalar(1 + 0.15 * Math.sin(marker.userData.t * 5)); }
   // 相机：在恐龙身后，走路时慢慢转到身后；拖动鼠标或 Q/E 可以自己转
   const behind = PL.dir + Math.PI;
-  if (G.t - CAM.manualT > 2.5 && (Math.abs(PL.spd) > 0.5 || PL.tx !== null)) CAM.yaw += wrapA(behind - CAM.yaw) * Math.min(1, dt * (PL.spd < 0 ? 0.3 : 1.4));
+  if (G.t - CAM.manualT > 2.5 && (Math.abs(PL.spd) > 0.5 || PL.tx !== null)) CAM.yaw += wrapA(behind - CAM.yaw) * Math.min(1, dt * (PL.spd < 0 ? 0.3 : 1.4) * (JOY.on ? Math.pow(PL.joyFwd || 0, 2) * 0.8 : 1));
   if (!G.camInit) CAM.yaw = behind;
   const dist = (5 + PL.len * 1.35) * (G.zoom || 1), y0 = H(PL.x, PL.z);
   const cp = Math.cos(CAM.pitch), spch = Math.sin(CAM.pitch);

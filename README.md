@@ -2,6 +2,7 @@
 
 - **恐龙考察营**：挖化石、拼骨架、恐龙乐园 → `index.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/ ）
 - **恐龙长大记 3D**：吃东西长大、一路进化 → `grow.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/grow.html ）
+- 恐龙长大记离线单文件版（不联网、直接双击打开）→ `grow-offline.html`
 - 旧的 2D 版恐龙长大记 → `grow2d.html`
 
 ---
@@ -24,7 +25,9 @@
 直接用浏览器打开 `index.html`。
 
 ## 恐龙长大记 3D
-用 WebGL 做的 3D 卡通风格版本，电脑浏览器（Chrome / Edge / Safari）里玩最流畅，单个网页文件，离线也能用。
+用 WebGL 做的 3D 卡通风格版本。电脑和手机都能玩：`grow.html` 在线打开（模型放在 `grow-assets/` 里，加载快）；`grow-offline.html` 是把模型都装在一个文件里的离线版。手机需要 iOS 15 / Android Chrome 90 以上。
+
+- 手机：左下角摇杆走路（推到底会跑），单指滑动转视角，双指捏合拉近拉远，轻点地面走过去；手机上自动用省电画质。
 
 - 5 个地方：🌿蕨类森林、🌼开花草原（几千朵小花）、💧大河湿地、🌴苏铁海岸、🏜️红岩台地。
 - 从迅猛龙宝宝开始，吃东西长大，进化 3 次，每次二选一：迅猛龙/副栉龙 → 剑龙/三角龙 → 霸王龙/迷惑龙。

@@ -211,11 +211,11 @@ export function makeInstancer(scene, gltfScene, targetH, opt = {}) {
 }
 
 // 花海：成千上万朵小花，一次画完
-export function buildFlowerField(scene) {
+export function buildFlowerField(scene, maxN = 4200) {
   const stem = new THREE.CylinderGeometry(0.02, 0.025, 0.36, 4).translate(0, 0.18, 0);
   const head = new THREE.IcosahedronGeometry(0.11, 0).scale(1, 0.6, 1).translate(0, 0.38, 0);
   const list = []; const RR = RNG(99);
-  for (let i = 0; i < 30000 && list.length < 4200; i++) {
+  for (let i = 0; i < 30000 && list.length < maxN; i++) {
     const x = -10 + RR() * 140, z = -125 + RR() * 140; if (biomeAt(x, z) !== 'flower') continue;
     const f = fbm(x * 0.05 + 7, z * 0.05 - 3); if (f < 0.5 && RR() > 0.08) continue; const h = H(x, z); if (h < 0) continue;
     list.push({x, y: h, z, c: FLOWERCOLS[Math.floor(hash(Math.floor(x * 0.15), Math.floor(z * 0.15)) * 6 + RR() * 1.6) % 6], s: 0.6 + RR() * 0.7});
