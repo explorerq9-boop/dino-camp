@@ -25,6 +25,10 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
 .sz small{font-size:13px;font-weight:400;color:#8a8f7d;display:block;line-height:1}
 .hintline{text-align:center;color:#8a8f7d;font-size:16px;margin-bottom:16px}
 .sec{font-size:22px;font-weight:800;margin:18px auto 12px;max-width:1400px}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:0 auto 16px;max-width:1400px}
+.tab{height:52px;border-radius:26px;padding:0 20px;background:#fffdf6;font-size:19px;font-weight:700;box-shadow:0 3px 10px rgba(80,60,20,.12);border:3px solid transparent}
+.tab.sel{border-color:#8fd16a;background:#effae6}
+.tab small{color:#8a8f7d;font-weight:400;margin-left:4px}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;max-width:1400px;margin:0 auto}
 .card{background:#fffdf6;border-radius:24px;padding:10px;box-shadow:0 6px 16px rgba(80,60,20,.15);cursor:pointer;position:relative;transition:transform .15s}
 .card:hover{transform:translateY(-3px)}
@@ -75,6 +79,8 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
 .brow{display:flex;align-items:center;gap:14px;background:#fffdf6;border-radius:20px;padding:12px 16px;margin:0 auto 12px;max-width:1100px;box-shadow:0 3px 10px rgba(80,60,20,.1)}
 .brow .nm{width:200px;font-size:18px;font-weight:700}
 .brow .slots{display:flex;gap:14px;flex-wrap:wrap}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px;max-width:1300px;margin:0 auto}
+.bcell{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:14px;text-align:center;color:#6b705f}
 .slot{width:76px;height:76px;border-radius:50%;border:3px dashed #e0d3b0;display:flex;align-items:center;justify-content:center;color:#c9bb94;font-weight:700;font-size:15px}
 /* dialogs */
 .dlg{position:fixed;inset:0;background:rgba(40,35,20,.35);display:none;align-items:center;justify-content:center;z-index:3000}
@@ -98,7 +104,7 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
   <div class="wrap">
     <div class="sizes" id="sizes"><span>几块：</span></div>
     <div class="hintline" id="sizeHint"></div>
-    <div id="galleries"></div>
+    <div class="tabs" id="tabs"></div><div id="galleries"></div>
   </div>
 </div>
 
@@ -140,30 +146,16 @@ button{font-family:inherit;border:0;cursor:pointer;color:inherit}
   <div class="row"><div>🧲 大磁铁<small>吸附范围大一些（更容易）</small></div><button class="tg" data-k="magnet"></button></div>
   <div class="row"><div>👻 淡底图<small>拼图板上印一层很淡的原图（最容易）</small></div><button class="tg" data-k="ghost"></button></div>
   <div class="row"><div>✏️ 拼块格线<small>拼图板上画出每一块的位置</small></div><button class="tg" data-k="grid"></button></div>
-  <div class="credits">图片来源：<br>· 「手绘恐龙」6 张：Universal Blue 项目 Bluefin 壁纸（ublue-os/artwork 仓库，Apache License 2.0），裁剪成 2:1 并缩小。<br>· 「3D 小恐龙」8 张：本游戏自己用 three.js（MIT）渲染，模型来自 Quaternius（CC0）。<br>· 「我的图片」：你自己加的图片只保存在这台电脑的浏览器里，不会上传。</div>
+  <div class="credits" id="credits"></div>
   <div style="text-align:center;margin-top:12px"><button class="big" id="setClose">好了</button></div>
 </div></div>
 <input type="file" id="fileIn" accept="image/*" style="display:none">
 
+<script src="pictures.js"></script>
 <script>
-const IMGS=__IMAGES__;
-const PICS=[
- {id:'bf07',set:'hand',ar:2,name:'草原上的日落',praise:'三角龙和长脖子恐龙在金色的草原上散步！'},
- {id:'bf08',set:'hand',ar:2,name:'长脖子恐龙的山谷',praise:'好多长脖子恐龙在雾里慢慢走！'},
- {id:'bf04',set:'hand',ar:2,name:'下雨的森林',praise:'副栉龙在绿色的雨林里听雨声！'},
- {id:'bf06',set:'hand',ar:2,name:'背帆龙的黄昏',praise:'背上有帆的异齿龙在晒太阳！'},
- {id:'bf02',set:'hand',ar:2,name:'冰海里的游泳',praise:'远古的海洋动物在冰海里游泳！'},
- {id:'bf09',set:'hand',ar:2,name:'秋天的森林',praise:'霸王龙在秋天的森林里休息！'},
- {id:'meadow',set:'3d',ar:1.6,name:'三角龙妈妈和宝宝',praise:'三角龙妈妈和宝宝在花海里见面啦！'},
- {id:'river',set:'3d',ar:1.6,name:'雷龙在河边喝水',praise:'长脖子雷龙喝到清凉的河水啦！'},
- {id:'fern',set:'3d',ar:1.6,name:'剑龙在蕨类森林',praise:'剑龙背上的骨板像一排小树叶！'},
- {id:'beach',set:'3d',ar:1.6,name:'副栉龙在海边散步',praise:'副栉龙在沙滩上散步！'},
- {id:'trex',set:'3d',ar:1.6,name:'霸王龙在花丛里',praise:'霸王龙在花丛里慢慢散步！'},
- {id:'raptors',set:'3d',ar:1.6,name:'迅猛龙三兄弟',praise:'迅猛龙三兄弟一起在湖边玩！'},
- {id:'friends',set:'3d',ar:1.6,name:'恐龙好朋友',praise:'恐龙好朋友聚在一起啦！'},
- {id:'oasis',set:'3d',ar:1.6,name:'剑龙在沙漠绿洲',praise:'剑龙找到了一片有水的绿洲！'},
-];
-const SETS=[['hand','🎨 手绘恐龙'],['3d','🧸 3D 小恐龙'],['mine','📷 我的图片']];
+const IMGS={},THUMBS={};
+const PICS=(window.PUZZLE_PICS||[]).map(p=>{IMGS[p.id]='images/'+p.id+'.webp';THUMBS[p.id]='thumbs/'+p.id+'.webp';return p;});
+const SETS=(window.PUZZLE_SETS||[]).concat([['mine','📷 我的图片']]);
 const LEVELS=[4,9,16,24,36,48];
 const LVHINT=['刚开始','简单','中等','有点难','难','很难'];
 const SNAP=[0.5,0.42,0.34,0.3,0.27,0.24];
@@ -183,7 +175,7 @@ const DB={db:null,
 async function loadMine(){
   for(let i=PICS.length-1;i>=0;i--) if(PICS[i].set==='mine') PICS.splice(i,1);
   const all=await DB.all();
-  all.sort((a,b)=>a.t-b.t).forEach((o,k)=>{IMGS[o.id]=o.src;PICS.push({id:o.id,set:'mine',ar:o.ar,name:'我的图片 '+(k+1),praise:'你把自己的图片拼好啦！'});});
+  all.sort((a,b)=>a.t-b.t).forEach((o,k)=>{IMGS[o.id]=o.src;THUMBS[o.id]=o.src;PICS.push({id:o.id,set:'mine',ar:o.ar,name:'我的图片 '+(k+1),praise:'你把自己的图片拼好啦！'});});
 }
 $('fileIn').onchange=async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
@@ -217,7 +209,7 @@ function speak(t){if(!(S.voice&&!S.quiet&&window.speechSynthesis))return;try{con
 
 /* ---------- images ---------- */
 const imgEl={};
-function loadImg(id){if(!imgEl[id]){const im=new Image();im.src=IMGS[id];imgEl[id]=im.decode().then(()=>im);}return imgEl[id];}
+function loadImg(id){if(!imgEl[id]){const im=new Image();im.src=IMGS[id];imgEl[id]=im.decode().then(()=>im).catch(e=>{delete imgEl[id];throw e;});}return imgEl[id];}
 function gridFor(n,ar){let rows=Math.max(2,Math.round(Math.sqrt(n/ar)));let cols=Math.max(2,Math.round(n/rows));return [cols,rows];}
 
 /* ---------- home ---------- */
@@ -226,15 +218,18 @@ function buildHome(){
   LEVELS.forEach((n,i)=>{const b=document.createElement('button');b.className='sz'+(S.lv===i?' sel':'');
     b.innerHTML=`<div>${n} 块<small>${LVHINT[i]}</small></div>`;b.onclick=()=>{S.lv=i;save();buildHome();sfx.pick();};sz.appendChild(b);});
   $('sizeHint').textContent=S.lv<=1?'4、9 块会在拼图板上画出每块的位置':'16 块以上：拼图板是空的，拼块打乱放在旁边，可以先把几块拼在一起';
+  if(!S.cat||!SETS.some(t=>t[0]===S.cat))S.cat=SETS[0][0];
+  const tb=$('tabs');tb.innerHTML='';
+  for(const [set,title] of SETS){const b=document.createElement('button');b.className='tab'+(S.cat===set?' sel':'');
+    b.innerHTML=`${title}<small>${PICS.filter(p=>p.set===set).length||''}</small>`;b.onclick=()=>{S.cat=set;save();buildHome();$('home').querySelector('.wrap').scrollTop=0;};tb.appendChild(b);}
   const G=$('galleries');G.innerHTML='';
-  for(const [set,title] of SETS){
-    const h=document.createElement('div');h.className='sec';h.textContent=title;G.appendChild(h);
+  {const set=S.cat;
     const g=document.createElement('div');g.className='gallery';G.appendChild(g);
     PICS.filter(p=>p.set===set).forEach(p=>{
       const i=PICS.indexOf(p);const d=document.createElement('div');d.className='card';
       const got=LEVELS.filter((n,k)=>S.stickers[p.id+'_'+k]).length;
       const sv=S.saves[p.id+'_'+S.lv];
-      d.innerHTML=`<div class="im" style="background-image:url(${IMGS[p.id]})"></div><div class="t"><span>${p.name}</span><span class="stars">${'★'.repeat(got)}${'☆'.repeat(LEVELS.length-got)}</span></div>${sv?'<div class="resume">▶ 接着拼</div>':''}`;
+      d.innerHTML=`<div class="im" style="background-image:url('${THUMBS[p.id]}')"></div><div class="t"><span>${p.name}</span><span class="stars">${'★'.repeat(got)}${'☆'.repeat(LEVELS.length-got)}</span></div>${sv?'<div class="resume">▶ 接着拼</div>':''}`;
       if(set==='mine'){const x=document.createElement('button');x.className='del';x.textContent='✕';x.title='删除这张图';
         x.onclick=async ev=>{ev.stopPropagation();x.textContent='确定?';if(x.dataset.c){await DB.del(p.id);delete IMGS[p.id];await loadMine();buildHome();}x.dataset.c=1;};d.appendChild(x);}
       d.onclick=()=>startGame(i);g.appendChild(d);});
@@ -261,7 +256,7 @@ function edge(ctx,x1,y1,x2,y2,sign,s){
 let G=null,hitCtx=document.createElement('canvas').getContext('2d');
 async function startGame(pi,fresh){
   const p=PICS[pi];const lv=S.lv;const [c,r]=gridFor(LEVELS[lv],p.ar);
-  const im=await loadImg(p.id);
+  let im;try{im=await loadImg(p.id);}catch(e){alert('这张图片没找到。请确认 images 文件夹和网页放在一起。');return;}
   $('pieces').innerHTML='';$('fx').innerHTML='';$('doneBox').classList.remove('show');
   ['home','book'].forEach(s=>$(s).classList.remove('show'));$('play').classList.add('show');
   $('ptitle').textContent=p.name;$('ref').src=IMGS[p.id];
@@ -417,7 +412,7 @@ function finish(){
   const msgs=['拼好啦！🎉','太棒了！🌟','你真厉害！👏','完成啦！🦕','好厉害的拼图高手！🧩'];
   $('doneT').textContent=msgs[Math.floor(Math.random()*msgs.length)];$('doneP').textContent=G.p.praise;
   const n=Object.keys(S.stickers).length;
-  $('doneStk').innerHTML=`<div class="sticker${isNew?' pop':''}" style="background-image:url(${IMGS[G.p.id]})"><b>${LEVELS[G.lv]}</b></div><div>${isNew?'得到一张新贴纸！':'这张贴纸已经有啦'}<br><span style="font-weight:400;color:#8a8f7d">贴纸本里一共 ${n} 张</span></div>`;
+  $('doneStk').innerHTML=`<div class="sticker${isNew?' pop':''}" style="background-image:url('${THUMBS[G.p.id]}')"><b>${LEVELS[G.lv]}</b></div><div>${isNew?'得到一张新贴纸！':'这张贴纸已经有啦'}<br><span style="font-weight:400;color:#8a8f7d">贴纸本里一共 ${n} 张</span></div>`;
   $('harderBtn').style.display=G.lv<LEVELS.length-1?'':'none';$('harderBtn').textContent=`试试 ${LEVELS[G.lv+1]||''} 块`;
   setTimeout(()=>{$('doneBox').classList.add('show');if(isNew)setTimeout(sfx.sticker,500);},900);
   speak('拼好啦，你真棒！'+G.p.praise);
@@ -427,13 +422,16 @@ function sparkle(x,y,n){const em=['⭐','✨','🌟','💛'];for(let i=0;i<n;i++
 
 /* ---------- sticker book ---------- */
 function buildBook(){
-  const w=$('bookWrap');w.innerHTML='';let tot=0,got=0;
-  PICS.forEach(p=>{const r=document.createElement('div');r.className='brow';
-    r.innerHTML=`<div class="nm">${p.name}</div><div class="slots">${LEVELS.map((n,k)=>{tot++;if(S.stickers[p.id+'_'+k]){got++;return `<div class="sticker" style="background-image:url(${IMGS[p.id]})"><b>${n}</b></div>`;}return `<div class="slot">${n}块</div>`;}).join('')}</div>`;
-    w.appendChild(r);});
-  $('bookCount').textContent=`已收集 ${got} / ${tot}`;
+  const w=$('bookWrap');w.innerHTML='';let got=0;
+  for(const [set,title] of SETS){const ps=PICS.filter(p=>p.set===set);if(!ps.length)continue;
+    const h=document.createElement('div');h.className='sec';h.textContent=title;w.appendChild(h);
+    const r=document.createElement('div');r.className='bgrid';w.appendChild(r);
+    ps.forEach(p=>{const ks=LEVELS.map((n,k)=>k).filter(k=>S.stickers[p.id+'_'+k]);const d=document.createElement('div');d.className='bcell';
+      if(ks.length){got++;const best=Math.max(...ks);d.innerHTML=`<div class="sticker" style="background-image:url('${THUMBS[p.id]}')"><b>${LEVELS[best]}</b></div><span>${p.name}</span>`;}
+      else d.innerHTML=`<div class="slot">?</div><span>${p.name}</span>`;
+      r.appendChild(d);});}
+  $('bookCount').textContent=`已收集 ${got} / ${PICS.length}`;
 }
-
 /* ---------- wiring ---------- */
 function goHome(){if(G)G=null;$('doneBox').classList.remove('show');$('play').classList.remove('show');$('book').classList.remove('show');$('home').classList.add('show');buildHome();}
 $('backBtn').onclick=goHome;
@@ -453,6 +451,7 @@ $('setBtn1').onclick=$('setBtn2').onclick=()=>$('setBox').classList.add('show');
 $('setClose').onclick=()=>$('setBox').classList.remove('show');
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>layout(false),120);});
 addEventListener('contextmenu',e=>e.preventDefault());
+$('credits').innerHTML=(window.PUZZLE_CREDITS||'')+'<br>· 「我的图片」只保存在这台电脑的浏览器里，不会上传。';
 applySettings();buildHome();
 DB.open().then(loadMine).then(buildHome);
 </script>

@@ -3,7 +3,7 @@
 - **恐龙考察营**：挖化石、拼骨架、恐龙乐园 → `index.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/ ）
 - **恐龙长大记 3D**：吃东西长大、一路进化 → `grow.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/grow.html ）
 - 恐龙长大记离线单文件版（不联网、直接双击打开）→ `grow-offline.html`
-- **恐龙拼图**：8 张恐龙壁纸，4/9/16 块 → `puzzle.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/puzzle.html ）
+- **恐龙拼图**：按分类选图，4–48 块 → `puzzle/`（在线玩：https://explorerq9-boop.github.io/dino-camp/puzzle/ ）
 - 旧的 2D 版恐龙长大记 → `grow2d.html`
 
 ---
@@ -62,6 +62,9 @@
 - 📒 贴纸本：每张图每种块数拼好一次得一张贴纸，慢慢集齐。
 - 📷 我的图片：可以用电脑里的任何图片（比如网上下载的恐龙图、家人照片）做拼图，图片只存在本机浏览器里。
 - 声音很轻、可一键静音；🌙 安静模式关掉所有声音和动画。设置里还有“淡底图”“拼块格线”“大磁铁”可以让它变简单。
+
+### 文件
+游戏在 `puzzle/`：`index.html` 是游戏，`pictures.js` 是图片清单（每张图的名字、分类、来源、授权），图片在 `images/`，缩略图在 `thumbs/`。加新图只要把图片放进去、在 `pictures.js` 里加一行。离线玩时把整个 `puzzle` 文件夹拷走，双击 `index.html`。
 
 ### 图片来源
 - 「手绘恐龙」6 张：[Universal Blue / Bluefin 壁纸](https://github.com/ublue-os/artwork)（ublue-os/artwork 仓库，Apache License 2.0），裁剪为 2:1 并缩小。
