@@ -8,373 +8,452 @@ html,body{margin:0;height:100%;overflow:hidden;background:#fbf4e4;font-family:"P
 button{font-family:inherit;border:0;cursor:pointer;color:inherit}
 .screen{position:fixed;inset:0;display:none}
 .screen.show{display:block}
-/* ---------- top bar ---------- */
-.bar{position:absolute;left:0;right:0;top:0;height:76px;display:flex;align-items:center;gap:12px;padding:0 16px;z-index:5}
-.bar h1{margin:0;font-size:28px;flex:1;letter-spacing:2px}
+.bar{position:absolute;left:0;right:0;top:0;height:76px;display:flex;align-items:center;gap:10px;padding:0 16px;z-index:5}
+.bar h1{margin:0;font-size:28px;flex:1;letter-spacing:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar .sub{font-size:18px;color:#7a806e;font-weight:400;margin-left:10px}
-.ib{min-width:58px;height:58px;border-radius:29px;background:#fffdf6;font-size:26px;box-shadow:0 4px 12px rgba(80,60,20,.16);padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:20px;font-weight:700}
-.ib .e{font-size:26px}
+.ib{min-width:58px;height:58px;border-radius:29px;background:#fffdf6;box-shadow:0 4px 12px rgba(80,60,20,.16);padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:19px;font-weight:700;flex:none}
+.ib .e{font-size:24px}
 .ib.on{background:#ffe7a6}
 .ib:active{transform:scale(.96)}
-/* ---------- home ---------- */
-#home .wrap{position:absolute;top:76px;left:0;right:0;bottom:0;overflow:auto;padding:8px 22px 30px}
-.sizes{display:flex;gap:14px;justify-content:center;align-items:center;margin:6px 0 20px;flex-wrap:wrap}
+.ib:disabled{opacity:.4}
+/* home */
+#home .wrap{position:absolute;top:76px;left:0;right:0;bottom:0;overflow:auto;padding:4px 22px 30px}
+.sizes{display:flex;gap:12px;justify-content:center;align-items:center;margin:4px 0 8px;flex-wrap:wrap}
 .sizes span{font-size:20px;font-weight:700;margin-right:4px}
-.sz{width:118px;height:66px;border-radius:20px;background:#fffdf6;font-size:22px;font-weight:800;box-shadow:0 4px 12px rgba(80,60,20,.14);display:flex;align-items:center;justify-content:center;gap:8px;border:4px solid transparent}
+.sz{min-width:92px;height:62px;border-radius:20px;background:#fffdf6;font-size:21px;font-weight:800;box-shadow:0 4px 12px rgba(80,60,20,.14);display:flex;align-items:center;justify-content:center;gap:6px;border:4px solid transparent;padding:0 12px}
 .sz.sel{border-color:#f2b33d;background:#fff3cf}
-.sz i{display:grid;gap:2px;width:30px;height:30px}
-.sz i b{background:#8fcf6e;border-radius:2px}
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;max-width:1400px;margin:0 auto}
+.sz small{font-size:13px;font-weight:400;color:#8a8f7d;display:block;line-height:1}
+.hintline{text-align:center;color:#8a8f7d;font-size:16px;margin-bottom:16px}
+.sec{font-size:22px;font-weight:800;margin:18px auto 12px;max-width:1400px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;max-width:1400px;margin:0 auto}
 .card{background:#fffdf6;border-radius:24px;padding:10px;box-shadow:0 6px 16px rgba(80,60,20,.15);cursor:pointer;position:relative;transition:transform .15s}
 .card:hover{transform:translateY(-3px)}
-.card img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:16px;display:block;pointer-events:none}
-.card .t{font-size:21px;font-weight:700;padding:10px 6px 4px;display:flex;justify-content:space-between;align-items:center}
-.card .stars{font-size:18px;letter-spacing:2px;color:#f2b33d}
-/* ---------- play ---------- */
-#play{background:radial-gradient(ellipse at 40% 40%,#fffaf0,#f6ecd4)}
-#board{position:absolute;border-radius:14px;background:#efe4c8;box-shadow:inset 0 2px 10px rgba(80,60,20,.18)}
-#ghost{position:absolute;inset:0;width:100%;height:100%;border-radius:14px;transition:opacity .4s}
-#tray{position:absolute;border-radius:22px;background:rgba(255,253,246,.7);box-shadow:inset 0 2px 8px rgba(80,60,20,.1)}
-.pc{position:absolute;left:0;top:0;transform-origin:0 0;cursor:grab;touch-action:none;will-change:transform}
-.pc.drag{cursor:grabbing;filter:drop-shadow(0 10px 12px rgba(40,30,10,.35));z-index:1000!important}
-.pc.glide{transition:transform .38s cubic-bezier(.3,.8,.3,1)}
-.pc.done{cursor:default;pointer-events:none}
+.card .im{width:100%;aspect-ratio:2/1;background-size:cover;background-position:center;border-radius:16px}
+.card .t{font-size:20px;font-weight:700;padding:10px 6px 4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card .stars{font-size:15px;color:#f2b33d;white-space:nowrap}
+.card .resume{position:absolute;left:18px;top:18px;background:#8fd16a;color:#fff;font-weight:800;border-radius:14px;padding:4px 12px;font-size:16px}
+.card .del{position:absolute;right:16px;top:16px;width:40px;height:40px;border-radius:20px;background:rgba(255,255,255,.9);font-size:18px}
+.card.add{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;border:3px dashed #e3c98a;background:#fffaf0;font-size:20px;font-weight:700;color:#8a7a4c}
+.card.add .plus{font-size:48px}
+/* play */
+#play{background:radial-gradient(ellipse at 40% 40%,#fffaf0,#f3e7cc)}
+#board{position:absolute;border-radius:6px;background:#e9dcbc;box-shadow:inset 0 2px 10px rgba(80,60,20,.25),0 0 0 3px #e0cfa4}
+#ghost,#full{position:absolute;inset:0;width:100%;height:100%;border-radius:6px}
+#full{opacity:0;transition:opacity 1.2s;pointer-events:none}
+#pieces{position:absolute;inset:0}
+.pc{position:absolute;left:0;top:0;pointer-events:none;will-change:transform}
+.pc.lift{filter:drop-shadow(0 8px 10px rgba(40,30,10,.35))}
+.pc.glide{transition:transform .35s cubic-bezier(.3,.8,.3,1)}
+.pc.dim{opacity:.18}
 .pc.flash{animation:flash .7s}
-@keyframes flash{0%{filter:brightness(1.35)}100%{filter:brightness(1)}}
+@keyframes flash{0%{filter:brightness(1.4)}100%{filter:brightness(1)}}
 .quiet .pc.flash{animation:none}
-#count{font-size:22px;font-weight:800;background:#fffdf6;border-radius:29px;height:58px;padding:0 20px;display:flex;align-items:center;box-shadow:0 4px 12px rgba(80,60,20,.16)}
-#full{position:absolute;inset:0;width:100%;height:100%;border-radius:14px;opacity:0;transition:opacity 1.2s;pointer-events:none}
-/* ---------- done ---------- */
-#doneBox{position:fixed;left:50%;bottom:26px;transform:translate(-50%,40px);opacity:0;transition:all .6s;background:#fffdf6;border-radius:28px;padding:18px 26px;box-shadow:0 10px 30px rgba(60,40,10,.25);text-align:center;z-index:2000;pointer-events:none;min-width:min(520px,92vw)}
+#hit{position:absolute;inset:0;touch-action:none}
+#count{font-size:21px;font-weight:800;background:#fffdf6;border-radius:29px;height:58px;padding:0 18px;display:flex;align-items:center;box-shadow:0 4px 12px rgba(80,60,20,.16);flex:none}
+#ref{position:absolute;right:16px;bottom:16px;border-radius:14px;box-shadow:0 8px 22px rgba(40,30,10,.3);border:5px solid #fffdf6;display:none;z-index:900;pointer-events:none}
+#ref.show{display:block}
+#saved{position:absolute;left:50%;top:84px;transform:translateX(-50%);background:#fffdf6;border-radius:16px;padding:6px 16px;font-size:16px;color:#6b705f;opacity:0;transition:opacity .4s;pointer-events:none;z-index:6}
+/* done */
+#doneBox{position:fixed;left:50%;bottom:22px;transform:translate(-50%,40px);opacity:0;transition:all .6s;background:#fffdf6;border-radius:28px;padding:16px 24px;box-shadow:0 10px 30px rgba(60,40,10,.25);text-align:center;z-index:2000;pointer-events:none;width:min(600px,94vw)}
 #doneBox.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
-#doneBox h2{margin:0 0 6px;font-size:32px}
-#doneBox p{margin:0 0 14px;font-size:20px;color:#6b705f}
-.big{height:64px;border-radius:32px;padding:0 28px;font-size:22px;font-weight:800;background:#8fd16a;color:#fff;box-shadow:0 5px 0 #5fa648;margin:0 6px}
+#doneBox h2{margin:0 0 4px;font-size:30px}
+#doneBox p{margin:0 0 12px;font-size:19px;color:#6b705f}
+#doneBox .stk{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;font-size:18px;font-weight:700;color:#8a6b20}
+.sticker{width:76px;height:76px;border-radius:50%;background-size:cover;background-position:center;border:5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.25);position:relative;flex:none}
+.sticker b{position:absolute;right:-8px;bottom:-6px;background:#f2b33d;color:#fff;border-radius:12px;font-size:13px;padding:2px 7px;border:2px solid #fff}
+.sticker.pop{animation:pop .9s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(0) rotate(-30deg)}100%{transform:scale(1) rotate(0)}}
+.quiet .sticker.pop{animation:none}
+.big{height:60px;border-radius:30px;padding:0 24px;font-size:20px;font-weight:800;background:#8fd16a;color:#fff;box-shadow:0 5px 0 #5fa648;margin:4px 5px}
 .big.light{background:#fff3cf;color:#6b5a2c;box-shadow:0 5px 0 #e3c98a}
-.big:active{transform:translateY(3px);box-shadow:0 2px 0 #5fa648}
+.big:active{transform:translateY(3px)}
 #fx{position:fixed;inset:0;pointer-events:none;z-index:1500;overflow:hidden}
-.star{position:absolute;font-size:30px;animation:rise 2.6s ease-out forwards}
-@keyframes rise{0%{transform:translateY(0) scale(.4);opacity:0}15%{opacity:1}100%{transform:translateY(-260px) scale(1.1);opacity:0}}
-/* ---------- settings ---------- */
-#setBox{position:fixed;inset:0;background:rgba(40,35,20,.35);display:none;align-items:center;justify-content:center;z-index:3000}
-#setBox.show{display:flex}
-#setBox .p{background:#fffdf6;border-radius:28px;padding:22px 28px;width:min(560px,92vw);box-shadow:0 10px 30px rgba(0,0,0,.25)}
-#setBox h2{margin:0 0 12px;font-size:26px}
-.row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eee3c8;font-size:20px;gap:12px}
-.row small{display:block;color:#8a8f7d;font-size:15px}
+.star{position:absolute;font-size:28px;animation:rise 2.4s ease-out forwards}
+@keyframes rise{0%{transform:translateY(0) scale(.4);opacity:0}15%{opacity:1}100%{transform:translateY(-220px) scale(1.1);opacity:0}}
+/* sticker book */
+#book .wrap{position:absolute;top:76px;left:0;right:0;bottom:0;overflow:auto;padding:10px 22px 30px}
+.brow{display:flex;align-items:center;gap:14px;background:#fffdf6;border-radius:20px;padding:12px 16px;margin:0 auto 12px;max-width:1100px;box-shadow:0 3px 10px rgba(80,60,20,.1)}
+.brow .nm{width:200px;font-size:18px;font-weight:700}
+.brow .slots{display:flex;gap:14px;flex-wrap:wrap}
+.slot{width:76px;height:76px;border-radius:50%;border:3px dashed #e0d3b0;display:flex;align-items:center;justify-content:center;color:#c9bb94;font-weight:700;font-size:15px}
+/* dialogs */
+.dlg{position:fixed;inset:0;background:rgba(40,35,20,.35);display:none;align-items:center;justify-content:center;z-index:3000}
+.dlg.show{display:flex}
+.dlg .p{background:#fffdf6;border-radius:28px;padding:22px 28px;width:min(580px,92vw);max-height:90vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.dlg h2{margin:0 0 10px;font-size:25px}
+.row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #eee3c8;font-size:19px;gap:12px}
+.row small{display:block;color:#8a8f7d;font-size:14px}
 .tg{width:76px;height:42px;border-radius:21px;background:#ddd5c0;position:relative;flex:none;transition:background .2s}
 .tg::after{content:'';position:absolute;left:4px;top:4px;width:34px;height:34px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 2px 4px rgba(0,0,0,.2)}
 .tg.on{background:#8fd16a}.tg.on::after{left:38px}
-.credits{font-size:14px;color:#7a806e;line-height:1.6;margin-top:12px}
-@media(max-width:980px){#ptitle{display:none}}
-@media(max-width:700px){.ib{padding:0 12px;font-size:17px}.bar{gap:8px;padding:0 8px}}
+.credits{font-size:13px;color:#7a806e;line-height:1.6;margin-top:12px}
+@media(max-width:1100px){#ptitle{display:none}.ib .t{display:none}}
+@media(max-width:700px){.ib{padding:0 12px;min-width:50px;height:52px}.bar{gap:6px;padding:0 8px}}
 </style></head><body>
 
-<!-- ============ HOME ============ -->
 <div id="home" class="screen show">
   <div class="bar"><h1>🦕 恐龙拼图<span class="sub">选一张图，开始拼吧</span></h1>
+    <button class="ib" id="bookBtn"><span class="e">📒</span><span class="t">贴纸本</span></button>
     <button class="ib" id="setBtn1" title="设置"><span class="e">⚙️</span></button></div>
   <div class="wrap">
     <div class="sizes" id="sizes"><span>几块：</span></div>
-    <div class="gallery" id="gallery"></div>
+    <div class="hintline" id="sizeHint"></div>
+    <div id="galleries"></div>
   </div>
 </div>
 
-<!-- ============ PLAY ============ -->
+<div id="book" class="screen">
+  <div class="bar"><button class="ib" id="bookBack"><span class="e">⬅️</span>返回</button><h1>📒 我的恐龙贴纸本 <span class="sub" id="bookCount"></span></h1></div>
+  <div class="wrap" id="bookWrap"></div>
+</div>
+
 <div id="play" class="screen">
   <div class="bar">
-    <button class="ib" id="backBtn"><span class="e">🏠</span>换图</button>
-    <h1 id="ptitle" style="font-size:24px"></h1>
+    <button class="ib" id="backBtn"><span class="e">🏠</span><span class="t">换图</span></button>
+    <h1 id="ptitle" style="font-size:22px"></h1>
     <div id="count">0 / 4</div>
-    <button class="ib" id="hintBtn" title="帮我放一块"><span class="e">🪄</span>帮我</button>
-    <button class="ib on" id="ghostBtn" title="底图提示"><span class="e">👀</span>底图</button>
+    <button class="ib" id="undoBtn" title="撤回"><span class="e">↩️</span><span class="t">撤回</span></button>
+    <button class="ib" id="edgeBtn" title="先拼边框"><span class="e">🔲</span><span class="t">边框</span></button>
+    <button class="ib" id="refBtn" title="看原图"><span class="e">🖼️</span><span class="t">看图</span></button>
+    <button class="ib" id="hintBtn" title="帮我放一块"><span class="e">🪄</span><span class="t">帮我</span></button>
     <button class="ib" id="soundBtn" title="声音"><span class="e">🔈</span></button>
     <button class="ib" id="setBtn2" title="设置"><span class="e">⚙️</span></button>
   </div>
   <div id="board"><canvas id="ghost"></canvas><canvas id="full"></canvas></div>
-  <div id="tray"></div>
   <div id="pieces"></div>
+  <div id="hit"></div>
+  <img id="ref" alt="">
+  <div id="saved">已自动保存 ✓</div>
 </div>
 
 <div id="doneBox"><h2 id="doneT">拼好啦！🎉</h2><p id="doneP"></p>
-  <button class="big" id="againBtn">再拼一次</button><button class="big light" id="nextBtn">下一张图 ➜</button></div>
+  <div class="stk" id="doneStk"></div>
+  <div><button class="big" id="harderBtn">试试更多块</button><button class="big light" id="againBtn">再拼一次</button><button class="big light" id="nextBtn">下一张 ➜</button></div></div>
 <div id="fx"></div>
 
-<div id="setBox"><div class="p">
+<div id="setBox" class="dlg"><div class="p">
   <h2>⚙️ 设置</h2>
-  <div class="row"><div>🔈 轻柔音效<small>拿起、放好时有小小的叮咚声</small></div><button class="tg" data-k="sound"></button></div>
+  <div class="row"><div>🔈 轻柔音效<small>拿起、拼上时小小的叮咚声</small></div><button class="tg" data-k="sound"></button></div>
   <div class="row"><div>🎵 背景音乐<small>很慢很轻的音乐</small></div><button class="tg" data-k="music"></button></div>
   <div class="row"><div>🗣️ 说话夸奖<small>拼好后用声音说"真棒"</small></div><button class="tg" data-k="voice"></button></div>
-  <div class="row"><div>🌙 安静模式<small>关掉所有声音和闪光星星，画面更平静</small></div><button class="tg" data-k="quiet"></button></div>
-  <div class="row"><div>🧲 大磁铁<small>拼块靠近一点就自动吸进去（更容易）</small></div><button class="tg" data-k="magnet"></button></div>
-  <div class="row"><div>🧩 拼块形状<small>打开 = 真拼图凹凸形状；关闭 = 方块</small></div><button class="tg" data-k="tabs"></button></div>
-  <div class="credits">图片来源：8 张壁纸都是这个游戏自己用 3D 渲染出来的（不是网上找的图）。恐龙、树、花、石头的 3D 模型来自 Quaternius 的「Animated Dinosaur Pack」「Ultimate Nature Pack」「Stylized Nature MegaKit」，都是 CC0 公共领域授权，可以免费使用。地形、河水、天空、配色是程序原创。渲染用 three.js（MIT 授权）。</div>
-  <div style="text-align:center;margin-top:14px"><button class="big" id="setClose">好了</button></div>
+  <div class="row"><div>🌙 安静模式<small>关掉所有声音、星星和闪光</small></div><button class="tg" data-k="quiet"></button></div>
+  <div class="row"><div>🧲 大磁铁<small>吸附范围大一些（更容易）</small></div><button class="tg" data-k="magnet"></button></div>
+  <div class="row"><div>👻 淡底图<small>拼图板上印一层很淡的原图（最容易）</small></div><button class="tg" data-k="ghost"></button></div>
+  <div class="row"><div>✏️ 拼块格线<small>拼图板上画出每一块的位置</small></div><button class="tg" data-k="grid"></button></div>
+  <div class="credits">图片来源：<br>· 「手绘恐龙」6 张：Universal Blue 项目 Bluefin 壁纸（ublue-os/artwork 仓库，Apache License 2.0），裁剪成 2:1 并缩小。<br>· 「3D 小恐龙」8 张：本游戏自己用 three.js（MIT）渲染，模型来自 Quaternius（CC0）。<br>· 「我的图片」：你自己加的图片只保存在这台电脑的浏览器里，不会上传。</div>
+  <div style="text-align:center;margin-top:12px"><button class="big" id="setClose">好了</button></div>
 </div></div>
+<input type="file" id="fileIn" accept="image/*" style="display:none">
 
 <script>
 const IMGS=__IMAGES__;
 const PICS=[
- {id:'meadow', name:'三角龙妈妈和宝宝', place:'开满小花的草原', praise:'三角龙妈妈和宝宝在花海里见面啦！'},
- {id:'river',  name:'雷龙在河边喝水',   place:'清清的小河',     praise:'长脖子雷龙低头喝到清凉的河水啦！'},
- {id:'fern',   name:'剑龙在蕨类森林',   place:'绿绿的大森林',   praise:'剑龙背上的骨板像一排小树叶！'},
- {id:'beach',  name:'副栉龙在海边散步', place:'阳光沙滩',       praise:'副栉龙头上的冠子可以发出“嘟嘟”的声音哦！'},
- {id:'trex',   name:'霸王龙在花丛里',   place:'傍晚的花丛',     praise:'霸王龙在花丛里慢慢散步！'},
- {id:'raptors',name:'迅猛龙三兄弟',     place:'湖边草地',       praise:'紫色、蓝色的迅猛龙一起在湖边玩！'},
- {id:'friends',name:'恐龙好朋友',       place:'大湖边',         praise:'六只恐龙好朋友聚在一起啦！'},
- {id:'oasis',  name:'剑龙在沙漠绿洲',   place:'开花的仙人掌',   praise:'剑龙找到了一片有水的绿洲！'},
+ {id:'bf07',set:'hand',ar:2,name:'草原上的日落',praise:'三角龙和长脖子恐龙在金色的草原上散步！'},
+ {id:'bf08',set:'hand',ar:2,name:'长脖子恐龙的山谷',praise:'好多长脖子恐龙在雾里慢慢走！'},
+ {id:'bf04',set:'hand',ar:2,name:'下雨的森林',praise:'副栉龙在绿色的雨林里听雨声！'},
+ {id:'bf06',set:'hand',ar:2,name:'背帆龙的黄昏',praise:'背上有帆的异齿龙在晒太阳！'},
+ {id:'bf02',set:'hand',ar:2,name:'冰海里的游泳',praise:'远古的海洋动物在冰海里游泳！'},
+ {id:'bf09',set:'hand',ar:2,name:'秋天的森林',praise:'霸王龙在秋天的森林里休息！'},
+ {id:'meadow',set:'3d',ar:1.6,name:'三角龙妈妈和宝宝',praise:'三角龙妈妈和宝宝在花海里见面啦！'},
+ {id:'river',set:'3d',ar:1.6,name:'雷龙在河边喝水',praise:'长脖子雷龙喝到清凉的河水啦！'},
+ {id:'fern',set:'3d',ar:1.6,name:'剑龙在蕨类森林',praise:'剑龙背上的骨板像一排小树叶！'},
+ {id:'beach',set:'3d',ar:1.6,name:'副栉龙在海边散步',praise:'副栉龙在沙滩上散步！'},
+ {id:'trex',set:'3d',ar:1.6,name:'霸王龙在花丛里',praise:'霸王龙在花丛里慢慢散步！'},
+ {id:'raptors',set:'3d',ar:1.6,name:'迅猛龙三兄弟',praise:'迅猛龙三兄弟一起在湖边玩！'},
+ {id:'friends',set:'3d',ar:1.6,name:'恐龙好朋友',praise:'恐龙好朋友聚在一起啦！'},
+ {id:'oasis',set:'3d',ar:1.6,name:'剑龙在沙漠绿洲',praise:'剑龙找到了一片有水的绿洲！'},
 ];
-const SIZES=[[2,2],[3,3],[4,4]];
+const SETS=[['hand','🎨 手绘恐龙'],['3d','🧸 3D 小恐龙'],['mine','📷 我的图片']];
+const LEVELS=[4,9,16,24,36,48];
+const LVHINT=['刚开始','简单','中等','有点难','难','很难'];
+const SNAP=[0.5,0.42,0.34,0.3,0.27,0.24];
 const $=id=>document.getElementById(id);
-const store=(()=>{try{return JSON.parse(localStorage.getItem('dinoPuzzle')||'{}')}catch(e){return {}}})();
-const S=Object.assign({sound:true,music:false,voice:false,quiet:matchMedia('(prefers-reduced-motion: reduce)').matches,magnet:true,tabs:true,size:0,done:{}},store);
-const save=()=>{try{localStorage.setItem('dinoPuzzle',JSON.stringify(S))}catch(e){}};
+const KEY='dinoPuzzle2';
+let S;try{S=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){S={}}
+S=Object.assign({sound:true,music:false,voice:false,quiet:matchMedia('(prefers-reduced-motion: reduce)').matches,magnet:false,ghost:false,grid:false,lv:2,stickers:{},saves:{}},S);
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 
-/* ================= sound (WebAudio, soft) ================= */
+/* ---------- my pictures (IndexedDB) ---------- */
+const DB={db:null,
+  open(){return new Promise(r=>{try{const q=indexedDB.open('dinoPuzzleImgs',1);q.onupgradeneeded=()=>q.result.createObjectStore('imgs',{keyPath:'id'});q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r();}catch(e){r()}})},
+  all(){return new Promise(r=>{if(!this.db)return r([]);const q=this.db.transaction('imgs').objectStore('imgs').getAll();q.onsuccess=()=>r(q.result||[]);q.onerror=()=>r([]);})},
+  put(o){return new Promise(r=>{if(!this.db)return r();const t=this.db.transaction('imgs','readwrite');t.objectStore('imgs').put(o);t.oncomplete=r;t.onerror=r;})},
+  del(id){return new Promise(r=>{if(!this.db)return r();const t=this.db.transaction('imgs','readwrite');t.objectStore('imgs').delete(id);t.oncomplete=r;t.onerror=r;})},
+};
+async function loadMine(){
+  for(let i=PICS.length-1;i>=0;i--) if(PICS[i].set==='mine') PICS.splice(i,1);
+  const all=await DB.all();
+  all.sort((a,b)=>a.t-b.t).forEach((o,k)=>{IMGS[o.id]=o.src;PICS.push({id:o.id,set:'mine',ar:o.ar,name:'我的图片 '+(k+1),praise:'你把自己的图片拼好啦！'});});
+}
+$('fileIn').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  const url=URL.createObjectURL(f);const im=new Image();im.src=url;try{await im.decode();}catch(err){return;}
+  let ar=im.width/im.height;ar=Math.max(1.2,Math.min(2.2,ar));
+  const W=Math.min(2000,im.width),H=Math.round(W/ar);
+  const sw=Math.min(im.width,im.height*ar),sh=sw/ar;
+  const c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').drawImage(im,(im.width-sw)/2,(im.height-sh)/2,sw,sh,0,0,W,H);
+  URL.revokeObjectURL(url);
+  await DB.put({id:'mine'+Date.now(),src:c.toDataURL('image/jpeg',0.88),ar,t:Date.now()});
+  await loadMine();buildHome();
+};
+
+/* ---------- sound ---------- */
 let AC=null,master=null,musicTimer=null;
-function ac(){ if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.5;master.connect(AC.destination);} if(AC.state==='suspended')AC.resume(); return AC;}
+function ac(){if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.5;master.connect(AC.destination);}if(AC.state==='suspended')AC.resume();return AC;}
 function tone(freq,t0=0,dur=0.5,vol=0.12,type='sine'){
   const a=ac(),t=a.currentTime+t0,o=a.createOscillator(),g=a.createGain(),o2=a.createOscillator(),g2=a.createGain();
-  o.type=type;o.frequency.value=freq;o2.type='sine';o2.frequency.value=freq*2;g2.gain.value=0.18;
+  o.type=type;o.frequency.value=freq;o2.frequency.value=freq*2;g2.gain.value=0.18;
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+0.015);g.gain.exponentialRampToValueAtTime(0.0008,t+dur);
-  o.connect(g);o2.connect(g2);g2.connect(g);g.connect(master);o.start(t);o2.start(t);o.stop(t+dur+0.05);o2.stop(t+dur+0.05);
-}
+  o.connect(g);o2.connect(g2);g2.connect(g);g.connect(master);o.start(t);o2.start(t);o.stop(t+dur+0.05);o2.stop(t+dur+0.05);}
 const canSound=()=>S.sound&&!S.quiet;
-const sfx={
-  pick(){ if(canSound()) tone(660,0,0.18,0.05); },
-  snap(){ if(canSound()){ tone(784,0,0.5,0.09); tone(1047,0.09,0.7,0.08);} },
-  back(){ if(canSound()) tone(440,0,0.25,0.04); },
-  done(){ if(canSound()){ [523,659,784,1047,1319].forEach((f,i)=>tone(f,i*0.16,1.1,0.08)); } },
-};
+const sfx={pick(){if(canSound())tone(660,0,0.16,0.04)},join(){if(canSound()){tone(698,0,0.35,0.06)}},
+  snap(){if(canSound()){tone(784,0,0.5,0.08);tone(1047,0.09,0.7,0.07)}},
+  done(){if(canSound())[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*0.16,1.1,0.08))},
+  sticker(){if(canSound()){tone(1319,0,0.4,0.05);tone(1568,0.1,0.6,0.05)}}};
 const PENTA=[262,294,330,392,440,523,587,659];
-function musicTick(){
-  if(!(S.music&&!S.quiet)) return;
-  const f=PENTA[Math.floor(Math.random()*PENTA.length)];
-  tone(f/2,0,2.8,0.035,'triangle'); if(Math.random()<0.5) tone(f,0.6,2.4,0.025,'sine');
-}
-function setMusic(){ clearInterval(musicTimer); if(S.music&&!S.quiet){ ac(); musicTick(); musicTimer=setInterval(musicTick,1900);} }
-function speak(text){
-  if(!(S.voice&&!S.quiet&&window.speechSynthesis)) return;
-  try{const u=new SpeechSynthesisUtterance(text);u.lang='zh-CN';u.rate=0.85;u.pitch=1.1;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
-}
+function musicTick(){if(!(S.music&&!S.quiet))return;const f=PENTA[Math.floor(Math.random()*8)];tone(f/2,0,2.8,0.035,'triangle');if(Math.random()<0.5)tone(f,0.6,2.4,0.025);}
+function setMusic(){clearInterval(musicTimer);if(S.music&&!S.quiet){ac();musicTick();musicTimer=setInterval(musicTick,1900);}}
+function speak(t){if(!(S.voice&&!S.quiet&&window.speechSynthesis))return;try{const u=new SpeechSynthesisUtterance(t);u.lang='zh-CN';u.rate=0.85;u.pitch=1.1;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 
-/* ================= images ================= */
+/* ---------- images ---------- */
 const imgEl={};
-function loadImg(id){ if(imgEl[id]) return imgEl[id]; const im=new Image(); im.src=IMGS[id]; imgEl[id]=im.decode().then(()=>im); return imgEl[id]; }
+function loadImg(id){if(!imgEl[id]){const im=new Image();im.src=IMGS[id];imgEl[id]=im.decode().then(()=>im);}return imgEl[id];}
+function gridFor(n,ar){let rows=Math.max(2,Math.round(Math.sqrt(n/ar)));let cols=Math.max(2,Math.round(n/rows));return [cols,rows];}
 
-/* ================= home ================= */
+/* ---------- home ---------- */
 function buildHome(){
-  const sz=$('sizes'); sz.querySelectorAll('.sz').forEach(e=>e.remove());
-  SIZES.forEach(([c,r],i)=>{
-    const b=document.createElement('button');b.className='sz'+(S.size===i?' sel':'');
-    b.innerHTML=`<i style="grid-template-columns:repeat(${c},1fr)">${'<b></b>'.repeat(c*r)}</i>${c*r} 块`;
-    b.onclick=()=>{S.size=i;save();buildHome();sfx.pick();};
-    sz.appendChild(b);
-  });
-  const g=$('gallery'); g.innerHTML='';
-  PICS.forEach((p,i)=>{
-    const d=document.createElement('div');d.className='card';
-    const st=[0,1,2].map(k=>S.done[p.id+'_'+k]?'★':'☆').join('');
-    d.innerHTML=`<img src="${IMGS[p.id]}" alt=""><div class="t"><span>${p.name}</span><span class="stars" title="拼好过的难度">${st}</span></div>`;
-    d.onclick=()=>startGame(i);
-    g.appendChild(d);
-  });
-}
-
-/* ================= puzzle ================= */
-let G=null; // current game
-function rng(seed){return ()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646}}
-
-function makeEdges(c,r,rand){
-  // horizontal edges between rows: h[r][c] sign for bottom of row r; vertical v[r][c] sign for right of col c
-  const h=[],v=[];
-  for(let y=0;y<r;y++){h.push([]);v.push([]);for(let x=0;x<c;x++){h[y].push(y<r-1?(rand()<0.5?1:-1):0);v[y].push(x<c-1?(rand()<0.5?1:-1):0);}}
-  return {h,v};
-}
-// path of one piece in local coords (origin = piece top-left, size w×h), with tab margin m
-function piecePath(ctx,x,y,w,h,E,c,r,tabs){
-  const top= y===0?0:-E.h[y-1][x], bottom=E.h[y][x], left= x===0?0:-E.v[y][x-1], right=E.v[y][x];
-  const s=Math.min(w,h);
-  ctx.beginPath();ctx.moveTo(0,0);
-  edge(ctx,0,0,w,0,top,s,tabs);
-  edge(ctx,w,0,w,h,right,s,tabs);
-  edge(ctx,w,h,0,h,bottom,s,tabs);
-  edge(ctx,0,h,0,0,left,s,tabs);
-  ctx.closePath();
-}
-// draw edge from (x1,y1) to (x2,y2); sign +1 = tab bulges outward (to the left of travel direction rotated... we use outward normal)
-function edge(ctx,x1,y1,x2,y2,sign,s,tabs){
-  if(!sign||!tabs){ctx.lineTo(x2,y2);return;}
-  const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L;
-  // outward normal for clockwise path = (uy,-ux)
-  const nx=uy*sign,ny=-ux*sign;
-  const P=(a,b)=>[x1+ux*a*L+nx*b*s,y1+uy*a*L+ny*b*s];
-  const pts=[
-    [P(0.34,0)],
-    [P(0.42,0),P(0.40,0.06),P(0.38,0.12)],
-    [P(0.34,0.22),P(0.42,0.27),P(0.5,0.27)],
-    [P(0.58,0.27),P(0.66,0.22),P(0.62,0.12)],
-    [P(0.60,0.06),P(0.58,0),P(0.66,0)],
-  ];
-  ctx.lineTo(...pts[0][0]);
-  for(let i=1;i<pts.length;i++) ctx.bezierCurveTo(...pts[i][0],...pts[i][1],...pts[i][2]);
-  ctx.lineTo(x2,y2);
-}
-
-async function startGame(pi){
-  const p=PICS[pi]; const [c,r]=SIZES[S.size];
-  const im=await loadImg(p.id);
-  if(G) G.pieces.forEach(o=>o.el.remove());
-  $('doneBox').classList.remove('show');$('fx').innerHTML='';
-  $('home').classList.remove('show');$('play').classList.add('show');
-  $('ptitle').textContent=p.name;
-  const rand=rng(1000+pi*31+S.size*7+Math.floor(Math.random()*1000));
-  G={pi,p,im,c,r,E:makeEdges(c,r,rand),pieces:[],placed:0,finished:false};
-  // tray order shuffled
-  const order=[...Array(c*r).keys()].sort(()=>rand()-0.5);
-  for(let k=0;k<c*r;k++){
-    const x=k%c,y=Math.floor(k/c);
-    const el=document.createElement('canvas');el.className='pc';
-    const o={k,x,y,el,placed:false,slot:order.indexOf(k),px:0,py:0,sc:1};
-    G.pieces.push(o);$('pieces').appendChild(el);
-    el.addEventListener('pointerdown',e=>down(e,o));
+  const sz=$('sizes');sz.querySelectorAll('.sz').forEach(e=>e.remove());
+  LEVELS.forEach((n,i)=>{const b=document.createElement('button');b.className='sz'+(S.lv===i?' sel':'');
+    b.innerHTML=`<div>${n} 块<small>${LVHINT[i]}</small></div>`;b.onclick=()=>{S.lv=i;save();buildHome();sfx.pick();};sz.appendChild(b);});
+  $('sizeHint').textContent=S.lv<=1?'4、9 块会在拼图板上画出每块的位置':'16 块以上：拼图板是空的，拼块打乱放在旁边，可以先把几块拼在一起';
+  const G=$('galleries');G.innerHTML='';
+  for(const [set,title] of SETS){
+    const h=document.createElement('div');h.className='sec';h.textContent=title;G.appendChild(h);
+    const g=document.createElement('div');g.className='gallery';G.appendChild(g);
+    PICS.filter(p=>p.set===set).forEach(p=>{
+      const i=PICS.indexOf(p);const d=document.createElement('div');d.className='card';
+      const got=LEVELS.filter((n,k)=>S.stickers[p.id+'_'+k]).length;
+      const sv=S.saves[p.id+'_'+S.lv];
+      d.innerHTML=`<div class="im" style="background-image:url(${IMGS[p.id]})"></div><div class="t"><span>${p.name}</span><span class="stars">${'★'.repeat(got)}${'☆'.repeat(LEVELS.length-got)}</span></div>${sv?'<div class="resume">▶ 接着拼</div>':''}`;
+      if(set==='mine'){const x=document.createElement('button');x.className='del';x.textContent='✕';x.title='删除这张图';
+        x.onclick=async ev=>{ev.stopPropagation();x.textContent='确定?';if(x.dataset.c){await DB.del(p.id);delete IMGS[p.id];await loadMine();buildHome();}x.dataset.c=1;};d.appendChild(x);}
+      d.onclick=()=>startGame(i);g.appendChild(d);});
+    if(set==='mine'){const a=document.createElement('div');a.className='card add';a.innerHTML='<div class="plus">＋</div><div>用电脑里的图片做拼图</div><div style="font-size:14px;font-weight:400;margin-top:6px">比如从网上下载的恐龙图、家人的照片</div>';a.onclick=()=>$('fileIn').click();g.appendChild(a);}
   }
-  layout();
-  updCount();
-  $('full').style.opacity=0;
 }
 
-function layout(){
-  if(!G) return;
-  const vw=innerWidth,vh=innerHeight,top=86,pad=16;
-  const {c,r}=G; const AR=1.6;
-  // decide orientation: tray on right (landscape) or bottom (portrait)
-  const land=vw/vh>1.15;
-  let bw,bh,bx,by,tx,ty,tw,th;
+/* ---------- puzzle geometry ---------- */
+function rng(seed){return ()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646}}
+function makeEdges(c,r,rand){const h=[],v=[];for(let y=0;y<r;y++){h.push([]);v.push([]);for(let x=0;x<c;x++){h[y].push(y<r-1?(rand()<0.5?1:-1):0);v[y].push(x<c-1?(rand()<0.5?1:-1):0);}}return {h,v};}
+function piecePath(ctx,x,y,w,h,E){
+  const top=y===0?0:-E.h[y-1][x],bottom=E.h[y][x],left=x===0?0:-E.v[y][x-1],right=E.v[y][x],s=Math.min(w,h);
+  ctx.moveTo(0,0);edge(ctx,0,0,w,0,top,s);edge(ctx,w,0,w,h,right,s);edge(ctx,w,h,0,h,bottom,s);edge(ctx,0,h,0,0,left,s);ctx.closePath();}
+function edge(ctx,x1,y1,x2,y2,sign,s){
+  if(!sign){ctx.lineTo(x2,y2);return;}
+  const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,nx=uy*sign,ny=-ux*sign;
+  const P=(a,b)=>[x1+ux*a*L+nx*b*s,y1+uy*a*L+ny*b*s];
+  const pts=[[P(0.34,0)],[P(0.42,0),P(0.40,0.06),P(0.38,0.12)],[P(0.34,0.22),P(0.42,0.27),P(0.5,0.27)],[P(0.58,0.27),P(0.66,0.22),P(0.62,0.12)],[P(0.60,0.06),P(0.58,0),P(0.66,0)]];
+  ctx.lineTo(...pts[0][0]);for(let i=1;i<5;i++)ctx.bezierCurveTo(...pts[i][0],...pts[i][1],...pts[i][2]);ctx.lineTo(x2,y2);}
+
+/* ---------- game state ----------
+ group origin (ox,oy) = where piece(0,0)'s body top-left is, in board-width units relative to board top-left.
+ a group whose origin is (0,0) is placed on the board. */
+let G=null,hitCtx=document.createElement('canvas').getContext('2d');
+async function startGame(pi,fresh){
+  const p=PICS[pi];const lv=S.lv;const [c,r]=gridFor(LEVELS[lv],p.ar);
+  const im=await loadImg(p.id);
+  $('pieces').innerHTML='';$('fx').innerHTML='';$('doneBox').classList.remove('show');
+  ['home','book'].forEach(s=>$(s).classList.remove('show'));$('play').classList.add('show');
+  $('ptitle').textContent=p.name;$('ref').src=IMGS[p.id];
+  const key=p.id+'_'+lv,sv=fresh?null:S.saves[key];
+  const seed=sv?sv.seed:Math.floor(Math.random()*1e9)+1;
+  G={pi,p,im,c,r,lv,key,seed,E:makeEdges(c,r,rng(seed)),pieces:[],groups:[],undo:[],finished:false,edge:false};
+  for(let k=0;k<c*r;k++){const el=document.createElement('canvas');el.className='pc';$('pieces').appendChild(el);G.pieces.push({k,x:k%c,y:Math.floor(k/c),el,g:null});}
+  layout(true);
+  if(sv&&sv.groups){G.groups=[];sv.groups.forEach(s=>{const g={ox:s[0],oy:s[1],ps:s[2].map(k=>G.pieces[k])};g.ps.forEach(o=>o.g=g);G.groups.push(g);});}
+  else scatter();
+  G.zs=G.groups.slice();
+  $('ref').classList.toggle('show',lv<=1);$('refBtn').classList.toggle('on',lv<=1);
+  G.edge=false;$('edgeBtn').classList.remove('on');$('edgeBtn').style.display=lv>=2?'':'none';
+  $('full').style.opacity=0;
+  render();updCount();updUndo();
+}
+function layout(first){
+  if(!G)return;
+  const vw=innerWidth,vh=innerHeight,top=84,pad=14,AR=G.p.ar,land=vw/vh>1.1;
+  let bw,bh,bx,by,zones;
+  const share=[0.85,0.62,0.5,0.46,0.44,0.42][G.lv]; // board share of usable width/height
   if(land){
-    const trayW=Math.max(220,Math.min(vw*0.30,(vh-top)*0.62));
-    bw=Math.min(vw-trayW-pad*3,(vh-top-pad)*AR);bh=bw/AR;
-    bx=pad+(vw-trayW-pad*3-bw)/2; by=top+(vh-top-pad-bh)/2;
-    tx=vw-trayW-pad;ty=top;tw=trayW;th=vh-top-pad;
+    bw=Math.min((vw-pad*2)*share*(AR>1.8?1.08:1),(vh-top-pad)*0.78*AR);bh=bw/AR;bx=pad+8;by=top+6;
+    zones=[[bx+bw+pad,top,vw-pad,vh-pad],[pad,by+bh+pad,bx+bw,vh-pad]];
   }else{
-    bw=Math.min(vw-pad*2,(vh-top)*0.55*AR);bh=bw/AR;bx=(vw-bw)/2;by=top;
-    tx=pad;ty=by+bh+pad;tw=vw-pad*2;th=vh-ty-pad;
+    bw=vw-pad*2-16;bh=bw/AR;bx=pad+8;by=top+6;zones=[[pad,by+bh+pad,vw-pad,vh-pad]];
   }
   Object.assign($('board').style,{left:bx+'px',top:by+'px',width:bw+'px',height:bh+'px'});
-  Object.assign($('tray').style,{left:tx+'px',top:ty+'px',width:tw+'px',height:th+'px'});
-  G.B={x:bx,y:by,w:bw,h:bh};
-  const pw=bw/c,ph=bh/r,m=Math.min(pw,ph)*0.3; // margin for tabs
-  G.pw=pw;G.ph=ph;G.m=m;
-  // tray grid: fit n cells (each pw+2m × ph+2m scaled) into tray
-  const n=c*r,cw=pw+1.8*m,chh=ph+1.8*m; let best=null;
-  for(let cols=1;cols<=n;cols++){const rows=Math.ceil(n/cols);const s=Math.min(1,(tw-12)/(cols*cw),(th-12)/(rows*chh));if(!best||s>best.s)best={cols,rows,s};}
-  const ts=Math.min(best.s,0.9);G.ts=ts;
-  const gw=best.cols*cw*ts,gh=best.rows*chh*ts;
-  G.home=k=>{const i=G.pieces[k].slot,col=i%best.cols,row=Math.floor(i/best.cols);
-    return {x:tx+(tw-gw)/2+col*cw*ts+(cw*ts-pw*ts)/2-m*ts, y:ty+(th-gh)/2+row*chh*ts+(chh*ts-ph*ts)/2-m*ts};};
-  // ghost + full image
-  const dpr=Math.min(2,devicePixelRatio||1);
-  for(const id of ['ghost','full']){const cv=$(id);cv.width=bw*dpr;cv.height=bh*dpr;const x=cv.getContext('2d');x.scale(dpr,dpr);
-    if(id==='ghost'){x.globalAlpha=0.24;x.drawImage(G.im,0,0,bw,bh);x.globalAlpha=1;x.strokeStyle='rgba(120,100,60,.35)';x.lineWidth=1.5;
-      for(let yy=0;yy<r;yy++)for(let xx=0;xx<c;xx++){x.save();x.translate(xx*pw,yy*ph);piecePath(x,xx,yy,pw,ph,G.E,c,r,S.tabs);x.stroke();x.restore();}}
-    else x.drawImage(G.im,0,0,bw,bh);}
-  $('ghost').style.opacity=S.ghost===false?0:1;
-  // render pieces
+  const pw=bw/G.c,ph=bh/G.r,m=Math.min(pw,ph)*0.3;
+  Object.assign(G,{bx,by,bw,bh,pw,ph,m,zones,dpr:Math.min(2,devicePixelRatio||1)});
+  const dpr=G.dpr;
+  for(const id of ['ghost','full']){const cv=$(id);cv.width=bw*dpr;cv.height=bh*dpr;const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);
+    if(id==='full'){x.drawImage(G.im,0,0,bw,bh);continue;}
+    if(S.ghost){x.globalAlpha=0.2;x.drawImage(G.im,0,0,bw,bh);x.globalAlpha=1;}
+    if(S.grid||G.lv<=1){x.strokeStyle='rgba(120,100,60,.4)';x.lineWidth=1.5;for(let yy=0;yy<G.r;yy++)for(let xx=0;xx<G.c;xx++){x.save();x.translate(xx*pw,yy*ph);x.beginPath();piecePath(x,xx,yy,pw,ph,G.E);x.stroke();x.restore();}}}
   for(const o of G.pieces){
-    const cv=o.el,W=pw+2*m,H=ph+2*m;
-    cv.width=Math.ceil(W*dpr);cv.height=Math.ceil(H*dpr);cv.style.width=W+'px';cv.style.height=H+'px';
-    const x=cv.getContext('2d');x.scale(dpr,dpr);x.translate(m,m);
-    piecePath(x,o.x,o.y,pw,ph,G.E,c,r,S.tabs);
-    x.save();x.clip();
-    const sx=G.im.width/bw;
-    x.drawImage(G.im,(o.x*pw-m)*sx,(o.y*ph-m)*sx,(pw+2*m)*sx,(ph+2*m)*sx,-m,-m,pw+2*m,ph+2*m);
-    x.restore();
-    x.lineWidth=2;x.strokeStyle='rgba(255,255,255,.75)';x.stroke();
-    x.lineWidth=1;x.strokeStyle='rgba(60,45,20,.35)';x.stroke();
-    o.W=W;o.H=H;
-    if(o.placed) setPos(o,bx+o.x*pw-m,by+o.y*ph-m,1);
-    else {const h=G.home(o.k);setPos(o,h.x,h.y,ts);}
+    const W=pw+2*m,H=ph+2*m,cv=o.el;cv.width=Math.ceil(W*dpr);cv.height=Math.ceil(H*dpr);cv.style.width=W+'px';cv.style.height=H+'px';
+    const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.translate(m,m);
+    const path=new Path2D();piecePath(path,o.x,o.y,pw,ph,G.E);o.path=path;
+    x.save();x.clip(path);const sx=G.im.width/bw;
+    x.drawImage(G.im,(o.x*pw-m)*sx,(o.y*ph-m)*sx,(pw+2*m)*sx,(ph+2*m)*sx,-m,-m,pw+2*m,ph+2*m);x.restore();
+    x.lineWidth=2;x.strokeStyle='rgba(255,255,255,.7)';x.stroke(path);x.lineWidth=1;x.strokeStyle='rgba(60,45,20,.4)';x.stroke(path);
+  }
+  const rw=Math.min(vw*0.3,360);$('ref').style.width=rw+'px';
+  if(!first){clampAll();render();}
+}
+// screen pos of a piece's body top-left
+const px=(g,o)=>G.bx+(g.ox+o.x/G.c)*G.bw, py=(g,o)=>G.by+g.oy*G.bw+o.y*G.ph;
+function scatter(){
+  G.groups=[];const placed=[];
+  const zs=G.zones.map(z=>({z,a:Math.max(0,z[2]-z[0]-G.pw)*Math.max(0,z[3]-z[1]-G.ph)})).filter(z=>z.a>0);
+  const tot=zs.reduce((s,z)=>s+z.a,0);
+  const order=G.pieces.slice().sort(()=>Math.random()-0.5);
+  for(const o of order){
+    let best=null;
+    for(let t=0;t<24;t++){let r=Math.random()*tot,Z=zs[0];for(const z of zs){if(r<z.a){Z=z;break;}r-=z.a;}
+      const x=Z.z[0]+Math.random()*(Z.z[2]-Z.z[0]-G.pw),y=Z.z[1]+Math.random()*(Z.z[3]-Z.z[1]-G.ph);
+      let ov=0;for(const q of placed){const ix=Math.max(0,Math.min(x,q[0])+G.pw-Math.max(x,q[0])+0),iy=Math.max(0,Math.min(y,q[1])+G.ph-Math.max(y,q[1]));ov+=ix*iy;}
+      if(!best||ov<best.ov)best={x,y,ov};if(ov===0)break;}
+    placed.push([best.x,best.y]);
+    const g={ox:(best.x-G.bx)/G.bw-o.x/G.c,oy:(best.y-G.by-o.y*G.ph)/G.bw,ps:[o]};o.g=g;G.groups.push(g);
   }
 }
-function setPos(o,x,y,s){o.px=x;o.py=y;o.sc=s;o.el.style.transform=`translate(${x}px,${y}px) scale(${s})`;}
-let zTop=10;
+function render(){
+  const z=G.zs;z.forEach((g,i)=>{const isPlaced=g.ox===0&&g.oy===0;g.ps.forEach(o=>{o.el.style.transform=`translate(${px(g,o)-G.m}px,${py(g,o)-G.m}px)`;o.el.style.zIndex=isPlaced?1:10+i;
+    o.el.classList.toggle('dim',G.edge&&!isPlaced&&g.ps.length===1&&!isEdge(o));});});
+}
+const isEdge=o=>o.x===0||o.y===0||o.x===G.c-1||o.y===G.r-1;
+function clampAll(){for(const g of G.groups)clampGroup(g);}
+function clampGroup(g){if(g.ox===0&&g.oy===0)return;let dx=0,dy=0;
+  for(const o of g.ps){const x=px(g,o),y=py(g,o);dx=Math.max(dx,4-x);dx=Math.min(dx,innerWidth-4-G.pw-x);dy=Math.max(dy,80-y);dy=Math.min(dy,innerHeight-4-G.ph-y);}
+  g.ox+=dx/G.bw;g.oy+=dy/G.bw;}
+
+/* ---------- input ---------- */
 let drag=null;
-function down(e,o){
-  if(o.placed||G.finished) return;
-  e.preventDefault();ac();
-  o.el.setPointerCapture(e.pointerId);
-  o.el.classList.remove('glide');o.el.classList.add('drag');
-  // grab point relative (in unscaled piece units)
-  const gx=(e.clientX-o.px)/o.sc, gy=(e.clientY-o.py)/o.sc;
-  drag={o,gx,gy,id:e.pointerId};
-  setPos(o,e.clientX-gx,e.clientY-gy,1);
-  o.el.style.zIndex=++zTop;
-  sfx.pick();
-  o.el.onpointermove=ev=>{if(!drag||ev.pointerId!==drag.id)return;setPos(o,ev.clientX-drag.gx,ev.clientY-drag.gy,1);};
-  o.el.onpointerup=o.el.onpointercancel=ev=>{if(!drag||ev.pointerId!==drag.id)return;o.el.onpointermove=null;drop(o);drag=null;};
+$('hit').addEventListener('pointerdown',e=>{
+  if(!G||G.finished||drag)return;ac();
+  // topmost piece under pointer (exact shape)
+  for(let i=G.zs.length-1;i>=0;i--){const g=G.zs[i];if(g.ox===0&&g.oy===0)continue;
+    for(const o of g.ps){if(G.edge&&g.ps.length===1&&!isEdge(o))continue;const lx=e.clientX-px(g,o),ly=e.clientY-py(g,o);
+      const pad=G.lv>=3?6:12; // a bit of forgiving margin for small fingers
+      if(lx<-G.m||ly<-G.m||lx>G.pw+G.m||ly>G.ph+G.m)continue;
+      if(hitCtx.isPointInPath(o.path,lx,ly)||(lx>-pad&&ly>-pad&&lx<G.pw+pad&&ly<G.ph+pad)){startDrag(e,g);return;}}}
+});
+function snapshot(){return G.groups.map(g=>[g.ox,g.oy,g.ps.map(o=>o.k)]);}
+function startDrag(e,g){
+  G.undo.push(snapshot());if(G.undo.length>30)G.undo.shift();updUndo();
+  $('hit').setPointerCapture(e.pointerId);
+  G.zs.splice(G.zs.indexOf(g),1);G.zs.push(g);
+  drag={g,id:e.pointerId,sx:e.clientX,sy:e.clientY,ox:g.ox,oy:g.oy};
+  g.ps.forEach(o=>{o.el.classList.remove('glide');o.el.classList.add('lift');});
+  render();sfx.pick();
 }
-function drop(o){
-  o.el.classList.remove('drag');
-  const tx=G.B.x+o.x*G.pw-G.m, ty=G.B.y+o.y*G.ph-G.m;
-  const d=Math.hypot(o.px-tx,o.py-ty), lim=Math.min(G.pw,G.ph)*(S.magnet?0.55:0.32);
-  o.el.classList.add('glide');
-  if(d<lim) place(o);
-  else { const h=G.home(o.k); setPos(o,h.x,h.y,G.ts); sfx.back(); }
+$('hit').addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const g=drag.g;
+  g.ox=drag.ox+(e.clientX-drag.sx)/G.bw;g.oy=drag.oy+(e.clientY-drag.sy)/G.bw;render();});
+const endDrag=e=>{if(!drag||e.pointerId!==drag.id)return;const g=drag.g;drag=null;g.ps.forEach(o=>o.el.classList.remove('lift'));drop(g);};
+$('hit').addEventListener('pointerup',endDrag);$('hit').addEventListener('pointercancel',endDrag);
+
+function tol(){return Math.min(G.pw,G.ph)*SNAP[G.lv]*(S.magnet?1.5:1);}
+function drop(g){
+  const T=tol();let target=null,boardHit=false;
+  // board?
+  if(Math.hypot(g.ox*G.bw,g.oy*G.bw)<T)boardHit=true;
+  // neighbour groups
+  const merges=[];
+  for(const h of G.groups){if(h===g)continue;
+    if(Math.hypot((g.ox-h.ox)*G.bw,(g.oy-h.oy)*G.bw)<T&&adjacent(g,h))merges.push(h);}
+  if(!boardHit&&!merges.length){clampGroup(g);g.ps.forEach(o=>o.el.classList.add('glide'));render();afterMove();return;}
+  // decide anchor: board if hit or any merged group is on board
+  let anchor=boardHit||merges.some(h=>h.ox===0&&h.oy===0)?{ox:0,oy:0}:merges[0];
+  g.ps.forEach(o=>o.el.classList.add('glide'));
+  g.ox=anchor.ox;g.oy=anchor.oy;
+  for(const h of merges){h.ps.forEach(o=>{o.g=g;g.ps.push(o);});G.groups.splice(G.groups.indexOf(h),1);G.zs.splice(G.zs.indexOf(h),1);}
+  const onBoard=g.ox===0&&g.oy===0;
+  // also absorb placed group if g lands on board
+  if(onBoard){for(const h of G.groups.slice()){if(h!==g&&h.ox===0&&h.oy===0){h.ps.forEach(o=>{o.g=g;g.ps.push(o);});G.groups.splice(G.groups.indexOf(h),1);G.zs.splice(G.zs.indexOf(h),1);}}}
+  render();
+  setTimeout(()=>g.ps.forEach(o=>{o.el.classList.remove('flash');void o.el.offsetWidth;o.el.classList.add('flash');}),320);
+  if(onBoard){sfx.snap();if(!S.quiet){const o=g.ps[g.ps.length-1];sparkle(px(g,o)+G.pw/2,py(g,o)+G.ph/2,2);}}else sfx.join();
+  afterMove();
 }
-function place(o,fromHint){
-  o.placed=true;o.el.classList.add('glide','done');
-  o.el.style.zIndex=1;
-  setPos(o,G.B.x+o.x*G.pw-G.m,G.B.y+o.y*G.ph-G.m,1);
-  setTimeout(()=>{o.el.classList.add('flash');},300);
-  sfx.snap();
-  G.placed++;updCount();
-  if(!S.quiet) sparkle(G.B.x+(o.x+0.5)*G.pw,G.B.y+(o.y+0.5)*G.ph,2);
-  if(G.placed===G.pieces.length) setTimeout(finish,700);
+function adjacent(g,h){const set=new Set(h.ps.map(o=>o.k));return g.ps.some(o=>[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>{const x=o.x+dx,y=o.y+dy;return x>=0&&y>=0&&x<G.c&&y<G.r&&set.has(y*G.c+x);}));}
+function placedCount(){const g=G.groups.find(g=>g.ox===0&&g.oy===0);return g?g.ps.length:0;}
+function updCount(){$('count').textContent=`${placedCount()} / ${G.pieces.length}`;}
+function updUndo(){$('undoBtn').disabled=!G||!G.undo.length||G.finished;}
+let saveT;
+function afterMove(){
+  updCount();updUndo();
+  if(placedCount()===G.pieces.length){delete S.saves[G.key];save();setTimeout(finish,600);return;}
+  S.saves[G.key]={seed:G.seed,groups:snapshot()};save();
+  clearTimeout(saveT);$('saved').style.opacity=1;saveT=setTimeout(()=>$('saved').style.opacity=0,1200);
 }
-function updCount(){ $('count').textContent=`${G.placed} / ${G.pieces.length}`; }
+function undo(){
+  if(!G||!G.undo.length||G.finished)return;const s=G.undo.pop();
+  G.groups=[];s.forEach(t=>{const g={ox:t[0],oy:t[1],ps:t[2].map(k=>G.pieces[k])};g.ps.forEach(o=>{o.g=g;o.el.classList.add('glide');});G.groups.push(g);});
+  G.zs=G.groups.slice();render();afterMove();sfx.pick();
+}
 function hint(){
-  if(!G||G.finished) return;
-  const left=G.pieces.filter(o=>!o.placed); if(!left.length) return;
-  const o=left[0]; o.el.style.zIndex=++zTop; place(o,true);
+  if(!G||G.finished)return;G.undo.push(snapshot());
+  const placed=G.groups.find(g=>g.ox===0&&g.oy===0);
+  let cand=G.groups.filter(g=>!(g.ox===0&&g.oy===0));
+  if(placed){const near=cand.filter(g=>adjacent(g,placed));if(near.length)cand=near;}
+  else{const ed=cand.filter(g=>g.ps.some(isEdge));if(ed.length)cand=ed;}
+  if(!cand.length)return;cand.sort((a,b)=>a.ps.length-b.ps.length);
+  const g=cand[0];G.zs.splice(G.zs.indexOf(g),1);G.zs.push(g);g.ps.forEach(o=>o.el.classList.add('glide'));
+  g.ox=0;g.oy=0;drop(g);
 }
 function finish(){
-  G.finished=true;
-  $('full').style.opacity=1;
-  setTimeout(()=>G.pieces.forEach(o=>o.el.style.opacity=0),1200);
-  S.done[G.p.id+'_'+S.size]=1;save();
+  G.finished=true;updUndo();$('full').style.opacity=1;
+  setTimeout(()=>{if(G&&G.finished)G.pieces.forEach(o=>o.el.style.opacity=0)},1200);
+  const sk=G.p.id+'_'+G.lv,isNew=!S.stickers[sk];S.stickers[sk]=Date.now();save();
   sfx.done();
-  const msgs=['拼好啦！🎉','太棒了！🌟','你真厉害！👏','完成啦！🦕'];
-  $('doneT').textContent=msgs[Math.floor(Math.random()*msgs.length)];
-  $('doneP').textContent=G.p.praise;
-  setTimeout(()=>$('doneBox').classList.add('show'),900);
-  speak('拼好啦，你真棒！'+G.p.praise.replace(/[“”]/g,''));
-  if(!S.quiet){ for(let i=0;i<14;i++) setTimeout(()=>sparkle(G.B.x+Math.random()*G.B.w,G.B.y+G.B.h*(0.4+Math.random()*0.6),1),i*120); }
+  const msgs=['拼好啦！🎉','太棒了！🌟','你真厉害！👏','完成啦！🦕','好厉害的拼图高手！🧩'];
+  $('doneT').textContent=msgs[Math.floor(Math.random()*msgs.length)];$('doneP').textContent=G.p.praise;
+  const n=Object.keys(S.stickers).length;
+  $('doneStk').innerHTML=`<div class="sticker${isNew?' pop':''}" style="background-image:url(${IMGS[G.p.id]})"><b>${LEVELS[G.lv]}</b></div><div>${isNew?'得到一张新贴纸！':'这张贴纸已经有啦'}<br><span style="font-weight:400;color:#8a8f7d">贴纸本里一共 ${n} 张</span></div>`;
+  $('harderBtn').style.display=G.lv<LEVELS.length-1?'':'none';$('harderBtn').textContent=`试试 ${LEVELS[G.lv+1]||''} 块`;
+  setTimeout(()=>{$('doneBox').classList.add('show');if(isNew)setTimeout(sfx.sticker,500);},900);
+  speak('拼好啦，你真棒！'+G.p.praise);
+  if(!S.quiet)for(let i=0;i<14;i++)setTimeout(()=>sparkle(G.bx+Math.random()*G.bw,G.by+G.bh*(0.4+Math.random()*0.6),1),i*120);
 }
-function sparkle(x,y,n){
-  const em=['⭐','✨','🌟','💛'];
-  for(let i=0;i<n;i++){const s=document.createElement('div');s.className='star';s.textContent=em[Math.floor(Math.random()*em.length)];
-    s.style.left=(x-15+(Math.random()-0.5)*40)+'px';s.style.top=(y-15)+'px';$('fx').appendChild(s);setTimeout(()=>s.remove(),2700);}
+function sparkle(x,y,n){const em=['⭐','✨','🌟','💛'];for(let i=0;i<n;i++){const s=document.createElement('div');s.className='star';s.textContent=em[Math.floor(Math.random()*4)];s.style.left=(x-14+(Math.random()-0.5)*40)+'px';s.style.top=(y-14)+'px';$('fx').appendChild(s);setTimeout(()=>s.remove(),2500);}}
+
+/* ---------- sticker book ---------- */
+function buildBook(){
+  const w=$('bookWrap');w.innerHTML='';let tot=0,got=0;
+  PICS.forEach(p=>{const r=document.createElement('div');r.className='brow';
+    r.innerHTML=`<div class="nm">${p.name}</div><div class="slots">${LEVELS.map((n,k)=>{tot++;if(S.stickers[p.id+'_'+k]){got++;return `<div class="sticker" style="background-image:url(${IMGS[p.id]})"><b>${n}</b></div>`;}return `<div class="slot">${n}块</div>`;}).join('')}</div>`;
+    w.appendChild(r);});
+  $('bookCount').textContent=`已收集 ${got} / ${tot}`;
 }
 
-/* ================= wiring ================= */
-$('backBtn').onclick=()=>{ if(G) G.pieces.forEach(o=>o.el.remove()); G=null; $('doneBox').classList.remove('show'); $('play').classList.remove('show'); $('home').classList.add('show'); buildHome(); };
-$('againBtn').onclick=()=>startGame(G.pi);
-$('nextBtn').onclick=()=>startGame((G.pi+1)%PICS.length);
-$('hintBtn').onclick=hint;
-$('ghostBtn').onclick=()=>{S.ghost=S.ghost===false;save();$('ghost').style.opacity=S.ghost===false?0:1;$('ghostBtn').classList.toggle('on',S.ghost!==false);};
-$('ghostBtn').classList.toggle('on',S.ghost!==false);
-function soundIcon(){ $('soundBtn').querySelector('.e').textContent=(S.sound&&!S.quiet)?'🔈':'🔇'; }
-$('soundBtn').onclick=()=>{ if(S.quiet){S.quiet=false;S.sound=true;} else S.sound=!S.sound; save();applySettings(); if(S.sound) {ac();sfx.pick();} };
-function applySettings(){
-  document.body.classList.toggle('quiet',S.quiet);
-  document.querySelectorAll('.tg').forEach(t=>t.classList.toggle('on',!!S[t.dataset.k]));
-  soundIcon(); setMusic();
-}
-document.querySelectorAll('.tg').forEach(t=>t.onclick=()=>{const k=t.dataset.k;S[k]=!S[k];save();applySettings();if(k==='tabs'&&G)layout(); if((k==='sound'||k==='voice')&&S[k]) ac();});
+/* ---------- wiring ---------- */
+function goHome(){if(G)G=null;$('doneBox').classList.remove('show');$('play').classList.remove('show');$('book').classList.remove('show');$('home').classList.add('show');buildHome();}
+$('backBtn').onclick=goHome;
+$('bookBtn').onclick=()=>{buildBook();$('home').classList.remove('show');$('book').classList.add('show');};
+$('bookBack').onclick=goHome;
+$('againBtn').onclick=()=>startGame(G.pi,true);
+$('nextBtn').onclick=()=>{const p=G.p,list=PICS.filter(q=>q.set===p.set),i=list.indexOf(p);startGame(PICS.indexOf(list[(i+1)%list.length]));};
+$('harderBtn').onclick=()=>{S.lv=Math.min(LEVELS.length-1,G.lv+1);save();startGame(G.pi);};
+$('hintBtn').onclick=hint;$('undoBtn').onclick=undo;
+$('refBtn').onclick=()=>{const on=!$('ref').classList.contains('show');$('ref').classList.toggle('show',on);$('refBtn').classList.toggle('on',on);};
+$('edgeBtn').onclick=()=>{G.edge=!G.edge;$('edgeBtn').classList.toggle('on',G.edge);render();};
+function soundIcon(){$('soundBtn').querySelector('.e').textContent=(S.sound&&!S.quiet)?'🔈':'🔇';}
+$('soundBtn').onclick=()=>{if(S.quiet){S.quiet=false;S.sound=true;}else S.sound=!S.sound;save();applySettings();if(S.sound){ac();sfx.pick();}};
+function applySettings(){document.body.classList.toggle('quiet',S.quiet);document.querySelectorAll('.tg').forEach(t=>t.classList.toggle('on',!!S[t.dataset.k]));soundIcon();setMusic();}
+document.querySelectorAll('.tg').forEach(t=>t.onclick=()=>{const k=t.dataset.k;S[k]=!S[k];save();applySettings();if((k==='ghost'||k==='grid')&&G)layout();if((k==='sound'||k==='voice')&&S[k])ac();});
 $('setBtn1').onclick=$('setBtn2').onclick=()=>$('setBox').classList.add('show');
 $('setClose').onclick=()=>$('setBox').classList.remove('show');
-let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(layout,120);});
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>layout(false),120);});
 addEventListener('contextmenu',e=>e.preventDefault());
-buildHome();applySettings();
+applySettings();buildHome();
+DB.open().then(loadMine).then(buildHome);
 </script>
 </body></html>
