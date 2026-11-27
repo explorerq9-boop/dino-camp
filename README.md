@@ -3,7 +3,7 @@
 - **恐龙考察营**：挖化石、拼骨架、恐龙乐园 → `index.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/ ）
 - **恐龙长大记 3D**：吃东西长大、一路进化 → `grow.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/grow.html ）
 - 恐龙长大记离线单文件版（不联网、直接双击打开）→ `grow-offline.html`
-- **恐龙拼图**：150 张图、9 个分类，4–48 块 → `puzzle/`（在线玩：https://explorerq9-boop.github.io/dino-camp/puzzle/ ）
+- **恐龙拼图**：150 张图、9 个分类，4–48 块 → `puzzle/`（在线玩：https://explorerq9-boop.github.io/dino-camp/puzzle/ ）；离线单文件版（下载后双击就能玩）→ `puzzle-offline.html`
 - 旧的 2D 版恐龙长大记 → `grow2d.html`
 
 ---
