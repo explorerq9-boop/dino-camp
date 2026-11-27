@@ -159,7 +159,7 @@ const visible=p=>!p.pending&&p.ok!==false;
 // images listed by file name (e.g. AI pictures) appear automatically once the file exists in images/
 function probe(p){const base='images/'+p.file.replace(/\.[a-z]+$/i,'');const c=[...new Set(['images/'+p.file,base+'.png',base+'.jpg',base+'.jpeg',base+'.webp'])];
   return new Promise(res=>{let i=0;const next=()=>{if(i>=c.length){p.pending=false;p.ok=false;return res();}const im=new Image(),u=c[i++];
-    im.onload=()=>{IMGS[p.id]=THUMBS[p.id]=u;p.ar=Math.max(1.2,Math.min(2.2,im.naturalWidth/im.naturalHeight));p.pending=false;p.ok=true;res();};im.onerror=next;im.src=u;};next();});}
+    im.onload=()=>{IMGS[p.id]=u;THUMBS[p.id]=p.thumb||u;p.ar=Math.max(1.2,Math.min(2.2,im.naturalWidth/im.naturalHeight));p.pending=false;p.ok=true;res();};im.onerror=next;im.src=u;};next();});}
 function probeAll(){const ps=PICS.filter(p=>p.pending);let k=0;const lim=6;return new Promise(done=>{if(!ps.length)return done();let active=0,fin=0;
   const go=()=>{while(active<lim&&k<ps.length){active++;probe(ps[k++]).then(()=>{active--;fin++;if(fin===ps.length)done();else go();});}};go();});}
 const SETS=(window.PUZZLE_SETS||[]).concat([['mine','📷 我的图片']]);
@@ -228,7 +228,7 @@ function buildHome(){
   if(!S.cat||!SETS.some(t=>t[0]===S.cat&&(t[0]==='mine'||PICS.some(p=>p.set===t[0]&&visible(p)))))S.cat=(SETS.find(t=>PICS.some(p=>p.set===t[0]&&visible(p)))||SETS[0])[0];
   const tb=$('tabs');tb.innerHTML='';
   for(const [set,title] of SETS){const b=document.createElement('button');b.className='tab'+(S.cat===set?' sel':'');
-    const nv=PICS.filter(p=>p.set===set&&visible(p)).length;if(!nv&&set!=='mine'&&set!==S.cat)continue;b.innerHTML=`${title}<small>${nv||''}</small>`;b.onclick=()=>{S.cat=set;save();buildHome();$('home').querySelector('.wrap').scrollTop=0;};tb.appendChild(b);}
+    const nv=PICS.filter(p=>p.set===set&&visible(p)).length;if(!nv&&set!=='mine'&&set!==S.cat)continue;b.innerHTML=`${title}<small>${nv||''}</small>`;b.onclick=()=>{S.cat=set;S.catUser=true;save();buildHome();$('home').querySelector('.wrap').scrollTop=0;};tb.appendChild(b);}
   const G=$('galleries');G.innerHTML='';
   {const set=S.cat;
     const g=document.createElement('div');g.className='gallery';G.appendChild(g);
@@ -461,6 +461,6 @@ addEventListener('contextmenu',e=>e.preventDefault());
 $('credits').innerHTML=(window.PUZZLE_CREDITS||'')+'<br>· 「我的图片」只保存在这台电脑的浏览器里，不会上传。';
 applySettings();buildHome();
 DB.open().then(loadMine).then(buildHome);
-probeAll().then(buildHome);
+probeAll().then(()=>{if(!S.catUser)S.cat=null;buildHome();});
 </script>
 </body></html>

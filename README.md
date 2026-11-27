@@ -3,7 +3,7 @@
 - **恐龙考察营**：挖化石、拼骨架、恐龙乐园 → `index.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/ ）
 - **恐龙长大记 3D**：吃东西长大、一路进化 → `grow.html`（在线玩：https://explorerq9-boop.github.io/dino-camp/grow.html ）
 - 恐龙长大记离线单文件版（不联网、直接双击打开）→ `grow-offline.html`
-- **恐龙拼图**：按分类选图，4–48 块 → `puzzle/`（在线玩：https://explorerq9-boop.github.io/dino-camp/puzzle/ ）
+- **恐龙拼图**：150 张图、9 个分类，4–48 块 → `puzzle/`（在线玩：https://explorerq9-boop.github.io/dino-camp/puzzle/ ）
 - 旧的 2D 版恐龙长大记 → `grow2d.html`
 
 ---
@@ -70,5 +70,6 @@
 `puzzle/ai-art/PROMPTS.md` 里有 6 种风格、108 条画图提示词，每条都有固定文件名。画好的图按文件名放进 `puzzle/images/`（PNG/JPG/WEBP 都行），游戏会自动显示，不用改代码。
 
 ### 图片来源
+- AI 绘图 6 种风格各 18 张（3D 卡通、水彩绘本、扁平插画、剪纸纸艺、黏土手工、写实自然），共 108 张：家长用 AI 按 `puzzle/ai-art/PROMPTS.md` 生成，缩略图在 `puzzle/thumbs/`。
 - 「手绘恐龙」6 张：[Universal Blue / Bluefin 壁纸](https://github.com/ublue-os/artwork)（ublue-os/artwork 仓库，Apache License 2.0），裁剪为 2:1 并缩小。
 - 「3D 小恐龙」8 张：用 three.js 自己渲染，模型来自 Quaternius（CC0），渲染源码在 `puzzle-src/`，原图在 `puzzle-wallpapers/`。
