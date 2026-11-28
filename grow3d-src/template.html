@@ -66,7 +66,20 @@ body.mob .ftxt{font-size:20px}
  .legend{gap:5px} .legend span{font-size:13px;padding:4px 8px}
  .btn{font-size:19px;padding:10px 24px} .choice b{font-size:20px} .tag{font-size:12px} .tr{font-size:13px}
 }
-@media (max-height:520px){ .choices{grid-template-columns:1fr 1fr!important;gap:10px;margin:8px 0} .choice img{max-width:200px} img.big{max-width:260px} body.mob #tip{bottom:auto;top:66px} body.mob #joy{width:116px;height:116px;left:16px;bottom:14px} }
+@media (max-height:520px){ .choices{grid-template-columns:1fr 1fr!important;gap:10px;margin:8px 0} .choice img{max-width:200px} img.big{max-width:260px} body.mob #tip{top:auto;bottom:12px;max-width:52vw} body.mob #joy{width:116px;height:116px;left:16px;bottom:14px} }
+.lcol{display:flex;flex-direction:column;align-items:flex-start;gap:8px} #quest{padding:9px 14px;border-radius:16px;font-size:17px;font-weight:700;max-width:min(360px,60vw);transition:background .6s,transform .6s}
+#quest.done{background:rgba(255,236,150,.95);transform:scale(1.05)}
+#questArrow{display:none;margin-left:8px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:16px solid #e08a00;vertical-align:middle}
+#dashBtn{position:fixed;right:24px;bottom:24px;z-index:3;width:96px;height:96px;border-radius:50%;border:4px solid #fff;background:#ff9a3c;color:#fff;font-size:20px;font-weight:800;box-shadow:0 6px 16px rgba(0,0,0,.25);touch-action:none;transition:opacity .4s,background .4s}
+#dashBtn small{display:block;font-size:12px;font-weight:600}
+#dashBtn.cd{background:#b9a690;opacity:.65}
+#comboTxt{position:fixed;left:50%;top:60px;transform:translateX(-50%);z-index:4;font-size:30px;font-weight:900;color:#ff8a00;text-shadow:0 2px 0 #fff,0 0 8px #fff;opacity:0;pointer-events:none}
+#comboTxt.pop{animation:cpop 1.4s ease-out}
+@keyframes cpop{0%{opacity:0;transform:translateX(-50%) scale(.8)}20%{opacity:1;transform:translateX(-50%) scale(1.08)}70%{opacity:1;transform:translateX(-50%) scale(1)}100%{opacity:0;transform:translateX(-50%) scale(1)}}
+body.mob #quest{font-size:13px;padding:6px 10px;max-width:56vw} body.mob .lcol{gap:5px}
+body.mob #dashBtn{right:18px;bottom:22px;width:88px;height:88px;font-size:17px}
+body.mob #comboTxt{top:auto;bottom:120px;font-size:24px}
+@media (max-height:520px){ body.mob #dashBtn{width:76px;height:76px;bottom:14px} }
 @media (max-width:560px){ .choices{grid-template-columns:1fr 1fr!important;gap:8px} .choice{padding:8px 6px 10px} .choice .tag{display:none} .choice b{font-size:19px} }
 </style></head><body>
 <div id="game"></div>
@@ -74,11 +87,14 @@ body.mob .ftxt{font-size:20px}
 <div id="joy"><i></i></div>
 <div id="foodArrow"><i></i><b></b></div>
 <div id="hud">
-  <div class="panel" id="who"><img id="whoImg" alt=""><div><b id="whoName">恐龙宝宝</b><small id="whoSub">第 1 阶段</small><div class="xp"><i id="xpBar"></i></div><div class="stages" id="stages"></div></div></div>
+  <div class="lcol"><div class="panel" id="who"><img id="whoImg" alt=""><div><b id="whoName">恐龙宝宝</b><small id="whoSub">第 1 阶段</small><div class="xp"><i id="xpBar"></i></div><div class="stages" id="stages"></div></div></div>
+  <div id="quest" class="panel"><span id="questTxt">🎯</span><i id="questArrow"></i></div></div>
   <div class="btns"><button class="ib" id="soundBtn" title="声音">🔇</button><button class="ib" id="menuBtn" title="菜单">☰</button></div>
 </div>
 <div class="panel" id="mapBox"><canvas id="map" width="150" height="150"></canvas></div>
 <div id="tip" class="panel"></div>
+<button id="dashBtn">💨<small>冲刺</small></button>
+<div id="comboTxt"></div>
 <div id="overlay"><div class="box" id="box"></div></div>
 <div id="loading"><div class="egg">🥚</div><div id="loadTxt">正在加载…</div></div>
 <!--ASSETS-->

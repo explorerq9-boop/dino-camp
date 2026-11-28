@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {SPECIES, prepDino, makeDino, measureGait, locomote, bite, headTurn, DINO} from './dinos.js';
-import {RNG, BOUND, WATER_Y, H, riverZ, riverD, biomeAt, BIOMES, MESAS, buildTerrain, buildWater, buildMesas, buildSky, makeInstancer, buildFlowerField, cullChunks, WIND, NEAR} from './world.js';
+import {RNG, WATER_Y, H, biomeAt, BIOMES, CH, createWorld, makeKind, buildWater, buildSky, WIND, NEAR} from './world.js';
 import {FOOD, FOOD_KEYS, makeFood} from './food.js';
 
 const $ = id => document.getElementById(id);
 const KEY = 'dinogrow3d_v1';
-const SV = Object.assign({stage: 0, path: ['baby'], xp: 0, sound: false, seen: false, done: []}, JSON.parse(localStorage.getItem(KEY) || '{}'));
+const SV = Object.assign({stage: 0, path: ['baby'], xp: 0, sound: false, seen: false, done: [], hunt: true}, JSON.parse(localStorage.getItem(KEY) || '{}'));
 const save = () => localStorage.setItem(KEY, JSON.stringify(SV));
 
 // 阶段：0 宝宝 → 1 二选一 → 2 二选一 → 3 最终形态
@@ -41,7 +41,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = MOB ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
 $('game').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog('#c4e6f8', MOB ? 50 : 60, MOB ? 170 : 210);
+scene.fog = new THREE.Fog('#c4e6f8', MOB ? 45 : 55, MOB ? 150 : 165);
 const camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 0.3, 1300);
 const hemi = new THREE.HemisphereLight('#dff1ff', '#c8a874', 1.35); scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff1d6', 2.5); sun.castShadow = true; sun.shadow.mapSize.set(MOB ? 1024 : 2048, MOB ? 1024 : 2048); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04;
@@ -58,81 +58,69 @@ async function loadGLB(path) {
   return loader.loadAsync((window.ASSET_BASE || 'assets/') + path.split('/').map(encodeURIComponent).join('/'));
 }
 
-const G = {t: 0, paused: true, items: [], npcs: [], parts: [], solids: [], curBiome: null};
+const G = {t: 0, paused: true, items: [], npcs: [], prey: [], parts: [], curBiome: null};
 const PL = {x: -40, z: -40, dir: 0, vx: 0, vz: 0, D: null, len: 2, tx: null, tz: null, bump: 0, eatT: 0, scaleAnim: 1};
 
+let WORLD = null;
 async function init() {
   const prog = (t) => { $('loadTxt').textContent = t; };
   prog('正在搭建世界…');
-  buildTerrain(scene); G.water = buildWater(scene); buildMesas(scene); buildFlowerField(scene, MOB ? 2000 : 4200); G.clouds = buildSky(scene);
-  for (const M of MESAS) G.solids.push({x: M.x, z: M.z, r: M.r * 1.15 + 0.5});
+  WORLD = createWorld(scene, {mobile: MOB}); G.water = buildWater(scene); G.skyo = buildSky(scene);
   prog('正在请恐龙们过来…');
   for (const id of Object.keys(SPECIES)) { prepDino(id, await loadGLB('dino/' + SPECIES[id].file + '.glb')); measureGait(id); }
-  prog('正在种树和种花…');
-  await plantFlora();
-  prog('正在准备食物…');
+  await loadKinds();
   makeThumbs();
-  // 玩家
+  // 出生点：第一次来就找一块离原点近的绿地
+  if (SV.px === undefined || !isFinite(SV.px)) { const p = findLand(0, 0, ['fern', 'flower']); PL.x = p.x; PL.z = p.z; } else { PL.x = SV.px; PL.z = SV.pz; }
+  prog('正在长出大陆…');
+  WORLD.update(PL.x, PL.z, true);
   spawnPlayer(true);
-  // 其他恐龙（住在各自的地方，慢慢散步）
-  const plan = [['raptor', 'fern'], ['raptor', 'fern'], ['para', 'flower'], ['para', 'river'], ['tri', 'flower'], ['steg', 'fern'], ['apato', 'river'], ['apato', 'palm'], ['trex', 'mesa'], ['tri', 'mesa'], ['para', 'palm'], ['steg', 'mesa']];
-  for (const [id, home] of plan) { const p = randomSpot(home, 6); const D = makeDino(id, NPC_LEN[id]); D.holder.position.set(p.x, H(p.x, p.z), p.z); D.mixer.update(Math.random() * 3); scene.add(D.holder);
-    G.npcs.push({D, id, home, x: p.x, z: p.z, dir: Math.random() * 6, st: 'idle', timer: Math.random() * 4, tx: 0, tz: 0, speed: 1.2 + NPC_LEN[id] * 0.12}); }
-  for (let i = 0; i < 90; i++) spawnFood(false);
-  makeButterflies(); buildMinimap(); updHud();
+  // 其他恐龙：散布在你周围，走远了会在前方重新遇到新的
+  const plan = ['raptor', 'raptor', 'para', 'para', 'tri', 'steg', 'apato', 'apato', 'trex', 'tri', 'para', 'steg'];
+  for (const id of plan) { const D = makeDino(id, NPC_LEN[id]); scene.add(D.holder); const n = {D, id, x: 0, z: 0, dir: Math.random() * 6, st: 'idle', timer: Math.random() * 4, tx: 0, tz: 0}; placeNear(n, 25, 110); G.npcs.push(n); }
+  for (let i = 0; i < FOOD_N; i++) spawnFood(false);
+  makeButterflies(); updHud(); newQuest(true);
   $('loading').style.display = 'none';
   intro();
   requestAnimationFrame(frame);
 }
-
-/* ---------- 植物 ---------- */
-function randomSpot(biome, margin = 2, tries = 400) {
-  const R = Math.random;
-  for (let i = 0; i < tries; i++) {
-    const x = BOUND.x0 + 6 + R() * (BOUND.x1 - BOUND.x0 - 12), z = BOUND.z0 + 6 + R() * (BOUND.z1 - BOUND.z0 - 12);
-    if (biome && biomeAt(x, z) !== biome) continue;
-    const h = H(x, z); if (h < -0.2) continue;
-    if (G.solids.some(s => Math.hypot(s.x - x, s.z - z) < s.r + margin)) continue;
-    return {x, z};
-  }
-  return {x: 0, z: -30};
+const FOOD_N = MOB ? 60 : 80;
+// 在 (cx,cz) 附近找一块陆地
+function findLand(cx, cz, biomes, rmin = 0, rmax = 60) {
+  for (let i = 0; i < 600; i++) { const a = Math.random() * 6.283, d = rmin + Math.random() * (rmax - rmin + i * 0.5), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
+    if (biomes && !biomes.includes(biomeAt(x, z))) continue; if (H(x, z) < -0.1) continue; if (blocked(x, z, 2)) continue; return {x, z}; }
+  return {x: cx + 5, z: cz + 5};
 }
-async function plantFlora() {
-  const R = RNG(7);
-  const pick = (biomes, n, margin = 1.5, cond) => { const out = []; let guard = 0;
-    while (out.length < n && guard++ < n * 60) { const x = -205 + R() * 410, z = -205 + R() * 400; const b = biomeAt(x, z), h = H(x, z);
-      if (!biomes.includes(b) && !(biomes.includes('edge') && (Math.abs(x) > 118 || z < -118))) continue;
-      if (h < -0.15 || (cond && !cond(x, z, h))) continue; if (MESAS.some(M => Math.hypot(M.x - x, M.z - z) < M.r * 1.25 + margin)) continue;
-      if (Math.hypot(x + 40, z + 40) < 6) continue;
-      out.push({x, y: h - 0.05, z, r: R() * Math.PI * 2, s: 0.75 + R() * 0.5}); }
-    return out; };
-  const L = async (p, h, opt) => makeInstancer(scene, (await loadGLB(p)).scene, h, opt);
+function placeNear(n, rmin, rmax) {
+  // 优先放在玩家前方（看得到的地方）
+  const a0 = PL.dir;
+  for (let i = 0; i < 80; i++) { const a = a0 + (Math.random() - 0.5) * (i < 40 ? 2.2 : 6.28), d = rmin + Math.random() * (rmax - rmin), x = PL.x + Math.sin(a) * d, z = PL.z + Math.cos(a) * d;
+    if (H(x, z) < -0.1 || blocked(x, z, 3)) continue; n.x = x; n.z = z; n.home = biomeAt(x, z); n.st = 'idle'; n.timer = Math.random() * 3; return true; }
+  return false;
+}
+async function loadKinds() {
   const sets = [
-    ['nat/CommonTree_1.glb', 11, {shadow: 1, saturate: 1.25, sway: 0.005}, ['fern'], 22, 2.5, 1.2], ['nat/CommonTree_2.glb', 12, {shadow: 1, saturate: 1.25, sway: 0.005}, ['fern', 'flower'], 20, 2.5, 1.2],
-    ['nat/CommonTree_3.glb', 9, {shadow: 1, saturate: 1.25, sway: 0.005}, ['fern', 'flower'], 18, 2.5, 1.2], ['nat/CommonTree_4.glb', 9, {shadow: 1, saturate: 1.25, sway: 0.005}, ['fern', 'edge'], 40, 2.5, 1.2],
-    ['nat/CommonTree_5.glb', 10, {shadow: 1, saturate: 1.25, sway: 0.005}, ['fern', 'edge'], 40, 2.5, 1.2],
-    ['nat/PalmTree_1.glb', 11, {shadow: 1, saturate: 1.3, sway: 0.006}, ['palm'], 22, 2, 0.8], ['nat/PalmTree_2.glb', 10, {shadow: 1, saturate: 1.3, sway: 0.006}, ['palm', 'river'], 22, 2, 0.8],
-    ['nat/PalmTree_3.glb', 12, {shadow: 1, saturate: 1.3, sway: 0.006}, ['palm'], 18, 2, 0.8], ['nat/PalmTree_4.glb', 9, {shadow: 1, saturate: 1.3, sway: 0.006}, ['palm', 'mesa'], 16, 2, 0.8],
-    ['nat/Willow_1.glb', 10, {shadow: 1, saturate: 1.2, sway: 0.008}, ['river'], 12, 3, 1.2], ['nat/Willow_3.glb', 8, {shadow: 1, saturate: 1.2, sway: 0.008}, ['river'], 10, 3, 1.2],
-    ['mega/Fern.glb', 1.25, {bright: 1.7, sway: 0.05}, ['fern', 'palm', 'river'], 220, 0.5], ['mega/Flower Group.glb', 1.1, {far: 80, sway: 0.12}, ['flower'], 140, 0.3], ['mega/Bush with Flowers.glb', 1.6, {far: 100}, ['flower', 'fern'], 60, 0.6],
-    ['mega/Tall Grass.glb', 1.3, {bright: 1.4, far: 80, sway: 0.12}, ['river', 'flower', 'fern'], 200, 0.2], ['mega/Mushroom.glb', 0.6, {far: 70}, ['fern'], 40, 0.3], ['mega/Plant Big.glb', 0.4, {bright: 1.5}, ['fern', 'river'], 90, 0.3],
-    ['nat/Flowers.glb', 0.9, {saturate: 1.4, far: 80, sway: 0.14}, ['flower', 'river'], 160, 0.2], ['nat/Plant_1.glb', 1.2, {saturate: 1.3, sway: 0.05}, ['fern', 'palm'], 80, 0.3], ['nat/Plant_4.glb', 1.6, {saturate: 1.3, sway: 0.05}, ['fern', 'palm', 'river'], 70, 0.4],
-    ['nat/Bush_1.glb', 0.9, {saturate: 1.2, bright: 1.35}, ['mesa', 'palm'], 40, 0.8], ['nat/BushBerries_1.glb', 1.6, {saturate: 1.3}, ['fern', 'flower'], 40, 0.8],
-    ['nat/Rock_Moss_2.glb', 1.4, {shadow: 1}, ['fern', 'river'], 40, 0.8, 0.7], ['nat/Rock_3.glb', 1.8, {shadow: 1, saturate: 0.6}, ['mesa', 'palm'], 40, 0.8, 0.8], ['nat/Rock_6.glb', 2.6, {shadow: 1}, ['mesa'], 25, 1, 1.2],
-    ['nat/CactusFlowers_2.glb', 1.6, {saturate: 1.3, far: 90}, ['mesa'], 30, 0.6], ['nat/CactusFlowers_4.glb', 1.3, {saturate: 1.3, far: 90}, ['mesa'], 25, 0.6],
-    ['nat/WoodLog_Moss.glb', 0.9, {shadow: 1}, ['fern'], 12, 1], ['nat/Grass_Short.glb', 0.6, {saturate: 1.3, far: 70, sway: 0.2}, ['fern', 'flower', 'river'], 300, 0.1],
+    ['nat/CommonTree_1.glb', 11, {shadow: 1, saturate: 1.25, sway: 0.005, tall: 1}, ['fern'], 11, 2.5, 1.2], ['nat/CommonTree_2.glb', 12, {shadow: 1, saturate: 1.25, sway: 0.005, tall: 1}, ['fern', 'flower'], 10, 2.5, 1.2],
+    ['nat/CommonTree_3.glb', 9, {shadow: 1, saturate: 1.25, sway: 0.005, tall: 1}, ['fern', 'flower'], 9, 2.5, 1.2], ['nat/CommonTree_4.glb', 9, {shadow: 1, saturate: 1.25, sway: 0.005, tall: 1}, ['fern'], 8, 2.5, 1.2],
+    ['nat/CommonTree_5.glb', 10, {shadow: 1, saturate: 1.25, sway: 0.005, tall: 1}, ['fern'], 8, 2.5, 1.2],
+    ['nat/PalmTree_1.glb', 11, {shadow: 1, saturate: 1.3, sway: 0.006, tall: 1}, ['palm'], 11, 2, 0.8], ['nat/PalmTree_2.glb', 10, {shadow: 1, saturate: 1.3, sway: 0.006, tall: 1}, ['palm', 'river'], 11, 2, 0.8],
+    ['nat/PalmTree_3.glb', 12, {shadow: 1, saturate: 1.3, sway: 0.006, tall: 1}, ['palm'], 9, 2, 0.8], ['nat/PalmTree_4.glb', 9, {shadow: 1, saturate: 1.3, sway: 0.006, tall: 1}, ['palm', 'mesa'], 8, 2, 0.8],
+    ['nat/Willow_1.glb', 10, {shadow: 1, saturate: 1.2, sway: 0.008, tall: 1}, ['river'], 6, 3, 1.2], ['nat/Willow_3.glb', 8, {shadow: 1, saturate: 1.2, sway: 0.008, tall: 1}, ['river'], 5, 3, 1.2],
+    ['mega/Fern.glb', 1.25, {bright: 1.7, sway: 0.05, far: 120}, ['fern', 'palm', 'river'], 110, 0.5], ['mega/Flower Group.glb', 1.1, {far: 80, sway: 0.12}, ['flower'], 70, 0.3], ['mega/Bush with Flowers.glb', 1.6, {far: 100}, ['flower', 'fern'], 30, 0.6],
+    ['mega/Tall Grass.glb', 1.3, {bright: 1.4, far: 80, sway: 0.12}, ['river', 'flower', 'fern'], 100, 0.2], ['mega/Mushroom.glb', 0.6, {far: 70}, ['fern'], 20, 0.3], ['mega/Plant Big.glb', 0.4, {bright: 1.5, far: 80}, ['fern', 'river'], 45, 0.3],
+    ['nat/Flowers.glb', 0.9, {saturate: 1.4, far: 80, sway: 0.14}, ['flower', 'river'], 80, 0.2], ['nat/Plant_1.glb', 1.2, {saturate: 1.3, sway: 0.05, far: 100}, ['fern', 'palm'], 40, 0.3], ['nat/Plant_4.glb', 1.6, {saturate: 1.3, sway: 0.05, far: 110}, ['fern', 'palm', 'river'], 35, 0.4],
+    ['nat/Bush_1.glb', 0.9, {saturate: 1.2, bright: 1.35, far: 110}, ['mesa', 'palm'], 20, 0.8], ['nat/BushBerries_1.glb', 1.6, {saturate: 1.3, far: 110}, ['fern', 'flower'], 20, 0.8],
+    ['nat/Rock_Moss_2.glb', 1.4, {shadow: 1}, ['fern', 'river'], 20, 0.8, 0.7], ['nat/Rock_3.glb', 1.8, {shadow: 1, saturate: 0.6}, ['mesa', 'palm'], 20, 0.8, 0.8], ['nat/Rock_6.glb', 2.6, {shadow: 1}, ['mesa'], 13, 1, 1.2],
+    ['nat/CactusFlowers_2.glb', 1.6, {saturate: 1.3, far: 90}, ['mesa'], 15, 0.6], ['nat/CactusFlowers_4.glb', 1.3, {saturate: 1.3, far: 90}, ['mesa'], 13, 0.6],
+    ['nat/WoodLog_Moss.glb', 0.9, {shadow: 1, far: 100}, ['fern'], 6, 1], ['nat/Grass_Short.glb', 0.6, {saturate: 1.3, far: 70, sway: 0.2}, ['fern', 'flower', 'river'], 150, 0.1],
   ];
   let done = 0;
   for (const [p, h, opt, biomes, n, margin, solidR] of sets) {
-    const inst = await L(p, h, opt); const list = pick(biomes, Math.max(4, Math.round(n * (h > 5 ? Math.max(QF, 0.75) : QF))), margin); if (MOB && opt.far) opt.far *= 0.8;
+    if (MOB && opt.far) opt.far *= 0.8;
+    const kd = makeKind((await loadGLB(p)).scene, h, opt); kd.name = p; WORLD.addKind(kd, biomes, n, margin, solidR);
     done++; $('loadTxt').textContent = `正在种树和种花… ${Math.round(done / sets.length * 100)}%`;
-    inst.add(list);
-    if (solidR) for (const it of list) G.solids.push({x: it.x, z: it.z, r: solidR * it.s});
   }
-  // 湖面的睡莲
-  const lily = await L('nat/Lilypad.glb', 0.12, {saturate: 1.3}); const ll = [];
-  for (let i = 0; i < 70; i++) { const x = -110 + Math.random() * 220, z = riverZ(x) + (Math.random() - 0.5) * 7; if (H(x, z) < -0.5) ll.push({x, y: WATER_Y + 0.02, z, r: Math.random() * 6, s: 1.4 + Math.random()}); }
-  lily.add(ll);
+  WORLD.lily = makeKind((await loadGLB('nat/Lilypad.glb')).scene, 0.12, {saturate: 1.3});
 }
 
 /* ---------- 恐龙缩略图（进化选择、名片用） ---------- */
@@ -152,17 +140,20 @@ function makeThumbs() {
 }
 
 /* ---------- 玩家 ---------- */
+// 每吃一口都会长大一点：本阶段从 85% 慢慢长到 100%；最终形态还能继续长大一点
+const growTarget = () => SV.stage < STAGES.length - 1 ? 0.85 + 0.15 * Math.min(1, SV.xp / NEED[SV.stage]) : 1 + Math.min(0.35, SV.xp / 400);
 function spawnPlayer(first) {
   const old = PL.D; if (old) scene.remove(old.holder);
   PL.len = LEN[curId()]; PL.D = makeDino(modelOf(curId()), PL.len); scene.add(PL.D.holder);
-  if (first) { if (SV.px !== undefined && Math.abs(SV.px) < 125) { PL.x = SV.px; PL.z = SV.pz; } PL.dir = 0; }
+  if (first) PL.dir = 0;
   const g = DINO[modelOf(curId())].gait, RM = {baby: 1.55, raptor: 1.15, para: 1.0, steg: 1.25, tri: 1.15, trex: 1.0, apato: 1.45};
-  PL.walkSpd = g.Walk * PL.len * 1.35; PL.runSpd = g.Run * PL.len * RM[curId()]; PL.spd = 0; PL.holdT = 0; PL.look = 0; PL.lean = 0; PL.pitch = 0;
+  PL.walkSpd = g.Walk * PL.len * 1.35; PL.runSpd = g.Run * PL.len * RM[curId()]; PL.spd = 0; PL.holdT = 0; PL.look = 0; PL.lean = 0; PL.pitch = 0; PL.grow = growTarget();
 }
 const keys = {};
 const keyName = e => (e.key || '').length === 1 ? e.key.toLowerCase() : e.key;
 addEventListener('keydown', e => { const k = keyName(e); keys[k] = true; if (e.key.startsWith('Arrow') || k === ' ') e.preventDefault(); if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(k)) { PL.tx = null; marker.visible = false; } });
 addEventListener('keyup', e => { keys[keyName(e)] = false; });
+$('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!G.paused) G.dashReq = true; });
 const clearInput = () => { for (const k in keys) keys[k] = false; ptr.down = false; ptr.drag = false; if (typeof JOY !== 'undefined') { JOY.on = false; JOY.x = JOY.y = 0; const k = document.querySelector('#joy i'); if (k) k.style.transform = ''; } };
 addEventListener('blur', clearInput); document.addEventListener('visibilitychange', clearInput);
 // 鼠标/手指：轻点地面 = 走过去；按住拖动 = 转动视角
@@ -188,7 +179,7 @@ addEventListener('pointermove', e => { if (touches.has(e.pointerId)) touches.set
   const sens = MOB ? 0.009 : 0.006; if (ptr.drag) { CAM.yaw -= dx * sens; CAM.pitch = Math.max(0.12, Math.min(0.95, CAM.pitch + dy * sens * 0.7)); CAM.manualT = G.t; } });
 const endPtr = e => { if (ptr.down && !ptr.drag && !ptr.pinch && !G.paused) setTarget(); ptr.down = false; ptr.drag = false; };
 addEventListener('pointerup', endPtr); addEventListener('pointercancel', () => { ptr.down = false; ptr.drag = false; });
-function setTarget() { const p = groundPoint(ptr.x, ptr.y); if (p) { PL.tx = Math.max(BOUND.x0, Math.min(BOUND.x1, p.x)); PL.tz = Math.max(BOUND.z0, Math.min(BOUND.z1, p.z)); marker.position.set(PL.tx, Math.max(H(PL.tx, PL.tz), WATER_Y) + 0.08, PL.tz); marker.visible = true; marker.userData.t = 0; } }
+function setTarget() { const p = groundPoint(ptr.x, ptr.y); if (p) { PL.tx = p.x; PL.tz = p.z; marker.position.set(PL.tx, Math.max(H(PL.tx, PL.tz), WATER_Y) + 0.08, PL.tz); marker.visible = true; marker.userData.t = 0; } }
 renderer.domElement.addEventListener('wheel', e => { G.zoom = Math.max(0.55, Math.min(1.7, (G.zoom || 1) * (e.deltaY > 0 ? 1.08 : 0.93))); e.preventDefault(); }, {passive: false});
 // 摇杆（手机）：往哪推，恐龙就往屏幕上那个方向走；推到底会跑
 const JOY = {on: false, x: 0, y: 0, id: null};
@@ -203,9 +194,8 @@ const marker = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.75, 32).rotateX(-Mat
 marker.visible = false; scene.add(marker);
 
 function blocked(x, z, r) {
-  if (x < BOUND.x0 || x > BOUND.x1 || z < BOUND.z0 || z > BOUND.z1) return true;
-  if (H(x, z) < -1.0) return true; // 太深的海
-  for (const s of G.solids) { const rr = s.r + r * 0.6; if (Math.abs(s.x - x) < rr && Math.abs(s.z - z) < rr && Math.hypot(s.x - x, s.z - z) < rr) return s; }
+  if (H(x, z) < -1.0) return true; // 太深的湖
+  for (const s of WORLD.solidsNear(x, z)) { const rr = s.r + r * 0.6; if (Math.abs(s.x - x) < rr && Math.abs(s.z - z) < rr && Math.hypot(s.x - x, s.z - z) < rr) return s; }
   return false;
 }
 const wrapA = a => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
@@ -227,10 +217,13 @@ function updatePlayer(dt) {
     else { PL.tx = null; marker.visible = false; } }
   const moving = fwd !== 0;
   PL.holdT = moving && fwd > 0 ? PL.holdT + dt : 0;
-  const run = fwd > 0 && (keys.Shift || (JOY.on ? (PL.far && PL.holdT > 0.35) : PL.holdT > 0.9) || (PL.tx !== null && PL.far && PL.holdT > 0.3));
+  if ((keys[' '] || G.dashReq) && (PL.dashCD || 0) <= 0 && fwd >= 0) { G.dashReq = false; PL.dashT = 0.7; PL.dashCD = 3; if (!fwd) fwd = 1; tone([392, 523], 0.04, 0.05); }
+  G.dashReq = false; PL.dashCD = Math.max(0, (PL.dashCD || 0) - dt); if (PL.dashT > 0) { PL.dashT -= dt; if (!fwd) fwd = 1; }
+  const run = fwd > 0 && ((PL.dashT > 0) || keys.Shift || (JOY.on ? (PL.far && PL.holdT > 0.35) : PL.holdT > 0.9) || (PL.tx !== null && PL.far && PL.holdT > 0.3));
   let target = fwd > 0 ? (run ? PL.runSpd : PL.walkSpd * (JOY.on ? 1.6 : 1)) * fwd : fwd < 0 ? -PL.walkSpd : 0;
-  if (PL.eatT > 0) target *= 0.3;
-  const acc = target > PL.spd ? (run ? 1.6 : 4) : 5; PL.spd += (target - PL.spd) * Math.min(1, dt * acc);
+  if (PL.dashT > 0) target = PL.runSpd * 1.7;
+  if (PL.eatT > 0) target *= PL.dashT > 0 ? 0.7 : 0.3;
+  const acc = target > PL.spd ? (PL.dashT > 0 ? 6 : run ? 1.6 : 4) : 5; PL.spd += (target - PL.spd) * Math.min(1, dt * acc);
   // 跑得越快转得越慢一点，看起来更有重量
   const turnK = 1 / (1 + Math.abs(PL.spd) / (PL.len * 1.2));
   PL.turnV = (PL.turnV || 0) + (wantTurn * (0.45 + 0.55 * turnK) - (PL.turnV || 0)) * Math.min(1, dt * 7);
@@ -255,10 +248,10 @@ function updatePlayer(dt) {
   PL.pitch += (Math.atan2(by - fy, PL.len * 0.7) * 0.8 - PL.pitch) * Math.min(1, dt * 6);
   PL.lean += (-PL.turnV * Math.min(1, Math.abs(PL.spd) / (PL.len * 0.8)) * 0.09 - PL.lean) * Math.min(1, dt * 6);
   D.holder.rotation.order = 'YXZ'; D.holder.position.set(PL.x, y, PL.z); D.holder.rotation.set(PL.pitch, PL.dir, PL.lean);
-  PL.scaleAnim += (1 - PL.scaleAnim) * Math.min(1, dt * 3); D.holder.scale.setScalar(PL.scaleAnim);
+  PL.scaleAnim += (1 - PL.scaleAnim) * Math.min(1, dt * 3); PL.grow += (growTarget() - PL.grow) * Math.min(1, dt * 2); D.holder.scale.setScalar(PL.scaleAnim * PL.grow);
   locomote(D, PL.animV, dt);
   // 跑步扬起尘土
-  if (Math.abs(PL.animV) > PL.walkSpd * 1.6 && (PL.dustT = (PL.dustT || 0) - dt) < 0) { PL.dustT = 0.09; dust(PL.x - Math.sin(PL.dir) * PL.len * 0.15, y, PL.z - Math.cos(PL.dir) * PL.len * 0.15, PL.len); }
+  if (Math.abs(PL.animV) > PL.walkSpd * 1.6 && (PL.dustT = (PL.dustT || 0) - dt) < 0) { PL.dustT = PL.dashT > 0 ? 0.04 : 0.09; dust(PL.x - Math.sin(PL.dir) * PL.len * 0.15, y, PL.z - Math.cos(PL.dir) * PL.len * 0.15, PL.len); }
   // 扭头看最近的食物
   let la = 0, best = 1e9;
   for (const it of G.items) { if (it.eaten) continue; const dx = it.x - PL.x, dz = it.z - PL.z, d = dx * dx + dz * dz; const R = PL.len * 2.2 + 5; if (d > R * R || d > best) continue;
@@ -281,7 +274,7 @@ function updatePlayer(dt) {
     const d = Math.hypot(n.x - PL.x, n.z - PL.z); if (d < nl * 0.35 + PL.len * 0.25) { const dx = (PL.x - n.x) / (d || 1), dz = (PL.z - n.z) / (d || 1); PL.pushX = dx * 6; PL.pushZ = dz * 6;
       if (PL.bump <= 0) { PL.bump = 6; tip(`${spInfo(n.id).name}：“小家伙，小心哦！” 😊`); tone([330, 392], 0.04); } } }
   // 地区提示
-  const b = biomeAt(PL.x, PL.z); if (b !== G.curBiome) { if (G.curBiome !== null) { const B = BIOMES[b]; tip(`${B.icon} 来到了<b>${B.name}</b><br><span class="small">${B.fact}</span>`, 4500); } G.curBiome = b; }
+  const b = biomeAt(PL.x, PL.z); if (b !== G.curBiome) { if (G.curBiome !== null) { const B = BIOMES[b]; tip(`${B.icon} 来到了<b>${B.name}</b><br><span class="small">${B.fact}</span>`, 4500); } G.curBiome = b; questEvent('visit', b); }
 }
 
 /* ---------- 食物 ---------- */
@@ -293,41 +286,54 @@ function spawnFood(near) {
   const type = FOOD_KEYS[k], f = FOOD[type];
   let p = null;
   for (let i = 0; i < 80 && !p; i++) {
-    let x, z;
-    if (near) { const a = Math.random() * Math.PI * 2, d = 18 + Math.random() * 40; x = PL.x + Math.cos(a) * d; z = PL.z + Math.sin(a) * d; }
-    else { x = BOUND.x0 + 8 + Math.random() * (BOUND.x1 - BOUND.x0 - 16); z = BOUND.z0 + 8 + Math.random() * (BOUND.z1 - BOUND.z0 - 16); }
-    if (x < BOUND.x0 + 5 || x > BOUND.x1 - 5 || z < BOUND.z0 + 5 || z > BOUND.z1 - 5) continue;
-    const h = H(x, z);
+    // 新食物大多出现在前方，走到哪里都有得吃
+    const a = PL.dir + (Math.random() - 0.5) * (Math.random() < 0.6 ? 2.4 : 6.28), d = near ? 22 + Math.random() * 70 : 6 + Math.random() * 100;
+    const x = PL.x + Math.sin(a) * d, z = PL.z + Math.cos(a) * d, h = H(x, z);
     if (f.water) { if (h > -0.45 || h < -1.0) continue; } else if (h < -0.15) continue;
     if (f.biomes && !f.biomes.includes(biomeAt(x, z))) continue;
-    if (G.solids.some(s => Math.hypot(s.x - x, s.z - z) < s.r + f.r + 0.6)) continue;
+    if (WORLD.solidsNear(x, z).some(s => Math.hypot(s.x - x, s.z - z) < s.r + f.r + 0.6)) continue;
     p = {x, z, h};
   }
-  if (!p) { if (near) spawnFood(false); return; }
+  if (!p) return false;
   const obj = makeFood(type); const y = f.water ? WATER_Y : p.h;
   obj.position.set(p.x, y, p.z); obj.rotation.y = Math.random() * 6; scene.add(obj);
-  G.items.push({type, x: p.x, z: p.z, y, obj, ph: Math.random() * 6, eaten: 0});
+  const it = {type, x: p.x, z: p.z, y, obj, ph: Math.random() * 6, eaten: 0};
+  // 偶尔出现闪闪发光的金色食物
+  if (f.tier <= st && Math.random() < 0.05) { it.gold = true; const gm = new THREE.MeshStandardMaterial({color: '#ffd23f', emissive: '#ff9d00', emissiveIntensity: 0.45, metalness: 0.35, roughness: 0.3}); gm.userData.own = true;
+    obj.userData.body.traverse(o => { if (o.isMesh) o.material = gm; }); obj.userData.body.scale.multiplyScalar(1.15); }
+  G.items.push(it); return true;
 }
 function eat(it, i) {
   const f = FOOD[it.type], sp = spInfo(curId()); let xp = f.xp, bonus = false;
   if ((f.kind === 'meat' && sp.diet === 'meat') || (f.kind === 'plant' && sp.diet === 'plant')) { xp = Math.round(xp * 1.5 + 0.4); bonus = true; }
+  if (it.gold) xp *= 3;
   it.eaten = 0.0001; it.told = true;
   bite(PL.D); PL.eatT = 0.45;
-  burstAt(it.x, it.y + f.r, it.z, f.kind === 'meat' ? '#ffd76a' : '#b8f27a', 10);
-  floatText(`+${xp}${bonus ? ' ⭐' : ''}`, it.x, it.y + f.r + 1, it.z);
-  tone(bonus ? [660, 880] : [587], 0.045, 0.07);
-  if (!SV.firstEat) { SV.firstEat = 1; tip('吃到啦！⭐ 表示这是你最擅长吃的食物，长得更快'); }
+  burstAt(it.x, it.y + f.r, it.z, it.gold ? '#ffe066' : f.kind === 'meat' ? '#ffd76a' : '#b8f27a', it.gold ? 22 : 10, it.gold ? 1.4 : 1);
+  const cb = combo(); if (cb >= 3) xp += 1;
+  floatText(`+${xp}${bonus ? ' ⭐' : ''}${it.gold ? ' ✨' : ''}${cb >= 3 ? ` 连吃×${cb}` : ''}`, it.x, it.y + f.r + 1, it.z);
+  tone(it.gold ? [784, 988, 1175] : bonus ? [660, 880] : [587], 0.045, 0.07);
+  if (it.gold) tip('✨ 金色食物！成长 ×3');
+  else if (!SV.firstEat) { SV.firstEat = 1; tip('吃到啦！⭐ 表示这是你最擅长吃的食物，长得更快'); }
+  questEvent('eat', it.type); if (it.gold) questEvent('gold'); questEvent('combo', cb);
+  gainXP(xp);
+}
+// 连吃：2.5 秒内接着吃，数字往上加
+function combo() { const now = G.t; G.combo = now - (G.lastEat || -9) < 2.5 ? (G.combo || 1) + 1 : 1; G.lastEat = now; if (G.combo >= 3) { const e = $('comboTxt'); e.textContent = `连吃 ×${G.combo}!`; e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop'); } return G.combo; }
+function gainXP(xp) {
   if (G.evoPending) return;
   if (SV.stage < STAGES.length - 1) { SV.xp += xp; if (SV.xp >= NEED[SV.stage]) { SV.xp = NEED[SV.stage]; save(); updHud(); setTimeout(evolveOffer, 600); G.evoPending = true; return; } }
   else SV.xp += xp;
   save(); updHud();
 }
 function updateItems(dt) {
+  for (let k = 0; k < 3 && G.items.length < FOOD_N; k++) spawnFood(true);
   for (let i = G.items.length - 1; i >= 0; i--) {
     const it = G.items[i], f = FOOD[it.type];
     if (it.eaten) { it.eaten += dt * 3; const s = Math.max(0, 1 - it.eaten); it.obj.scale.setScalar(s); it.obj.position.y = it.y + it.eaten * 0.8;
-      if (it.eaten >= 1) { dropFood(it); G.items.splice(i, 1); spawnFood(true); } continue; }
-    const dx = it.x - PL.x, dz = it.z - PL.z; if (dx * dx + dz * dz > 120 * 120) { it.obj.visible = false; continue; } it.obj.visible = true;
+      if (it.eaten >= 1) { dropFood(it); G.items.splice(i, 1); } continue; }
+    const dx = it.x - PL.x, dz = it.z - PL.z, d2 = dx * dx + dz * dz; if (d2 > 135 * 135) { dropFood(it); G.items.splice(i, 1); continue; } it.obj.visible = d2 < 120 * 120; if (!it.obj.visible) continue;
+    if (it.gold) it.obj.userData.body.rotation.y += dt * 2;
     f.anim && f.anim(it.obj, G.t + it.ph, it);
     const lock = it.obj.userData.lock; if (lock) lock.visible = f.tier > SV.stage + 1 && !!it.lockVis;
     const ring = it.obj.userData.ring; if (ring) { ring.visible = f.tier <= SV.stage + 1; ring.material.opacity = 0.35 + 0.2 * Math.sin(G.t * 2 + it.ph); }
@@ -397,13 +403,13 @@ function updateLife(dt) {
 /* ---------- 其他恐龙 ---------- */
 function updateNPCs(dt) {
   for (const n of G.npcs) {
-    const dPl = Math.hypot(n.x - PL.x, n.z - PL.z), far = dPl > 140, g = DINO[n.id].gait, walkV = g.Walk * NPC_LEN[n.id] * 1.25;
+    let dPl = Math.hypot(n.x - PL.x, n.z - PL.z); if (dPl > 160) { placeNear(n, 70, 130); dPl = Math.hypot(n.x - PL.x, n.z - PL.z); } const far = dPl > 140, g = DINO[n.id].gait, walkV = g.Walk * NPC_LEN[n.id] * 1.25;
     let v = 0;
     if (n.st === 'walk') { const dx = n.tx - n.x, dz = n.tz - n.z, l = Math.hypot(dx, dz);
       if (l < 1) { n.st = 'idle'; n.timer = 3 + Math.random() * 6; }
       else { const da = wrapA(Math.atan2(dx, dz) - n.dir); n.dir = wrapA(n.dir + Math.max(-1, Math.min(1, da * 2)) * dt * 0.9);
         v = walkV * (Math.abs(da) < 1 ? 1 : 0.3); const nx = n.x + Math.sin(n.dir) * v * dt, nz = n.z + Math.cos(n.dir) * v * dt;
-        if (H(nx, nz) < -0.6 || G.solids.some(s => s.r > 3 && Math.hypot(s.x - nx, s.z - nz) < s.r + NPC_LEN[n.id] * 0.3)) { n.st = 'idle'; n.timer = 1; v = 0; }
+        if (H(nx, nz) < -0.6 || WORLD.solidsNear(nx, nz).some(s => s.big && Math.hypot(s.x - nx, s.z - nz) < s.r + NPC_LEN[n.id] * 0.3)) { n.st = 'idle'; n.timer = 1; v = 0; }
         else { n.x = nx; n.z = nz; } } }
     else { n.timer -= dt; if (n.timer <= 0) { const p = randomSpotNear(n); n.tx = p.x; n.tz = p.z; n.st = 'walk'; } }
     n.v = (n.v || 0) + (v - (n.v || 0)) * Math.min(1, dt * 4);
@@ -416,7 +422,87 @@ function updateNPCs(dt) {
   }
 }
 function randomSpotNear(n) { for (let i = 0; i < 30; i++) { const a = Math.random() * 6.28, d = 8 + Math.random() * 25, x = n.x + Math.cos(a) * d, z = n.z + Math.sin(a) * d;
-  if (biomeAt(x, z) === n.home && H(x, z) > -0.3 && x > BOUND.x0 + 5 && x < BOUND.x1 - 5 && z > BOUND.z0 + 5 && z < BOUND.z1 - 5) return {x, z}; } return randomSpot(n.home, 4); }
+  if (H(x, z) > -0.3 && !WORLD.solidsNear(x, z).some(s => s.big && Math.hypot(s.x - x, s.z - z) < s.r + 3)) return {x, z}; } return {x: n.x, z: n.z}; }
+
+/* ---------- 捕猎：吃肉的恐龙可以追比自己小的恐龙 ---------- */
+const PREY_KINDS = ['para', 'steg', 'tri', 'raptor', 'para'];
+const PREY_N = MOB ? 3 : 5;
+const canHunt = () => SV.hunt && spInfo(curId()).diet === 'meat';
+function spawnPrey() {
+  const id = PREY_KINDS[Math.floor(Math.random() * PREY_KINDS.length)], len = Math.max(0.9, PL.len * (0.4 + Math.random() * 0.25));
+  const D = makeDino(id, len); const n = {D, id, len, x: 0, z: 0, dir: Math.random() * 6, st: 'idle', timer: 1, tx: 0, tz: 0, v: 0, stamina: 4, tired: 0, prey: true};
+  if (!placeNear(n, 30, 90)) return; scene.add(D.holder); G.prey.push(n);
+}
+function dropPrey(n) { scene.remove(n.D.holder); n.D.mixer.stopAllAction(); G.prey.splice(G.prey.indexOf(n), 1); }
+function updatePrey(dt) {
+  if (G.prey.length < PREY_N && Math.random() < dt * 0.5) spawnPrey();
+  const hunt = canHunt(), mx = PL.x + Math.sin(PL.dir) * PL.len * 0.42, mz = PL.z + Math.cos(PL.dir) * PL.len * 0.42;
+  for (const n of [...G.prey]) {
+    const dPl = Math.hypot(n.x - PL.x, n.z - PL.z);
+    if (dPl > 150 || n.len > PL.len * 0.85) { dropPrey(n); continue; }
+    const g = DINO[n.id].gait, walkV = g.Walk * n.len * 1.3, runV = Math.min(g.Run * n.len * 1.4, PL.runSpd * 0.72);
+    let v = 0, wantDir = n.dir;
+    const scared = hunt && dPl < PL.len * 2.5 + 9 && n.tired <= 0;
+    if (scared) { // 逃跑：跑一会儿会累，所以一定追得上
+      wantDir = Math.atan2(n.x - PL.x, n.z - PL.z) + Math.sin(G.t * 1.3 + n.len * 7) * 0.5; v = runV; n.stamina -= dt; if (n.stamina <= 0) { n.tired = 1.8; n.stamina = 3.5; }
+      if (!n.told && dPl < PL.len * 2 + 6) { n.told = true; if (!SV.huntTip) { SV.huntTip = 1; tip(`小${SPECIES[n.id].name}比你小，追上它！${MOB ? '点「冲刺」' : '按空格'}可以冲刺 💨`, 4000); } } }
+    else { if (n.tired > 0) n.tired -= dt;
+      if (n.st === 'walk') { const dx = n.tx - n.x, dz = n.tz - n.z; if (Math.hypot(dx, dz) < 1) { n.st = 'idle'; n.timer = 2 + Math.random() * 4; } else { wantDir = Math.atan2(dx, dz); v = walkV * (n.tired > 0 ? 0.5 : 1); } }
+      else { n.timer -= dt; if (n.timer <= 0) { const p = randomSpotNear(n); n.tx = p.x; n.tz = p.z; n.st = 'walk'; } } }
+    const da = wrapA(wantDir - n.dir); n.dir = wrapA(n.dir + Math.max(-1, Math.min(1, da * 3)) * dt * (scared ? 4 : 1.2));
+    const nx = n.x + Math.sin(n.dir) * v * dt, nz = n.z + Math.cos(n.dir) * v * dt;
+    if (H(nx, nz) < -0.6 || blocked(nx, nz, n.len * 0.3)) { n.dir += 1.2 * dt * 3; n.st = 'idle'; n.timer = 0.3; v *= 0.2; } else { n.x = nx; n.z = nz; }
+    n.v += (v - n.v) * Math.min(1, dt * 5);
+    n.D.holder.position.set(n.x, H(n.x, n.z), n.z); n.D.holder.rotation.y = n.dir; n.D.holder.visible = dPl < 140;
+    if (dPl < 140) { locomote(n.D, n.v, dt); n.D.mixer.update(dt); }
+    // 抓到了
+    if (hunt && !G.evoPending && Math.hypot(n.x - mx, n.z - mz) < PL.len * 0.35 + n.len * 0.4) catchPrey(n);
+  }
+}
+function catchPrey(n) {
+  bite(PL.D); PL.eatT = 0.5; const y = H(n.x, n.z) + n.len * 0.25;
+  burstAt(n.x, y, n.z, '#fff3a8', 18, 1.3); burstAt(n.x, y, n.z, '#ffffff', 10, 1.1);
+  const cb = combo(); let xp = Math.round((3 + SV.stage * 2) * 1.5) + (cb >= 3 ? 1 : 0);
+  floatText(`+${xp} ⭐ 抓到小${SPECIES[n.id].name}!`, n.x, y + 1.2, n.z); tone([523, 784, 1046], 0.05, 0.08);
+  if (!SV.firstCatch) { SV.firstCatch = 1; tip('抓到啦！吃肉的恐龙会捕猎比自己小的恐龙 🌟'); }
+  dropPrey(n); questEvent('prey'); questEvent('combo', cb); gainXP(xp);
+}
+
+/* ---------- 小任务：给一个小目标，完成有奖励 ---------- */
+let Q = null;
+function newQuest(first) {
+  const st = SV.stage + 1, edible = FOOD_KEYS.filter(k => FOOD[k].tier <= st && FOOD[k].tier >= st - 1 && !FOOD[k].water);
+  const here = biomeAt(PL.x, PL.z), others = Object.keys(BIOMES).filter(b => b !== here);
+  const pool = [];
+  const t = edible[Math.floor(Math.random() * edible.length)]; if (t) pool.push({kind: 'eat', type: t, need: 3 + Math.floor(Math.random() * 3), text: n => `吃 ${n} 个${FOOD[t].icon}${FOOD[t].name}`});
+  pool.push({kind: 'eatany', need: 8 + SV.stage * 2, text: n => `吃 ${n} 口任何食物`});
+  pool.push({kind: 'combo', need: 3, text: () => '连吃 3 口（2.5 秒内接着吃）'});
+  const b = others[Math.floor(Math.random() * others.length)]; pool.push({kind: 'visit', biome: b, need: 1, text: () => `去找 ${BIOMES[b].icon}${BIOMES[b].name}`});
+  if (canHunt()) pool.push({kind: 'prey', need: 2, text: n => `抓到 ${n} 只小恐龙`});
+  if (!first) pool.push({kind: 'gold', need: 1, text: () => '找到一个 ✨金色食物'});
+  Q = pool[Math.floor(Math.random() * pool.length)]; Q.have = 0;
+  if (Q.kind === 'visit') Q.target = searchBiome(Q.biome);
+  showQuest();
+}
+function searchBiome(b) { for (let r = 40; r < 900; r += 25) for (let a = 0; a < 6.28; a += 0.25) { const x = PL.x + Math.sin(a) * r, z = PL.z + Math.cos(a) * r; if (biomeAt(x, z) === b && H(x, z) > -0.1) return {x, z}; } return null; }
+function showQuest() { if (!Q) return; $('questTxt').textContent = `🎯 ${Q.text(Q.need)}` + (Q.need > 1 ? `（${Q.have}/${Q.need}）` : ''); }
+function questEvent(kind, arg) {
+  if (!Q || G.evoPending) return;
+  let hit = false;
+  if (Q.kind === 'eat' && kind === 'eat' && arg === Q.type) hit = true;
+  if (Q.kind === 'eatany' && kind === 'eat') hit = true;
+  if (Q.kind === 'prey' && kind === 'prey') hit = true;
+  if (Q.kind === 'gold' && kind === 'gold') hit = true;
+  if (Q.kind === 'visit' && kind === 'visit' && arg === Q.biome) hit = true;
+  if (Q.kind === 'combo' && kind === 'combo') { Q.have = Math.max(Q.have, arg); if (Q.have >= Q.need) { Q.have = Q.need; done(); } else showQuest(); return; }
+  if (!hit) return; Q.have++; showQuest(); if (Q.have >= Q.need) done();
+  function done() { const xp = 4 + SV.stage * 3; tip(`🎉 任务完成：${Q.text(Q.need)}！成长 +${xp}`, 3500); tone([523, 659, 784, 1046], 0.05, 0.1); $('quest').classList.add('done');
+    burstAt(PL.x, H(PL.x, PL.z) + PL.len * 0.6, PL.z, '#ffe27a', 24, 1.5); Q = null; setTimeout(() => { $('quest').classList.remove('done'); newQuest(); }, 2500); setTimeout(() => gainXP(xp), 300); }
+}
+function updateQuestArrow() {
+  const el = $('questArrow'); if (!Q || Q.kind !== 'visit' || !Q.target) { el.style.display = 'none'; return; }
+  const a = Math.atan2(Q.target.x - PL.x, Q.target.z - PL.z), rel = wrapA(a - (CAM.yaw + Math.PI)); el.style.display = 'inline-block'; el.style.transform = `rotate(${-rel}rad)`;
+}
 
 /* ---------- 进化 ---------- */
 function holdOff(ms = 1300) { const b = $('box'); b.classList.add('wait'); clearTimeout(holdOff.t); holdOff.t = setTimeout(() => b.classList.remove('wait'), ms); }
@@ -435,8 +521,8 @@ function evolveTo(id) {
   if (evolving || SV.stage >= STAGES.length - 1 || !STAGES[SV.stage + 1].opts.includes(id)) return;
   evolving = true; setTimeout(() => evolving = false, 800); holdOff(1200);
   SV.stage++; SV.path[SV.stage] = id; SV.path.length = SV.stage + 1; SV.xp = 0; if (!SV.done.includes(id)) SV.done.push(id); save();
-  const s = spInfo(id), oldLen = PL.len;
-  spawnPlayer(false); PL.scaleAnim = oldLen / PL.len; PL.D.holder.scale.setScalar(PL.scaleAnim);
+  const s = spInfo(id), oldLen = PL.len * PL.grow;
+  spawnPlayer(false); PL.scaleAnim = oldLen / (PL.len * PL.grow); PL.D.holder.scale.setScalar(PL.scaleAnim);
   const y = H(PL.x, PL.z); burstAt(PL.x, y + PL.len * 0.3, PL.z, '#fff3a8', 26, 1.6); burstAt(PL.x, y + PL.len * 0.3, PL.z, '#9ff0ff', 16, 1.4);
   $('box').innerHTML = `<h1>🎉 变成${s.name}了！</h1><img class="big" src="${THUMB[id]}" alt=""><p>💡 ${s.facts[0]}</p>
     ${SV.stage === STAGES.length - 1 ? '<p><b>这是最终形态！</b>继续在世界里散步、吃东西、看看其他恐龙吧。想换一条路线，可以在菜单里“重新长大”。</p>' : ''}
@@ -445,7 +531,8 @@ function evolveTo(id) {
   $('goOn').onclick = () => { $('overlay').classList.remove('show'); G.paused = false;
     // 太小的食物换成合适的
     for (let i = G.items.length - 1; i >= 0; i--) { const it = G.items[i]; if (FOOD[it.type].tier < SV.stage) { dropFood(it); G.items.splice(i, 1); } }
-    while (G.items.length < 90) spawnFood(Math.random() < 0.5);
+    while (G.items.length < FOOD_N) if (!spawnFood(false)) break;
+    for (const n of [...G.prey]) dropPrey(n); newQuest();
     G.items.forEach(it => it.told = false); updHud(); };
   updHud();
 }
@@ -459,30 +546,30 @@ function updHud() {
   $('stages').innerHTML = STAGES.map((_, i) => `<i class="${i <= SV.stage ? 'on' : ''}"></i>`).join('');
   $('soundBtn').textContent = SV.sound ? '🔊' : '🔇';
 }
-let mapBg = null;
+let mapBg = null, mapCx = 1e9, mapCz = 1e9; const MAPR = 110;
 function buildMinimap() {
-  const c = document.createElement('canvas'), S = 150; c.width = S; c.height = S; const x = c.getContext('2d');
-  const W = BOUND.x1 - BOUND.x0, Hh = BOUND.z1 - BOUND.z0;
-  for (let i = 0; i < S; i += 3) for (let j = 0; j < S; j += 3) { const wx = BOUND.x0 + i / S * W, wz = BOUND.z0 + j / S * Hh, h = H(wx, wz);
-    x.fillStyle = h < -0.4 ? (wz > 80 ? '#2f8fd6' : '#45c4d4') : BIOMES[biomeAt(wx, wz)].map; x.fillRect(i, j, 3, 3); }
-  x.fillStyle = '#b8552f'; for (const M of MESAS) { if (M.x < BOUND.x0 || M.x > BOUND.x1 || M.z < BOUND.z0 || M.z > BOUND.z1) continue; x.beginPath(); x.arc((M.x - BOUND.x0) / W * S, (M.z - BOUND.z0) / Hh * S, M.r / W * S, 0, 7); x.fill(); }
+  const c = mapBg || document.createElement('canvas'), S = 150; c.width = S; c.height = S; const x = c.getContext('2d'); mapCx = PL.x; mapCz = PL.z;
+  for (let i = 0; i < S; i += 3) for (let j = 0; j < S; j += 3) { const wx = mapCx + (i / S * 2 - 1) * MAPR, wz = mapCz + (j / S * 2 - 1) * MAPR, h = H(wx, wz);
+    x.fillStyle = h < -0.4 ? '#45c4d4' : BIOMES[biomeAt(wx, wz)].map; x.fillRect(i, j, 3, 3); }
   mapBg = c;
 }
 function drawMinimap() {
-  const c = $('map'), x = c.getContext('2d'), S = c.width, W = BOUND.x1 - BOUND.x0, Hh = BOUND.z1 - BOUND.z0;
-  x.clearRect(0, 0, S, S); x.drawImage(mapBg, 0, 0, S, S);
-  x.fillStyle = '#ffd23f'; for (const it of G.items) { if (it.eaten || FOOD[it.type].tier > SV.stage + 1) continue; x.fillRect((it.x - BOUND.x0) / W * S - 1.5, (it.z - BOUND.z0) / Hh * S - 1.5, 3, 3); }
-  x.fillStyle = 'rgba(255,255,255,.85)'; for (const n of G.npcs) { x.beginPath(); x.arc((n.x - BOUND.x0) / W * S, (n.z - BOUND.z0) / Hh * S, 2.2, 0, 7); x.fill(); }
-  const px = (PL.x - BOUND.x0) / W * S, pz = (PL.z - BOUND.z0) / Hh * S;
-  x.save(); x.translate(px, pz); x.fillStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, 22, -Math.PI / 2 - CAM.yaw - 0.5, -Math.PI / 2 - CAM.yaw + 0.5); x.closePath(); x.fill(); x.rotate(-PL.dir + Math.PI); x.fillStyle = '#ff5a3c'; x.strokeStyle = '#fff'; x.lineWidth = 2; x.beginPath(); x.moveTo(0, -7); x.lineTo(5, 5); x.lineTo(-5, 5); x.closePath(); x.stroke(); x.fill(); x.restore();
+  if (Math.hypot(PL.x - mapCx, PL.z - mapCz) > 25) buildMinimap();
+  const c = $('map'), x = c.getContext('2d'), S = c.width, k = S / (2 * MAPR), toX = wx => S / 2 + (wx - PL.x) * k, toY = wz => S / 2 + (wz - PL.z) * k;
+  x.clearRect(0, 0, S, S); x.drawImage(mapBg, toX(mapCx - MAPR), toY(mapCz - MAPR), S, S);
+  x.fillStyle = '#ffd23f'; for (const it of G.items) { if (it.eaten || FOOD[it.type].tier > SV.stage + 1) continue; x.fillRect(toX(it.x) - 1.5, toY(it.z) - 1.5, 3, 3); }
+  x.fillStyle = 'rgba(255,255,255,.85)'; for (const n of G.npcs) { x.beginPath(); x.arc(toX(n.x), toY(n.z), 2.4, 0, 7); x.fill(); }
+  if (canHunt()) { x.fillStyle = '#ff7a59'; for (const n of G.prey) { x.beginPath(); x.arc(toX(n.x), toY(n.z), 2.6, 0, 7); x.fill(); } }
+  if (Q && Q.kind === 'visit' && Q.target) { const a = Math.atan2(Q.target.x - PL.x, Q.target.z - PL.z); x.fillStyle = '#ffe066'; x.font = '16px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; const d = Math.min(S / 2 - 10, Math.hypot(Q.target.x - PL.x, Q.target.z - PL.z) * k); x.fillText('🎯', S / 2 + Math.sin(a) * d, S / 2 + Math.cos(a) * d); }
+  x.save(); x.translate(S / 2, S / 2); x.fillStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, 22, -Math.PI / 2 - CAM.yaw - 0.5, -Math.PI / 2 - CAM.yaw + 0.5); x.closePath(); x.fill(); x.rotate(-PL.dir + Math.PI); x.fillStyle = '#ff5a3c'; x.strokeStyle = '#fff'; x.lineWidth = 2; x.beginPath(); x.moveTo(0, -7); x.lineTo(5, 5); x.lineTo(-5, 5); x.closePath(); x.stroke(); x.fill(); x.restore();
 }
 
 /* ---------- 菜单 / 开场 ---------- */
 function intro() {
   G.paused = true;
   $('box').innerHTML = `<h1>🥚 恐龙长大记</h1><p>你是一只刚出生的小恐龙。在大陆上走来走去，<b>吃东西长大</b>，吃饱了就能<b>进化</b>成更大的恐龙！</p>
-   <div class="legend">${MOB ? '<span>🕹️ 左下角摇杆 = 走路，推到底会跑</span><span>👆 轻点地面 = 走过去</span><span>☝️ 单指滑动 = 转视角</span><span>🤏 双指捏合 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span>' : `<span>🖱️ 点地面 = 走过去</span><span>🖱️ 按住拖动 = 转动视角</span><span>⌨️ ↑ 往前走（走久了会跑）← → 转身</span><span>⌨️ Q / E 转视角</span><span>🔍 滚轮 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span>`}</div>
-   <p>大陆上有 5 个地方：🌿蕨类森林、🌼开花草原、💧大河湿地、🌴苏铁海岸、🏜️红岩台地。</p>
+   <div class="legend">${MOB ? '<span>🕹️ 左下角摇杆 = 走路，推到底会跑</span><span>👆 轻点地面 = 走过去</span><span>☝️ 单指滑动 = 转视角</span><span>🤏 双指捏合 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>💨 冲刺按钮 = 跑得更快</span>' : `<span>🖱️ 点地面 = 走过去</span><span>🖱️ 按住拖动 = 转动视角</span><span>⌨️ ↑ 往前走（走久了会跑）← → 转身</span><span>⌨️ Q / E 转视角</span><span>🔍 滚轮 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span><span>💨 空格 = 冲刺</span>`}</div>
+   <p>这片大陆<b>没有边界</b>，可以一直走下去：🌿蕨类森林、🌼开花草原、💧大河湿地、🌴苏铁海岸、🏜️红岩台地会一片接一片出现。</p><p>🎯 左上角有小任务；✨金色食物成长 ×3；连续吃会有“连吃”奖励；吃肉的恐龙还可以追小恐龙。</p>
    <p style="color:#6c7563">这里没有时间限制，也不会输。碰到大恐龙只会被轻轻推开。</p>
    <button class="btn" id="startBtn">${SV.seen ? '继续冒险' : '出发！'}</button>`;
   $('overlay').classList.add('show');
@@ -494,10 +581,12 @@ $('menuBtn').onclick = () => {
   $('box').innerHTML = `<h1>☰ 菜单</h1>
    <p>我的进化路线：${SV.path.map(id => spInfo(id).name).join(' → ')}</p>
    <p class="credits">素材来源（全部是 CC0 公共领域授权，可以免费使用）：恐龙模型 — Quaternius「Animated Dinosaur Pack」；树、棕榈、花、石头 — Quaternius「Ultimate Nature Pack」和「Stylized Nature MegaKit」。鳞片质感、配色、地形、河流、红岩、天空、食物都是程序里原创画的。</p>
+   <p><button class="btn light" id="huntBtn">🦖 捕猎小恐龙：${SV.hunt ? '开' : '关'}</button></p>
    <button class="btn" id="resume">继续</button><button class="btn light" id="howBtn">怎么玩</button><button class="btn light" id="restart">重新长大</button>`;
   $('overlay').classList.add('show');
   $('resume').onclick = () => { $('overlay').classList.remove('show'); G.paused = false; };
   $('howBtn').onclick = intro;
+  $('huntBtn').onclick = e => { SV.hunt = !SV.hunt; save(); e.target.textContent = `🦖 捕猎小恐龙：${SV.hunt ? '开' : '关'}`; if (Q && Q.kind === 'prey' && !SV.hunt) newQuest(); };
   let armed = false; $('restart').onclick = e => { if (!armed) { armed = true; e.target.textContent = '再按一次确认'; return; }
     SV.stage = 0; SV.path = ['baby']; SV.xp = 0; save(); spawnPlayer(false); PL.scaleAnim = 1; updHud(); $('overlay').classList.remove('show'); G.paused = false; tip('又变回恐龙宝宝啦，这次试试另一条路线吧！'); };
 };
@@ -511,11 +600,12 @@ function frame(ts) {
   const dt = Math.min(0.1, (ts - (last || ts)) / 1000); last = ts;
   if (G.paused && G.drawnPaused) return; // 弹窗时不重画，省电
   G.t += dt;
-  if (!G.paused) { updatePlayer(dt); updateNPCs(dt); updateItems(dt); }
+  if (!G.paused) { updatePlayer(dt); updateNPCs(dt); updatePrey(dt); updateItems(dt); updateQuestArrow(); }
+  WORLD.update(PL.x, PL.z);
   PL.D.mixer.update(G.paused ? 0 : dt); if (Math.abs(PL.look) > 0.01) headTurn(PL.D, PL.look);
   updateLife(dt);
   updateParts(dt);
-  if (G.water) G.water.uT.value = G.t;
+  if (G.water) { G.water.uT.value = G.t; G.water.mesh.position.x = PL.x; G.water.mesh.position.z = PL.z; }
   if (marker.visible) { marker.userData.t += dt; marker.scale.setScalar(1 + 0.15 * Math.sin(marker.userData.t * 5)); }
   // 相机：在恐龙身后，走路时慢慢转到身后；拖动鼠标或 Q/E 可以自己转
   const behind = PL.dir + Math.PI;
@@ -532,15 +622,17 @@ function frame(ts) {
   // 阴影跟着玩家
   const sr = 18 + PL.len * 2.5; const sc = sun.shadow.camera; if (sc.right !== sr) { sc.left = -sr; sc.right = sr; sc.top = sr; sc.bottom = -sr; sc.near = 1; sc.far = 220; sc.updateProjectionMatrix(); }
   sun.target.position.set(PL.x, y0, PL.z); sun.position.copy(sun.target.position).addScaledVector(SUN_DIR, 100);
+  G.skyo.sky.position.copy(camera.position); G.skyo.clouds.position.set(PL.x, 0, PL.z);
+  if (PL.dashCD !== G.lastCD) { G.lastCD = PL.dashCD; const b = $('dashBtn'); b.classList.toggle('cd', PL.dashCD > 0); }
   renderer.render(scene, camera);
   G.drawnPaused = G.paused;
-  if ((mapT += dt) > 0.2) { mapT = 0; drawMinimap(); cullChunks(PL.x, PL.z); }
+  if ((mapT += dt) > 0.2) { mapT = 0; drawMinimap(); WORLD.cull(PL.x, PL.z); }
   if ((saveT += dt) > 5) { saveT = 0; SV.px = PL.x; SV.pz = PL.z; save(); }
   // 自动画质：太卡就降低分辨率和阴影
   if (dt > 0.034) { slowT += dt; fastT = 0; } else { fastT += dt; slowT = Math.max(0, slowT - dt * 0.5); }
   if (slowT > 2) { slowT = 0; if (PR > 1) { PR = 1; renderer.setPixelRatio(PR); } else if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => m.needsUpdate = true); }); } else if (PR > 0.7) { PR = 0.7; renderer.setPixelRatio(PR); } }
 }
-window.__G = {G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene, CAM, keys};
+window.__G = {G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene, CAM, keys, get WORLD() { return WORLD; }, get Q() { return Q; }, biomeAt, spawnPrey, newQuest, camera};
 const unpause = () => { G.drawnPaused = false; };
 new MutationObserver(unpause).observe($('overlay'), {attributes: true});
 init().catch(e => { $('loadTxt').textContent = '加载出错了：' + e.message; console.error(e); });
