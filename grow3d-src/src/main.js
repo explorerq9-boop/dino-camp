@@ -3,6 +3,8 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {SPECIES, GOB, prepDino, prepGob, makeDino, measureGait, locomote, bite, headTurn, DINO} from './dinos.js';
 import {createLife} from './life.js';
 import {createEnv} from './env.js';
+import {createHome, DECOR} from './home.js';
+import {SEASONS, SEASON, createFlakes} from './season.js';
 import {RNG, WATER_Y, H, biomeAt, BIOMES, CH, createWorld, makeKind, buildWater, buildSky, WIND, NEAR} from './world.js';
 import {FOOD, FOOD_KEYS, makeFood} from './food.js';
 
@@ -65,7 +67,7 @@ async function loadGLB(path) {
 const G = {t: 0, paused: true, items: [], npcs: [], prey: [], parts: [], curBiome: null};
 const PL = {x: -40, z: -40, dir: 0, vx: 0, vz: 0, D: null, len: 2, tx: null, tz: null, bump: 0, eatT: 0, scaleAnim: 1};
 
-let WORLD = null, LIFE = null, ENV = null;
+let WORLD = null, LIFE = null, ENV = null, HOME = null, FLAKES = null;
 async function init() {
   const prog = (t) => { $('loadTxt').textContent = t; };
   prog('正在搭建世界…');
@@ -81,11 +83,13 @@ async function init() {
   WORLD.update(PL.x, PL.z, true);
   spawnPlayer(true);
   // 其他恐龙：散布在你周围，走远了会在前方重新遇到新的
-  LIFE = createLife({scene, PL, G, MOB, SV, tip, burstAt, floatText, gainXP, questEvent, tone, blocked, placeNear, onDiscover: discover});
-  ENV = createEnv({scene, renderer, hemi, sun, SUN_DIR, sky: G.skyo.sky, clouds: G.skyo.clouds, PL, G, SV, MOB, tip, ripple: LIFE.ripple});
+  LIFE = createLife({scene, PL, G, MOB, SV, tip, burstAt, floatText, gainXP, questEvent, tone, blocked, placeNear, onDiscover: discover, toHome: f => { HOME.addBaby(f.id); scene.remove(f.D.holder); tip(`🏠 小${({ovi: '窃蛋龙', gtri: '三角龙', gsteg: '剑龙', anky: '甲龙', pachy: '肿头龙', gtrex: '霸王龙'})[f.id] || '恐龙'}先回小窝等你了。`, 3000); }});
+  ENV = createEnv({scene, renderer, hemi, sun, SUN_DIR, sky: G.skyo.sky, clouds: G.skyo.clouds, PL, G, SV, MOB, tip, ripple: LIFE.ripple, snowy: () => SEASON.value.z > 0.5});
+  FLAKES = createFlakes(scene, PL, MOB, H); seasonInit();
   const plan = MOB ? ['raptor', 'para', 'para', 'tri', 'steg', 'apato', 'trex', 'anky', 'pachy', 'ovi', 'spino', 'tri'] : ['raptor', 'raptor', 'para', 'para', 'tri', 'steg', 'apato', 'apato', 'trex', 'tri', 'para', 'steg', 'anky', 'anky', 'pachy', 'pachy', 'ovi', 'ovi', 'spino'];
   for (const id of plan) { const D = makeDino(id, NPC_LEN[id], (Math.random() - 0.5) * 2); scene.add(D.holder); const n = {D, id, x: 0, z: 0, dir: Math.random() * 6, st: 'idle', timer: Math.random() * 4, tx: 0, tz: 0}; placeNear(n, 25, 110); G.npcs.push(n); LIFE.addBabies(n, NPC_LEN[id]); }
   for (let i = 0; i < FOOD_N; i++) spawnFood(false);
+  HOME = createHome({world: WORLD, scene, PL, G, SV, MOB, tip, burstAt, floatText, tone, save, questEvent, findLand, blocked, glowTex: glowTex()});
   makeButterflies(); updHud(); newQuest(true);
   prog('正在准备画面…'); await new Promise(r => setTimeout(r, 30)); try { camera.position.set(PL.x, H(PL.x, PL.z) + 6, PL.z - 10); camera.lookAt(PL.x, 0, PL.z); renderer.compile(scene, camera); } catch (e) {}
   $('loading').style.display = 'none';
@@ -172,9 +176,13 @@ const keys = {};
 const keyName = e => (e.key || '').length === 1 ? e.key.toLowerCase() : e.key;
 addEventListener('keydown', e => { const k = keyName(e); keys[k] = true; if (e.key.startsWith('Arrow') || k === ' ') e.preventDefault(); if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(k)) { PL.tx = null; marker.visible = false; } });
 addEventListener('keyup', e => { keys[keyName(e)] = false; });
-$('callBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); callOut(); });
-addEventListener('keydown', e => { if (keyName(e) === 'c' && !e.repeat) callOut(); });
-$('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!G.paused) G.dashReq = true; });
+$('callBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (G.fly) G.flyDown = 1; else callOut(); });
+$('callBtn').addEventListener('pointerup', () => { G.flyDown = 0; }); $('callBtn').addEventListener('pointerleave', () => { G.flyDown = 0; });
+$('flyBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (G.paused) return; G.fly ? endFly() : startFly(); });
+$('homeBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); G.paused = true; $('overlay').classList.add('show'); HOME.ui($('box'), () => { $('overlay').classList.remove('show'); G.paused = false; }); });
+addEventListener('keydown', e => { if (keyName(e) === 'c' && !e.repeat && !G.fly) callOut(); if (keyName(e) === 'f' && !e.repeat && !G.paused) G.fly ? endFly() : startFly(); });
+$('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (G.fly) G.flyUp = 1; else if (!G.paused) G.dashReq = true; });
+$('dashBtn').addEventListener('pointerup', () => { G.flyUp = 0; }); $('dashBtn').addEventListener('pointerleave', () => { G.flyUp = 0; });
 const clearInput = () => { for (const k in keys) keys[k] = false; ptr.down = false; ptr.drag = false; if (typeof JOY !== 'undefined') { JOY.on = false; JOY.x = JOY.y = 0; const k = document.querySelector('#joy i'); if (k) k.style.transform = ''; } };
 addEventListener('blur', clearInput); document.addEventListener('visibilitychange', clearInput);
 // 鼠标/手指：轻点地面 = 走过去；按住拖动 = 转动视角
@@ -448,6 +456,75 @@ function updateNPCs(dt) {
 function randomSpotNear(n) { for (let i = 0; i < 30; i++) { const a = Math.random() * 6.28, d = 8 + Math.random() * 25, x = n.x + Math.cos(a) * d, z = n.z + Math.sin(a) * d;
   if (H(x, z) > -0.3 && !WORLD.solidsNear(x, z).some(s => s.big && Math.hypot(s.x - x, s.z - z) < s.r + 3)) return {x, z}; } return {x: n.x, z: n.z}; }
 
+/* ---------- 四季 ---------- */
+const SEASON_LEN = 13.5 * 60; // 每个季节约 13 分钟
+const S_TARGET = {spring: [1, 0, 0], summer: [0, 0, 0], autumn: [0, 1, 0], winter: [0, 0, 1]};
+function curSeason() { const m = SV.seasonMode || 'auto'; if (m !== 'auto') return m; return SEASONS[Math.floor((SV.seasonClock || 0) / SEASON_LEN) % 4].id; }
+function seasonInit() { G.season = curSeason(); SEASON.value.set(...S_TARGET[G.season]); updSeasonBadge(); }
+function updSeasonBadge() { const S = SEASONS.find(x => x.id === G.season); $('seasonTag').textContent = S.icon + ' ' + S.name; }
+function seasonUpdate(dt) {
+  SV.seasonClock = (SV.seasonClock || 0) + dt;
+  const s = curSeason();
+  if (s !== G.season) { G.season = s; const S = SEASONS.find(x => x.id === s); tip(`${S.icon} ${S.tip}<br><span class="small">${S.fact}</span>`, 5500); updSeasonBadge(); }
+  const T = S_TARGET[G.season], v = SEASON.value, k = Math.min(1, dt * 0.08);
+  v.x += (T[0] - v.x) * k; v.y += (T[1] - v.y) * k; v.z += (T[2] - v.z) * k;
+  const kind = v.z > 0.3 ? 'snow' : v.y > 0.3 ? 'leaf' : v.x > 0.3 ? 'petal' : 'none', amt = kind === 'snow' ? v.z : kind === 'leaf' ? v.y : v.x;
+  FLAKES.set(kind, amt * (kind === 'snow' ? 0.9 : 0.8)); FLAKES.update(dt, G.t, ENV.rain || 0);
+}
+let _glow = null; function glowTex() { if (_glow) return _glow; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 2, 32, 32, 30); gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return (_glow = new THREE.CanvasTexture(c)); }
+
+/* ---------- 回家 ---------- */
+function goHome() {
+  if (G.fly) endFly(true);
+  const f = $('fade'); f.classList.add('on');
+  setTimeout(() => { const p = findLand(SV.home.x + 4, SV.home.z + 5, null, 0, 12); PL.x = p.x; PL.z = p.z; PL.tx = null; marker.visible = false; PL.dir = Math.atan2(SV.home.x - PL.x, SV.home.z - PL.z); G.camInit = false;
+    WORLD.update(PL.x, PL.z, true); for (const it of [...G.items]) { dropFood(it); } G.items.length = 0; for (let i = 0; i < FOOD_N; i++) spawnFood(false); for (const n of G.npcs) placeNear(n, 25, 110);
+    setTimeout(() => f.classList.remove('on'), 150); }, 600);
+}
+
+/* ---------- 变成翼龙飞 ---------- */
+function startFly() {
+  if (G.fly || G.evoPending || G.paused) return;
+  G.fly = true; PL.saveLen = PL.len; const old = PL.D; scene.remove(old.holder); old.mixer.stopAllAction();
+  PL.len = 2.6 + SV.stage * 0.9; PL.D = makeDino('ptero', PL.len); scene.add(PL.D.holder); PL.D.mixer.stopAllAction(); PL.D.acts.Walk.play();
+  PL.fy = Math.max(H(PL.x, PL.z), WATER_Y) + 1; PL.alt = 17; PL.fspd = 6; PL.spd = 0; PL.animV = 0; PL.tx = null; marker.visible = false;
+  burstAt(PL.x, PL.fy, PL.z, '#ffffff', 14, 1.2); tone([523, 659, 784, 1046], 0.04, 0.08);
+  $('dashBtn').innerHTML = '⬆️<small>飞高</small>'; $('callBtn').innerHTML = '⬇️<small>飞低</small>'; $('flyBtn').innerHTML = '🦖<small>变回</small>';
+  discover('ptero'); questEvent('fly');
+  if (!SV.flyTip) { SV.flyTip = 1; tip(`🪽 变成翼龙啦！${MOB ? '摇杆转方向，⬆️⬇️ 飞高飞低' : '← → 转方向，↑ 快 ↓ 慢，空格飞高，C 飞低'}。低低地飞过水面能抓鱼。<br><span class="small">翼龙不是恐龙，是和恐龙同时代、会飞的爬行动物。</span>`, 6000); }
+}
+function endFly(quiet) {
+  if (!G.fly) return; G.fly = false; scene.remove(PL.D.holder); PL.D.mixer.stopAllAction();
+  spawnPlayer(false); PL.scaleAnim = 0.6; G.flyUp = G.flyDown = 0;
+  const p = findLand(PL.x, PL.z, null, 0, 30); PL.x = p.x; PL.z = p.z;
+  $('dashBtn').innerHTML = '💨<small>冲刺</small>'; $('callBtn').innerHTML = '🎵<small>叫一声</small>'; $('flyBtn').innerHTML = '🪽<small>飞</small>';
+  if (!quiet) { burstAt(PL.x, H(PL.x, PL.z) + 1, PL.z, '#ffffff', 12, 1); tip('🦖 落地，变回恐龙啦！', 2000); }
+}
+function updateFly(dt) {
+  let turn = 0, sp = 1;
+  if (keys.ArrowLeft || keys.a) turn += 1; if (keys.ArrowRight || keys.d) turn -= 1;
+  if (keys.ArrowUp || keys.w) sp = 1.7; else if (keys.ArrowDown || keys.s) sp = 0.5;
+  if (keys.q) { CAM.yaw += dt * 1.8; CAM.manualT = G.t; } if (keys.e) { CAM.yaw -= dt * 1.8; CAM.manualT = G.t; }
+  let wantTurn = turn * 1.4;
+  const jm = Math.hypot(JOY.x, JOY.y);
+  if (JOY.on && jm > 0.15) { const sy = Math.sin(CAM.yaw), cy = Math.cos(CAM.yaw), wx = -sy * -JOY.y + cy * JOY.x, wz = -cy * -JOY.y - sy * JOY.x;
+    const da = wrapA(Math.atan2(wx, wz) - PL.dir); wantTurn = Math.max(-1.6, Math.min(1.6, da * 2)); sp = 0.7 + jm; }
+  if (!turn && !(JOY.on && jm > 0.15) && PL.tx !== null) { const da = wrapA(Math.atan2(PL.tx - PL.x, PL.tz - PL.z) - PL.dir); wantTurn = Math.max(-1.6, Math.min(1.6, da * 2)); if (Math.hypot(PL.tx - PL.x, PL.tz - PL.z) < 4) { PL.tx = null; marker.visible = false; } }
+  if (keys[' '] || G.flyUp) PL.alt = Math.min(45, PL.alt + dt * 9); if (keys.c || G.flyDown) PL.alt = Math.max(1.2, PL.alt - dt * 9);
+  const base = 7 + SV.stage * 1.8; PL.fspd += (base * sp - PL.fspd) * Math.min(1, dt * 1.5);
+  PL.turnV = (PL.turnV || 0) + (wantTurn - (PL.turnV || 0)) * Math.min(1, dt * 4); PL.dir = wrapA(PL.dir + PL.turnV * dt);
+  PL.x += Math.sin(PL.dir) * PL.fspd * dt; PL.z += Math.cos(PL.dir) * PL.fspd * dt;
+  // 高度：跟着地面起伏，飞过红岩台地会自己抬高
+  let floor = Math.max(H(PL.x, PL.z), WATER_Y); for (const s of WORLD.solidsNear(PL.x, PL.z)) if (s.big && Math.hypot(s.x - PL.x, s.z - PL.z) < s.r + 3) floor = Math.max(floor, H(s.x, s.z) + 14);
+  const wantY = floor + PL.alt; PL.fy += (wantY - PL.fy) * Math.min(1, dt * 1.6);
+  const D = PL.D; D.holder.position.set(PL.x, PL.fy, PL.z); D.holder.rotation.set(0, PL.dir, 0); D.holder.rotation.z = -PL.turnV * 0.35;
+  D.acts.Walk.timeScale = (keys[" "] || G.flyUp) ? 1.6 : 0.8 + sp * 0.2;
+  PL.spd = 0; PL.animV = 0; PL.look = 0;
+  // 低飞时可以吃东西（翼龙最爱抓鱼）
+  if (PL.fy - floor < 3.2) for (let i = G.items.length - 1; i >= 0; i--) { const it = G.items[i]; if (it.eaten || FOOD[it.type].tier > SV.stage + 1) continue; if (Math.hypot(it.x - PL.x, it.z - PL.z) < 1.8 + PL.len * 0.2) { eat(it, i); } }
+  if (PL.fy - floor < 1.8 && floor <= WATER_Y + 0.01 && (G.splT = (G.splT || 0) - dt) < 0) { G.splT = 0.25; LIFE.ripple(PL.x, PL.z, 1.2); }
+}
+
 /* ---------- 叫一声：附近的恐龙会回应你 ---------- */
 let noteTex = null;
 function notesAt(x, y, z, n) {
@@ -469,7 +546,7 @@ function callOut() {
 /* ---------- 捕猎：吃肉的恐龙可以追比自己小的恐龙 ---------- */
 const PREY_KINDS = ['para', 'steg', 'tri', 'raptor', 'pachy', 'ovi', 'anky'];
 const PREY_N = MOB ? 3 : 5;
-const canHunt = () => SV.hunt && spInfo(curId()).diet === 'meat';
+const canHunt = () => SV.hunt && !G.fly && spInfo(curId()).diet === 'meat';
 function spawnPrey() {
   const id = PREY_KINDS[Math.floor(Math.random() * PREY_KINDS.length)], len = Math.max(0.9, PL.len * (0.4 + Math.random() * 0.25));
   const D = makeDino(id, len); const n = {D, id, len, x: 0, z: 0, dir: Math.random() * 6, st: 'idle', timer: 1, tx: 0, tz: 0, v: 0, stamina: 4, tired: 0, prey: true};
@@ -522,6 +599,9 @@ function newQuest(first) {
   const b = others[Math.floor(Math.random() * others.length)]; pool.push({kind: 'visit', biome: b, need: 1, text: () => `去找 ${BIOMES[b].icon}${BIOMES[b].name}`});
   if (canHunt()) pool.push({kind: 'prey', need: 2, text: n => `抓到 ${n} 只小恐龙`});
   if (!first) pool.push({kind: 'gold', need: 1, text: () => '找到一个 ✨金色食物'});
+  pool.push({kind: 'collect', need: 2, text: n => `捡 ${n} 个装饰品（闪着光的东西）`});
+  if (Math.hypot(PL.x - SV.home.x, PL.z - SV.home.z) > 60) pool.push({kind: 'home', need: 1, text: () => '回 🏠 小窝看看（菜单里也能直接回家）'});
+  if (!G.fly) pool.push({kind: 'fly', need: 1, text: () => '变成翼龙，在天上飞一会儿 🪽'});
   pool.push({kind: 'call', need: 1, text: () => `对着别的恐龙「叫一声」🎵`});
   if (LIFE && LIFE.lost) pool.push({kind: 'lost', need: 1, text: () => '带迷路的恐龙宝宝找到妈妈 💗'});
   pool.push({kind: 'nest', need: 1, text: () => '找到一个 🥚 恐龙蛋窝（看小地图）'});
@@ -541,6 +621,7 @@ function questEvent(kind, arg) {
   if (Q.kind === 'gold' && kind === 'gold') hit = true;
   if (Q.kind === 'nest' && kind === 'nest') hit = true;
   if (Q.kind === 'lost' && kind === 'lost') hit = true;
+  if ((Q.kind === 'collect' && kind === 'collect') || (Q.kind === 'home' && kind === 'home') || (Q.kind === 'fly' && kind === 'fly')) hit = true;
   if (Q.kind === 'call' && kind === 'call' && arg > 0) hit = true;
   if (Q.kind === 'book' && kind === 'book') hit = true;
   if (Q.kind === 'visit' && kind === 'visit' && arg === Q.biome) hit = true;
@@ -568,6 +649,7 @@ function evolveOffer() {
   tone([523, 659, 784, 1046], 0.05, 0.14); say('可以进化啦，选一种恐龙吧');
 }
 function evolveTo(id) {
+  if (G.fly) endFly(true);
   if (evolving || SV.stage >= STAGES.length - 1 || !STAGES[SV.stage + 1].opts.includes(id)) return;
   evolving = true; setTimeout(() => evolving = false, 800); holdOff(1200);
   SV.stage++; SV.path[SV.stage] = id; SV.path.length = SV.stage + 1; SV.xp = 0; if (!SV.done.includes(id)) SV.done.push(id); save();
@@ -610,6 +692,8 @@ function drawMinimap() {
   x.fillStyle = '#ffd23f'; for (const it of G.items) { if (it.eaten || FOOD[it.type].tier > SV.stage + 1) continue; x.fillRect(toX(it.x) - 1.5, toY(it.z) - 1.5, 3, 3); }
   x.fillStyle = 'rgba(255,255,255,.85)'; for (const n of G.npcs) { x.beginPath(); x.arc(toX(n.x), toY(n.z), 2.4, 0, 7); x.fill(); }
   if (canHunt()) { x.fillStyle = '#ff7a59'; for (const n of G.prey) { x.beginPath(); x.arc(toX(n.x), toY(n.z), 2.6, 0, 7); x.fill(); } }
+  { const hx = SV.home.x, hz = SV.home.z, a = Math.atan2(hx - PL.x, hz - PL.z), d = Math.min(S / 2 - 9, Math.hypot(hx - PL.x, hz - PL.z) * k); x.font = '15px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('🏠', S / 2 + Math.sin(a) * d, S / 2 + Math.cos(a) * d); }
+  x.fillStyle = '#c58cff'; for (const it of HOME.items) { x.beginPath(); x.arc(toX(it.x), toY(it.z), 3, 0, 7); x.fill(); }
   if (LIFE.lost) { const B = LIFE.lost, T = B.st === 'wait' ? B : B.mom, a = Math.atan2(T.x - PL.x, T.z - PL.z), d = Math.min(S / 2 - 9, Math.hypot(T.x - PL.x, T.z - PL.z) * k); x.font = '14px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(B.st === 'wait' ? '❓' : '💗', S / 2 + Math.sin(a) * d, S / 2 + Math.cos(a) * d); }
   if (LIFE.nest) { const a = Math.atan2(LIFE.nest.x - PL.x, LIFE.nest.z - PL.z), d = Math.min(S / 2 - 9, Math.hypot(LIFE.nest.x - PL.x, LIFE.nest.z - PL.z) * k); x.font = '14px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('🥚', S / 2 + Math.sin(a) * d, S / 2 + Math.cos(a) * d); }
   if (Q && Q.kind === 'visit' && Q.target) { const a = Math.atan2(Q.target.x - PL.x, Q.target.z - PL.z); x.fillStyle = '#ffe066'; x.font = '16px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; const d = Math.min(S / 2 - 10, Math.hypot(Q.target.x - PL.x, Q.target.z - PL.z) * k); x.fillText('🎯', S / 2 + Math.sin(a) * d, S / 2 + Math.cos(a) * d); }
@@ -650,7 +734,7 @@ function intro() {
   G.paused = true;
   $('box').innerHTML = `<h1>🥚 恐龙长大记</h1><p>你是一只刚出生的小恐龙。在大陆上走来走去，<b>吃东西长大</b>，吃饱了就能<b>进化</b>成更大的恐龙！</p>
    <div class="legend">${MOB ? '<span>🕹️ 左下角摇杆 = 走路，推到底会跑</span><span>👆 轻点地面 = 走过去</span><span>☝️ 单指滑动 = 转视角</span><span>🤏 双指捏合 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>💨 冲刺按钮 = 跑得更快</span><span>🎵 叫一声按钮</span>' : `<span>🖱️ 点地面 = 走过去</span><span>🖱️ 按住拖动 = 转动视角</span><span>⌨️ ↑ 往前走（走久了会跑）← → 转身</span><span>⌨️ Q / E 转视角</span><span>🔍 滚轮 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span><span>💨 空格 = 冲刺</span><span>🎵 C 键 = 叫一声</span>`}</div>
-   <p>这片大陆<b>没有边界</b>，可以一直走下去：🌿蕨类森林、🌼开花草原、💧大河湿地、🌴苏铁海岸、🏜️红岩台地会一片接一片出现。</p><p>🎯 左上角有小任务；✨金色食物成长 ×3；连续吃会有“连吃”奖励；吃肉的恐龙还可以追小恐龙。</p><p>🥚 小地图上的蛋是恐龙蛋窝，走过去会孵出恐龙宝宝跟着你；❓ 是迷路的恐龙宝宝，带它去找 💗 妈妈；📖 遇到新恐龙会记进菜单里的图鉴。</p><p>🎵 「叫一声」附近的恐龙会回应你。天会慢慢变黑再变亮，偶尔下小雨，雨后有彩虹（菜单里可以关掉）。</p>
+   <p>这片大陆<b>没有边界</b>，可以一直走下去：🌿蕨类森林、🌼开花草原、💧大河湿地、🌴苏铁海岸、🏜️红岩台地会一片接一片出现。</p><p>🎯 左上角有小任务；✨金色食物成长 ×3；连续吃会有“连吃”奖励；吃肉的恐龙还可以追小恐龙。</p><p>🥚 小地图上的蛋是恐龙蛋窝，走过去会孵出恐龙宝宝跟着你；❓ 是迷路的恐龙宝宝，带它去找 💗 妈妈；📖 遇到新恐龙会记进菜单里的图鉴。</p><p>🏠 你有自己的小窝（小地图上的 🏠）：路上捡到闪着光的装饰品可以带回家摆，孵出来的宝宝也会住在家里。🪽 右边的按钮可以变成翼龙在天上飞。一年四季会慢慢变化。</p><p>🎵 「叫一声」附近的恐龙会回应你。天会慢慢变黑再变亮，偶尔下小雨，雨后有彩虹（菜单里可以关掉）。</p>
    <p style="color:#6c7563">这里没有时间限制，也不会输。碰到大恐龙只会被轻轻推开。</p>
    <button class="btn" id="startBtn">${SV.seen ? '继续冒险' : '出发！'}</button>`;
   $('overlay').classList.add('show');
@@ -663,6 +747,8 @@ $('menuBtn').onclick = () => {
    <p>我的进化路线：${SV.path.map(id => spInfo(id).name).join(' → ')}</p>
    <p class="credits">素材来源（全部是 CC0 公共领域授权，可以免费使用）：恐龙模型 — Quaternius「Animated Dinosaur Pack」和 Gobkit「Free Dinosaur Pack」；树、棕榈、松树、花、石头 — Quaternius「Ultimate Nature Pack」「Ultimate Stylized Nature」和「Stylized Nature MegaKit」。鳞片质感、配色、地形、河流、红岩、天空、食物都是程序里原创画的。</p>
    <p><button class="btn light" id="bookBtn">📖 恐龙图鉴（${Object.keys(SV.book).length}/${BOOK.length}）</button></p>
+   <p><button class="btn light" id="goHome">🏠 回家</button> <button class="btn light" id="setHome">📍 在这里安家</button> <button class="btn light" id="flyMenu">${G.fly ? '🦖 变回恐龙' : '🪽 变成翼龙飞'}</button></p>
+   <p>🍃 季节：${['auto', ...SEASONS.map(x => x.id)].map(id => `<button class="sbtn${(SV.seasonMode || 'auto') === id ? ' on' : ''}" data-s="${id}">${id === 'auto' ? '🔄 会变化' : SEASONS.find(x => x.id === id).icon + ' 一直' + SEASONS.find(x => x.id === id).name}</button>`).join('')}</p>
    <p><button class="btn light" id="dayBtn">🌗 白天黑夜：${SV.daynight !== false ? '会变化' : '一直白天'}</button> <button class="btn light" id="wxBtn">🌧️ 下雨：${SV.weather !== false ? '会下' : '不下'}</button></p>
    <p><button class="btn light" id="huntBtn">🦖 捕猎小恐龙：${SV.hunt ? '开' : '关'}</button></p>
    <button class="btn" id="resume">继续</button><button class="btn light" id="howBtn">怎么玩</button><button class="btn light" id="restart">重新长大</button>`;
@@ -670,6 +756,10 @@ $('menuBtn').onclick = () => {
   $('resume').onclick = () => { $('overlay').classList.remove('show'); G.paused = false; };
   $('howBtn').onclick = intro;
   $('bookBtn').onclick = showBook;
+  $('goHome').onclick = () => { $('overlay').classList.remove('show'); G.paused = false; goHome(); };
+  let armH = false; $('setHome').onclick = e => { if (!armH) { armH = true; e.target.textContent = '再按一次：搬到这里'; return; } const p = findLand(PL.x + Math.sin(PL.dir) * 6, PL.z + Math.cos(PL.dir) * 6, null, 0, 20); HOME.setHome(p.x, p.z); $('overlay').classList.remove('show'); G.paused = false; tip('📍 新家安好啦！装饰和宝宝都搬过来了。'); };
+  $('flyMenu').onclick = () => { $('overlay').classList.remove('show'); G.paused = false; G.fly ? endFly() : startFly(); };
+  document.querySelectorAll('.sbtn').forEach(b => b.onclick = () => { SV.seasonMode = b.dataset.s; save(); document.querySelectorAll('.sbtn').forEach(x => x.classList.toggle('on', x === b)); });
   $('dayBtn').onclick = e => { SV.daynight = SV.daynight === false; save(); e.target.textContent = `🌗 白天黑夜：${SV.daynight !== false ? '会变化' : '一直白天'}`; };
   $('wxBtn').onclick = e => { SV.weather = SV.weather === false; save(); e.target.textContent = `🌧️ 下雨：${SV.weather !== false ? '会下' : '不下'}`; };
   $('huntBtn').onclick = e => { SV.hunt = !SV.hunt; save(); e.target.textContent = `🦖 捕猎小恐龙：${SV.hunt ? '开' : '关'}`; if (Q && Q.kind === 'prey' && !SV.hunt) newQuest(); };
@@ -686,9 +776,9 @@ function frame(ts) {
   const dt = Math.min(0.1, (ts - (last || ts)) / 1000); last = ts;
   if (G.paused && G.drawnPaused) return; // 弹窗时不重画，省电
   G.t += dt;
-  if (!G.paused) { updatePlayer(dt); updateNPCs(dt); updatePrey(dt); updateItems(dt); updateQuestArrow(); LIFE.update(dt); if ((G.bookT = (G.bookT || 0) - dt) < 0) { G.bookT = 0.5; checkBook(); } }
+  if (!G.paused) { if (G.fly) updateFly(dt); else updatePlayer(dt); updateNPCs(dt); updatePrey(dt); updateItems(dt); updateQuestArrow(); LIFE.update(dt); if ((G.bookT = (G.bookT || 0) - dt) < 0) { G.bookT = 0.5; checkBook(); } }
   WORLD.update(PL.x, PL.z);
-  if (!G.paused) ENV.update(dt);
+  if (!G.paused) { ENV.update(dt); seasonUpdate(dt); HOME.update(dt, LIFE.followers); $('homeBtn').style.display = HOME.near ? '' : 'none'; }
   PL.D.mixer.update(G.paused ? 0 : dt); if (Math.abs(PL.look) > 0.01) headTurn(PL.D, PL.look);
   updateLife(dt);
   updateParts(dt);
@@ -698,7 +788,7 @@ function frame(ts) {
   const behind = PL.dir + Math.PI;
   if (G.t - CAM.manualT > 2.5 && (Math.abs(PL.spd) > 0.5 || PL.tx !== null)) CAM.yaw += wrapA(behind - CAM.yaw) * Math.min(1, dt * (PL.spd < 0 ? 0.3 : 1.4) * (JOY.on ? Math.pow(PL.joyFwd || 0, 2) * 0.8 : 1));
   if (!G.camInit) CAM.yaw = behind;
-  const dist = (5 + PL.len * 1.35) * (G.zoom || 1), y0 = H(PL.x, PL.z);
+  const dist = (5 + PL.len * 1.35) * (G.zoom || 1), y0 = G.fly ? PL.fy - PL.len * 0.3 : H(PL.x, PL.z);
   const cp = Math.cos(CAM.pitch), spch = Math.sin(CAM.pitch);
   const fx = -Math.sin(CAM.yaw), fz = -Math.cos(CAM.yaw); // 镜头朝向
   camLook.set(PL.x + fx * dist * 0.22, y0 + PL.len * 0.32 + dist * 0.1, PL.z + fz * dist * 0.22);
@@ -719,7 +809,7 @@ function frame(ts) {
   if (dt > 0.034) { slowT += dt; fastT = 0; } else { fastT += dt; slowT = Math.max(0, slowT - dt * 0.5); }
   if (slowT > 2) { slowT = 0; if (PR > 1) { PR = 1; renderer.setPixelRatio(PR); } else if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => m.needsUpdate = true); }); } else if (PR > 0.7) { PR = 0.7; renderer.setPixelRatio(PR); } }
 }
-window.__G = {get LIFE() { return LIFE; }, get ENV() { return ENV; }, callOut, discover, showBook, G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene, CAM, keys, get WORLD() { return WORLD; }, get Q() { return Q; }, biomeAt, spawnPrey, newQuest, camera};
+window.__G = {get HOME() { return HOME; }, startFly, endFly, goHome, SEASON, get FLAKES() { return FLAKES; }, get LIFE() { return LIFE; }, get ENV() { return ENV; }, callOut, discover, showBook, G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene, CAM, keys, get WORLD() { return WORLD; }, get Q() { return Q; }, biomeAt, spawnPrey, newQuest, camera};
 const unpause = () => { G.drawnPaused = false; };
 new MutationObserver(unpause).observe($('overlay'), {attributes: true});
 init().catch(e => { $('loadTxt').textContent = '加载出错了：' + e.message; console.error(e); });

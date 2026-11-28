@@ -1,6 +1,7 @@
 // 恐龙模型：加载、上色、鳞片质感、动画
 import * as THREE from 'three';
 import {AnimationUtils} from 'three';
+import {SEASON, DINO_GLSL} from './season.js';
 import {clone as skClone} from 'three/examples/jsm/utils/SkeletonUtils.js';
 import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
@@ -28,11 +29,11 @@ export const SPECIES = {
 
 const scaleShader = (mat, freq, patCol, pattern) => {
   mat.onBeforeCompile = sh => {
-    sh.uniforms.uFreq = {value:freq}; sh.uniforms.uPat = {value:new THREE.Color(patCol)}; sh.uniforms.uMode = {value:pattern==='stripe'?1:0};
+    sh.uniforms.uSeason = SEASON; sh.uniforms.uFreq = {value:freq}; sh.uniforms.uPat = {value:new THREE.Color(patCol)}; sh.uniforms.uMode = {value:pattern==='stripe'?1:0};
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vOP;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvOP = position;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
-varying vec3 vOP; uniform float uFreq; uniform vec3 uPat; uniform float uMode;
+varying vec3 vOP; uniform float uFreq; uniform vec3 uPat; uniform float uMode; uniform vec3 uSeason;
 vec3 h3(vec3 p){p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6)));return fract(sin(p)*43758.5453);}
 vec2 cell(vec3 p){vec3 i=floor(p),f=fract(p);float d1=8.,d2=8.;for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++){vec3 g=vec3(x,y,z);vec3 o=h3(i+g);float d=length(g+o-f);if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;}return vec2(d1,d2);}
 float vn(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);float a=h3(i).x,b=h3(i+vec3(1,0,0)).x,c=h3(i+vec3(0,1,0)).x,d=h3(i+vec3(1,1,0)).x,e=h3(i+vec3(0,0,1)).x,f2=h3(i+vec3(1,0,1)).x,g=h3(i+vec3(0,1,1)).x,h=h3(i+vec3(1,1,1)).x;return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),mix(mix(e,f2,f.x),mix(g,h,f.x),f.y),f.z);}
@@ -41,7 +42,8 @@ float vn(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);float a=h3(i).x,b=h3
   float big = uMode>0.5 ? smoothstep(0.55,0.7, sin(vOP.z*uFreq*0.18 + vn(vOP*uFreq*0.08)*3.0)*0.5+0.5) : smoothstep(0.62,0.72, vn(vOP*uFreq*0.22));
   float top = smoothstep(-0.1,0.5,normalize(vOP).y);
   diffuseColor.rgb = mix(diffuseColor.rgb, uPat, big*0.55*top*step(0.25,length(diffuseColor.rgb-uPat)));
-  diffuseColor.rgb *= mix(0.72,1.06,edge) * (0.94+0.12*h3(floor(q)).x); }`)
+  diffuseColor.rgb *= mix(0.72,1.06,edge) * (0.94+0.12*h3(floor(q)).x); }
+${DINO_GLSL}`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
 { float rim = pow(1.0 - max(dot(normalize(vNormal), vec3(0.,0.,1.)),0.0), 2.5); totalEmissiveRadiance += diffuseColor.rgb*rim*0.35; }`);
   };
@@ -172,7 +174,7 @@ export function prepGob(id, gltf) {
   root.traverse(m => {
     if (!m.isMesh) return;
     const old = m.material, nm = new THREE.MeshStandardMaterial({map: old.map, roughness: 0.55, metalness: 0});
-    nm.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+    nm.onBeforeCompile = sh => { sh.uniforms.uSeason = SEASON; sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform vec3 uSeason;').replace('#include <color_fragment>', '#include <color_fragment>\n' + DINO_GLSL).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
 { float rim = pow(1.0 - max(dot(normalize(vNormal), vec3(0.,0.,1.)),0.0), 2.5); totalEmissiveRadiance += diffuseColor.rgb*rim*0.4; }`); };
     nm.customProgramCacheKey = () => 'gob'; m.material = nm; m.castShadow = true; m.frustumCulled = false;
   });

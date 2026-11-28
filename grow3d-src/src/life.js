@@ -104,7 +104,7 @@ export function createLife(C) {
     const id = N.kind, len = Math.max(0.9, PL.len * 0.32), D = makeDino(id, len); D.holder.position.set(N.x, y, N.z); scene.add(D.holder);
     const nm = BABY_NAME[id];
     L.followers.push({D, id, len, x: N.x, z: N.z, dir: Math.random() * 6, v: 0, t: 0, slot: L.followers.length});
-    while (L.followers.length > 3) { const f = L.followers.shift(); f.leaving = 4; L.leaving = (L.leaving || []).concat(f); }
+    while (L.followers.length > 3) { const f = L.followers.shift(); if (C.toHome) C.toHome(f); else { f.leaving = 4; L.leaving = (L.leaving || []).concat(f); } }
     L.followers.forEach((f, i) => f.slot = i);
     const xp = 3 + C.SV.stage * 2; C.floatText(`+${xp} 🐣 小${nm}破壳啦!`, N.x, y + 2, N.z); C.gainXP(xp);
     C.tip(`🐣 小${nm}破壳啦！它会跟着你走。<br><span class="small">恐龙宝宝都是从蛋里孵出来的。${id === 'ovi' ? '窃蛋龙其实会像鸟一样趴在蛋上孵蛋。' : '有些恐龙爸爸妈妈会守在窝边照顾宝宝。'}</span>`, 4500);

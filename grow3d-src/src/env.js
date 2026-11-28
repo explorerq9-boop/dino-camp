@@ -77,8 +77,8 @@ export function createEnv(E) {
     if ((saveT += dt) > 5) { saveT = 0; E.SV.tod = V.t; }
     // 天气：偶尔下一阵小雨
     V.rainT -= dt;
-    if (V.rainT < 0) { if (V.rainOn) { V.rainOn = false; V.rainT = 200 + Math.random() * 160; if (rainOK && V.night < 0.5) { V.bow = 45; E.tip('🌈 雨停了，天上出现了彩虹！', 4000); } }
-      else if (rainOK) { V.rainOn = true; V.rainT = 50 + Math.random() * 40; E.tip('🌧️ 下小雨啦。恐龙的皮很结实，不怕淋雨。<br><span class="small">雨停以后，看看天上会不会有彩虹。</span>', 4500); }
+    if (V.rainT < 0) { if (V.rainOn) { V.rainOn = false; V.rainT = 200 + Math.random() * 160; if (rainOK && V.night < 0.5 && !(E.snowy && E.snowy())) { V.bow = 45; E.tip('🌈 雨停了，天上出现了彩虹！', 4000); } }
+      else if (rainOK) { V.rainOn = true; V.rainT = 50 + Math.random() * 40; E.tip(E.snowy && E.snowy() ? '❄️ 雪下大了一点，地上白白的。' : '🌧️ 下小雨啦。恐龙的皮很结实，不怕淋雨。<br><span class="small">雨停以后，看看天上会不会有彩虹。</span>', 4500); }
       else V.rainT = 60; }
     if (!rainOK) V.rainOn = false;
     V.rain += ((V.rainOn ? 1 : 0) - V.rain) * Math.min(1, dt * 0.15);
@@ -105,7 +105,7 @@ export function createEnv(E) {
     // 云：日落时偏橙，下雨时变灰
     for (const c of E.clouds.children) { c.material.color.copy(a.hor).lerp(b.hor, s).lerp(C('#ffffff'), 0.55 * (1 - night)).lerp(_greyN, night * 0.5).lerp(_grey, R * 0.7); }
     // 雨丝
-    rain.visible = R > 0.02; rain.material.opacity = R * 0.75;
+    const snow = E.snowy && E.snowy(); rain.visible = R > 0.02 && !snow; rain.material.opacity = R * 0.75; V.snowHeavy = snow ? R : 0;
     if (rain.visible) { const A = rg.attributes.position.array, gy = Math.max(H(PL.x, PL.z), WATER_Y);
       rain.position.set(PL.x, gy, PL.z);
       for (let i = 0; i < RN; i++) { const o = i * 6, d = rSpd[i] * dt; A[o + 1] -= d; A[o + 4] -= d; if (A[o + 1] < -1) { A[o + 1] += 30; A[o + 4] += 30; } }

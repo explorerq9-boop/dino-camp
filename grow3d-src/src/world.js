@@ -1,6 +1,7 @@
 // 世界：没有边界的大陆。玩家走到哪里，周围的地形、河、湖、红岩、树和花就按“种子”自动生成，
 // 走远了就收起来，所以可以一直走下去，内存也不会越用越多。
 import * as THREE from 'three';
+import {SEASON, PLANT_GLSL, GROUND_GLSL} from './season.js';
 
 export const RNG = seed => { seed = Math.abs(Math.floor(seed)) % 2147483646 + 1; return () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; };
 const sstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -80,18 +81,22 @@ function groundColor(x, z, h, out) {
 const groundMat = new THREE.MeshStandardMaterial({vertexColors: true, roughness: 0.95});
 groundMat.onBeforeCompile = sh => {
   sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWP=(modelMatrix*vec4(transformed,1.0)).xyz;');
-  sh.uniforms.uT = WIND;
-  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP; uniform float uT;\nfloat hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\nfloat vn2(vec2 q){vec2 i=floor(q),f=fract(q);f=f*f*(3.0-2.0*f);return mix(mix(hh(i),hh(i+vec2(1,0)),f.x),mix(hh(i+vec2(0,1)),hh(i+vec2(1,1)),f.x),f.y);}')
-    .replace('#include <color_fragment>', '#include <color_fragment>\n{ vec2 wp=mod(vWP.xz,1000.0); vec2 q=wp*0.35; vec2 i=floor(q), f=fract(q); f=f*f*(3.0-2.0*f); float n=mix(mix(hh(i),hh(i+vec2(1,0)),f.x),mix(hh(i+vec2(0,1)),hh(i+vec2(1,1)),f.x),f.y); float g=hh(floor(wp*6.0)); diffuseColor.rgb*=0.9+0.14*n+0.04*g;   vec2 cq=mod(vWP.xz,2000.0)*0.012+vec2(uT*0.018,uT*0.01); float cl=vn2(cq)*0.65+vn2(cq*2.3)*0.35; diffuseColor.rgb*=1.0-0.16*smoothstep(0.55,0.72,cl);   float wl=vWP.y-(-0.35); float wet=1.0-smoothstep(0.0,0.35,wl); diffuseColor.rgb*=1.0-0.18*wet*step(-0.05,wl);   float fo=smoothstep(0.07,0.0,abs(wl-0.02-0.03*sin(uT*0.9+vWP.x*0.15+vWP.z*0.1))); diffuseColor.rgb=mix(diffuseColor.rgb,vec3(1.0),fo*0.7); }');
+  sh.uniforms.uT = WIND; sh.uniforms.uSeason = SEASON;
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP; uniform float uT; uniform vec3 uSeason;\nfloat hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\nfloat vn2(vec2 q){vec2 i=floor(q),f=fract(q);f=f*f*(3.0-2.0*f);return mix(mix(hh(i),hh(i+vec2(1,0)),f.x),mix(hh(i+vec2(0,1)),hh(i+vec2(1,1)),f.x),f.y);}')
+    .replace('#include <color_fragment>', '#include <color_fragment>\n{ vec2 wp=mod(vWP.xz,1000.0); vec2 q=wp*0.35; vec2 i=floor(q), f=fract(q); f=f*f*(3.0-2.0*f); float n=mix(mix(hh(i),hh(i+vec2(1,0)),f.x),mix(hh(i+vec2(0,1)),hh(i+vec2(1,1)),f.x),f.y); float g=hh(floor(wp*6.0)); diffuseColor.rgb*=0.9+0.14*n+0.04*g;   vec2 cq=mod(vWP.xz,2000.0)*0.012+vec2(uT*0.018,uT*0.01); float cl=vn2(cq)*0.65+vn2(cq*2.3)*0.35; diffuseColor.rgb*=1.0-0.16*smoothstep(0.55,0.72,cl);   float wl=vWP.y-(-0.35); float wet=1.0-smoothstep(0.0,0.35,wl); diffuseColor.rgb*=1.0-0.18*wet*step(-0.05,wl);   float fo=smoothstep(0.07,0.0,abs(wl-0.02-0.03*sin(uT*0.9+vWP.x*0.15+vWP.z*0.1))); diffuseColor.rgb=mix(diffuseColor.rgb,vec3(1.0),fo*0.7); }' + GROUND_GLSL);
 };
 const mesaMat = new THREE.MeshStandardMaterial({vertexColors: true, roughness: 0.9, flatShading: true});
+mesaMat.onBeforeCompile = sh => { sh.uniforms.uSeason = SEASON;
+  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vSWP;').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvSWP=(modelMatrix*vec4(transformed,1.0)).xyz;');
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vSWP; uniform vec3 uSeason;').replace('#include <color_fragment>', '#include <color_fragment>\n{ vec3 wn = normalize(cross(dFdx(vSWP), dFdy(vSWP))); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.94,0.97,1.0), uSeason.z * smoothstep(0.6, 0.9, abs(wn.y)) * 0.9); }'); };
 
 export const WIND = {value: 0};
 export const NEAR = {value: 2.5};
 // 风：让草、花、树叶轻轻摆动；离镜头太近的叶子隐藏，不挡视线
 export function addSway(mat, amp) {
   mat.onBeforeCompile = sh => { sh.uniforms.uWind = WIND; sh.uniforms.uNear = NEAR;
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vSWP; uniform float uNear;')
+    sh.uniforms.uSeason = SEASON;
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vSWP; uniform float uNear; uniform vec3 uSeason;').replace('#include <color_fragment>', '#include <color_fragment>\n' + PLANT_GLSL)
       .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n if (distance(vSWP, cameraPosition) < uNear) discard;');
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uWind; varying vec3 vSWP;')
       .replace('#include <project_vertex>', `#include <project_vertex>
@@ -141,7 +146,8 @@ function instance(kind, list, group, far) {
 
 /* ---------- 世界管理：按块生成、按块收起 ---------- */
 export function createWorld(scene, {mobile = false} = {}) {
-  const W = {chunks: new Map(), kinds: [], lily: null, scene, mobile, solidCache: new Map()};
+  const W = {chunks: new Map(), kinds: [], lily: null, scene, mobile, solidCache: new Map(), clear: []};
+  const inClear = (x, z) => W.clear.some(c => (c.x - x) ** 2 + (c.z - z) ** 2 < c.r * c.r);
   const SEG = mobile ? 26 : 36, TER_RING = 2, FLORA_RING = 2, QF = mobile ? 0.35 : 0.6;
   const stem = new THREE.CylinderGeometry(0.02, 0.025, 0.36, 4).translate(0, 0.18, 0);
   const head = new THREE.IcosahedronGeometry(0.11, 0).scale(1, 0.6, 1).translate(0, 0.38, 0);
@@ -181,7 +187,7 @@ export function createWorld(scene, {mobile = false} = {}) {
     for (const K of W.kinds) {
       const list = [], tries = Math.round(K.n * QF * (K.kind.opt.tall ? 1.3 : 1));
       for (let i = 0; i < tries; i++) { const x = x0 + R() * CH, z = z0 + R() * CH, r = R() * Math.PI * 2, s = 0.75 + R() * 0.5;
-        if (!K.biomes.includes(biomeAt(x, z))) continue; const h = H(x, z); if (h < -0.15) continue;
+        if (!K.biomes.includes(biomeAt(x, z))) continue; const h = H(x, z); if (h < -0.15) continue; if (inClear(x, z)) continue;
         if (mesas.some(M => Math.abs(M.x - x) < M.r * 1.3 + K.margin && Math.hypot(M.x - x, M.z - z) < M.r * 1.25 + K.margin)) continue;
         list.push({x, y: h - 0.05, z, r, s}); }
       if (!list.length) continue;
@@ -191,7 +197,7 @@ export function createWorld(scene, {mobile = false} = {}) {
     // 花海
     const fl = [];
     for (let i = 0; i < (mobile ? 1100 : 2200); i++) { const x = x0 + R() * CH, z = z0 + R() * CH, rr = R(), s = 0.6 + R() * 0.7;
-      if (biomeAt(x, z) !== 'flower') continue; const f = fbm(x * 0.05 + 7, z * 0.05 - 3); if (f < 0.5 && rr > 0.08) continue; const h = H(x, z); if (h < 0) continue;
+      if (biomeAt(x, z) !== 'flower' || inClear(x, z)) continue; const f = fbm(x * 0.05 + 7, z * 0.05 - 3); if (f < 0.5 && rr > 0.08) continue; const h = H(x, z); if (h < 0) continue;
       fl.push({x, y: h, z, s, c: FLOWERCOLS[Math.floor(hash(Math.floor(x * 0.15), Math.floor(z * 0.15)) * 6 + rr * 1.6) % 6]}); }
     if (fl.length) { const ims = new THREE.InstancedMesh(stem, stemM, fl.length), imh = new THREE.InstancedMesh(head, headM, fl.length);
       fl.forEach((p, i) => { _M.makeScale(p.s, p.s, p.s).setPosition(p.x, p.y, p.z); ims.setMatrixAt(i, _M); imh.setMatrixAt(i, _M); imh.setColorAt(i, p.c); });
@@ -224,6 +230,8 @@ export function createWorld(scene, {mobile = false} = {}) {
   };
   W.cull = (px, pz) => { for (const ch of W.chunks.values()) { if (!ch.flora) continue; for (const m of ch.flora.children) { if (!m.userData.far) continue; const s = m.boundingSphere; if (!s) continue; const dx = s.center.x - px, dz = s.center.z - pz, f = m.userData.far + s.radius * 0.5; m.visible = dx * dx + dz * dz < f * f; } } };
   W.solidsNear = (x, z) => { const ci = chunkOf(x), cj = chunkOf(z), out = []; for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const ch = W.chunks.get((ci + a) + ',' + (cj + b)); if (ch) for (const s of ch.solids) out.push(s); else for (const M of mesasOfChunk(ci + a, cj + b)) out.push({x: M.x, z: M.z, r: M.r * 1.15 + 0.5, big: true}); } return out; };
+  // 小窝附近不长树和草（让出一块空地）
+  W.setClear = list => { W.clear = list; for (const ch of W.chunks.values()) if (ch.flora) { const x0 = ch.ci * CH, z0 = ch.cj * CH; if (list.some(c => c.x + c.r > x0 && c.x - c.r < x0 + CH && c.z + c.r > z0 && c.z - c.r < z0 + CH)) dropFlora(ch); } };
   W.stats = () => ({chunks: W.chunks.size, flora: [...W.chunks.values()].filter(c => c.flora).length});
   return W;
 }
