@@ -1,7 +1,7 @@
 // 食物：用简单几何体拼出来的卡通食物（原创）
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-const VCMAT = new THREE.MeshStandardMaterial({vertexColors: true, roughness: 0.45});
+const VCMAT = new THREE.MeshStandardMaterial({vertexColors: true, roughness: 0.45, side: THREE.DoubleSide});
 
 const M = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({color: c, roughness: 0.45}, o));
 const S = (r, w = 14, h = 10) => new THREE.SphereGeometry(r, w, h);
@@ -48,26 +48,38 @@ export function makeFood(type) {
     case 'shroom': { add(new THREE.CylinderGeometry(0.12, 0.16, 0.45, 10), mat('#f4ead2'), 0, 0.22, 0);
       add(new THREE.SphereGeometry(0.42, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat('#e2412f', {roughness: 0.35}), 0, 0.42, 0, [1, 0.75, 1]);
       for (let i = 0; i < 7; i++) { const a = i * 0.9, r = 0.18 + (i % 2) * 0.1; add(S(0.05, 6, 4), mat('#fff'), Math.cos(a) * r, 0.42 + 0.3 * Math.cos(r * 2.2), Math.sin(a) * r); } break; }
-    case 'fish': case 'bigfish': { const k = type === 'bigfish' ? 1.7 : 1, c = type === 'bigfish' ? '#3a8de0' : '#ff8a2a';
-      add(S(0.3 * k, 14, 10), mat(c, {roughness: 0.25}), 0, 0, 0, [0.55, 0.8, 1.4]); add(new THREE.ConeGeometry(0.22 * k, 0.4 * k, 4).rotateX(-Math.PI / 2), mat(c), 0, 0, -0.55 * k, [0.25, 1, 1]);
-      for (const sx of [-1, 1]) add(S(0.05 * k, 6, 4), mat('#111'), sx * 0.13 * k, 0.08 * k, 0.28 * k);
-      add(S(0.2 * k, 8, 6), mat('#fff4d6'), 0, -0.1 * k, 0.05 * k, [0.5, 0.4, 1.1]); body.rotation.z = 0; break; }
+    case 'fish': case 'bigfish': { // 按真实鱼的样子：纺锤形身体，背深肚白，叉形尾鳍，背鳍和胸鳍
+      const big = type === 'bigfish', k = big ? 1.6 : 1, back = big ? '#3e4a3c' : '#4c5a62', side = big ? '#8c8f70' : '#9aa6a8';
+      const prof = []; for (let i = 0; i <= 12; i++) { const t = i / 12; prof.push(new THREE.Vector2(Math.max(0.002, Math.sin(Math.PI * Math.pow(t, 0.8)) * 0.17 * k * (1 - 0.35 * t)), (t - 0.5) * 0.95 * k)); }
+      const lathe = new THREE.LatheGeometry(prof, 12).rotateX(Math.PI / 2); // 身体沿 z 轴（鼻子在 -z → 转过来）
+      lathe.rotateY(Math.PI);
+      { const p = lathe.attributes.position, col = new Float32Array(p.count * 3), cb = new THREE.Color(back), cs = new THREE.Color(side), cw = new THREE.Color('#e9e6da'), c = new THREE.Color();
+        for (let i = 0; i < p.count; i++) { p.setX(i, p.getX(i) * 0.62); const y = p.getY(i) / (0.17 * k); c.copy(cs).lerp(cb, THREE.MathUtils.smoothstep(y, 0.0, 0.7)).lerp(cw, THREE.MathUtils.smoothstep(-y, 0.2, 0.8)); col.set([c.r, c.g, c.b], i * 3); }
+        lathe.setAttribute('color', new THREE.BufferAttribute(col, 3)); lathe.computeVertexNormals(); }
+      const bodyM = add(lathe, mat('#ffffff', {roughness: 0.35, vertexColors: true}), 0, 0, 0); bodyM.userData.vc = true;
+      const fin = (pts, c) => { const sh = new THREE.Shape(); sh.moveTo(pts[0][0], pts[0][1]); for (const q of pts.slice(1)) sh.lineTo(q[0], q[1]); return new THREE.ShapeGeometry(sh); };
+      const finM = mat(back, {roughness: 0.6, side: THREE.DoubleSide});
+      add(fin([[0, 0], [-0.18 * k, 0.17 * k], [-0.1 * k, 0], [-0.18 * k, -0.17 * k]]).rotateY(Math.PI / 2), finM, 0, 0, -0.47 * k);     // 叉形尾鳍
+      add(fin([[0.1 * k, 0], [-0.02 * k, 0.12 * k], [-0.12 * k, 0]]).rotateY(Math.PI / 2), finM, 0, 0.14 * k, -0.02 * k);              // 背鳍
+      for (const sx of [-1, 1]) { const pf = add(fin([[0, 0], [-0.12 * k, 0.03 * k], [-0.1 * k, -0.03 * k]]), finM, sx * 0.09 * k, -0.06 * k, 0.15 * k); pf.rotation.set(-0.3, sx * 0.6, 0);
+        add(S(0.022 * k, 8, 6), mat('#0e0e0e', {roughness: 0.15}), sx * 0.07 * k, 0.04 * k, 0.33 * k); }
+      body.rotation.z = 0; break; }
     case 'cone': { add(new THREE.CylinderGeometry(0.12, 0.16, 0.3, 6), mat('#8a5a32'), 0, 0.15, 0);
       const cg = new THREE.SphereGeometry(0.4, 10, 12); const o = add(cg, mat('#f08a24', {roughness: 0.6, flatShading: true}), 0, 0.62, 0, [0.9, 1.35, 0.9]);
       for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; const l = add(new THREE.ConeGeometry(0.1, 1.1, 4), mat('#3c9a3a'), Math.cos(a) * 0.35, 0.35, Math.sin(a) * 0.35); l.rotation.set(Math.sin(a) * 1.1, 0, -Math.cos(a) * 1.1); } break; }
     case 'leaves': { for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, l = add(S(0.5, 10, 8), mat(i % 2 ? '#5cc23f' : '#82d64e', {roughness: 0.6}), Math.cos(a) * 0.55, 0.5 + (i % 3) * 0.25, Math.sin(a) * 0.55, [1.4, 0.35, 0.7]); l.rotation.y = -a; l.rotation.z = 0.5; }
       add(S(0.3, 8, 6), mat('#ff7a59'), 0, 1.05, 0); add(S(0.22, 8, 6), mat('#ffd23f'), 0.35, 0.95, 0.2); break; }
-    case 'lizard': { add(S(0.22, 12, 8), mat('#46c07a', {roughness: 0.3}), 0, 0.2, 0, [0.8, 0.6, 2]); add(S(0.17, 10, 8), mat('#46c07a'), 0, 0.24, 0.48, [0.9, 0.7, 1.2]);
-      add(new THREE.ConeGeometry(0.1, 0.9, 6).rotateX(-Math.PI / 2), mat('#3aa86a'), 0, 0.18, -0.75);
-      for (const sx of [-1, 1]) { add(S(0.04, 6, 4), mat('#111'), sx * 0.1, 0.32, 0.58); for (const z of [0.22, -0.2]) add(new THREE.CylinderGeometry(0.035, 0.035, 0.25, 5), mat('#3aa86a'), sx * 0.2, 0.1, z).rotation.z = sx * 0.9; } break; }
+    case 'lizard': { add(S(0.22, 12, 8), mat('#7a6a48', {roughness: 0.6}), 0, 0.2, 0, [0.8, 0.6, 2]); add(S(0.17, 10, 8), mat('#7a6a48'), 0, 0.24, 0.48, [0.9, 0.7, 1.2]);
+      add(new THREE.ConeGeometry(0.1, 0.9, 6).rotateX(-Math.PI / 2), mat('#6a5a3c'), 0, 0.18, -0.75);
+      for (const sx of [-1, 1]) { add(S(0.04, 6, 4), mat('#111'), sx * 0.1, 0.32, 0.58); for (const z of [0.22, -0.2]) add(new THREE.CylinderGeometry(0.035, 0.035, 0.25, 5), mat('#6a5a3c'), sx * 0.2, 0.1, z).rotation.z = sx * 0.9; } break; }
   }
   // 把很多小零件合并成一个网格，一只食物只需画一次
   { const geos = [], keep = [];
     body.updateMatrixWorld(true);
     for (const c of body.children) { if (c.userData.wing || c.material.transparent) { keep.push(c); continue; }
       let g = c.geometry.clone(); if (g.index) g = g.toNonIndexed(); g.deleteAttribute('uv'); c.updateMatrix(); g.applyMatrix4(c.matrix);
-      const col = c.material.color, n = g.attributes.position.count, arr = new Float32Array(n * 3); for (let i = 0; i < n; i++) { arr[i * 3] = col.r; arr[i * 3 + 1] = col.g; arr[i * 3 + 2] = col.b; }
-      g.setAttribute('color', new THREE.BufferAttribute(arr, 3)); if (!g.attributes.normal) g.computeVertexNormals(); geos.push(g); }
+      if (!c.userData.vc) { const col = c.material.color, n = g.attributes.position.count, arr = new Float32Array(n * 3); for (let i = 0; i < n; i++) { arr[i * 3] = col.r; arr[i * 3 + 1] = col.g; arr[i * 3 + 2] = col.b; }
+      g.setAttribute('color', new THREE.BufferAttribute(arr, 3)); } if (!g.attributes.normal) g.computeVertexNormals(); geos.push(g); }
     body.clear(); const merged = new THREE.Mesh(mergeGeometries(geos), VCMAT); merged.castShadow = true; body.add(merged); keep.forEach(c => body.add(c)); }
   const k = f.tier === 4 ? 1.25 : f.tier === 3 ? 1.1 : f.tier === 2 ? 1.1 : 1.2; body.scale.multiplyScalar(k);
   if (!f.water) { const ring = new THREE.Mesh(ringGeo, Object.assign(new THREE.MeshBasicMaterial({color: '#fffbd0', transparent: true, opacity: 0.45, depthWrite: false}), {userData: {own: true}})); ring.scale.setScalar(f.r * 1.3); ring.position.y = 0.06; g.add(ring); g.userData.ring = ring; }
@@ -78,12 +90,13 @@ export function makeFood(type) {
 
 // 每种食物的小动画
 const anims = {
-  bug: (o, t) => { const b = o.userData.body; b.rotation.y = Math.sin(t * 0.7) * 1.2; b.position.y = 0; },
-  fly: (o, t) => { const b = o.userData.body; b.position.y = 1.2 + Math.sin(t * 1.7) * 0.25; b.rotation.y = t * 0.6; b.children.forEach(c => { if (c.userData.wing) c.rotation.z = c.userData.wing * Math.sin(t * 40) * 0.5; }); },
-  fish: (o, t) => { const b = o.userData.body; b.position.y = -0.1 + Math.max(0, Math.sin(t * 1.2)) * 0.5; b.rotation.y = Math.sin(t * 0.5) * 2; b.rotation.x = -Math.cos(t * 1.2) * 0.4; },
+  bug: (o, t) => { const b = o.userData.body; b.rotation.y = Math.sin(t * 0.3) * 0.35; b.position.y = 0; },
+  fly: (o, t) => { const b = o.userData.body; b.position.y = 1.2 + Math.sin(t * 1.1) * 0.2; b.rotation.y = Math.sin(t * 0.25) * 0.5; b.children.forEach(c => { if (c.userData.wing) c.rotation.z = c.userData.wing * Math.sin(t * 40) * 0.5; }); },
+  // 鱼在水面下慢慢来回游，身体轻轻摆尾
+  fish: (o, t) => { const b = o.userData.body, a = t * 0.18 + (o.userData.ph ??= Math.random() * 6); b.position.set(Math.sin(a) * 0.9, -0.12 + Math.sin(t * 0.7) * 0.04, Math.cos(a) * 0.5); b.rotation.set(0, Math.atan2(Math.cos(a) * 0.9, -Math.sin(a) * 0.5) + Math.sin(t * 3) * 0.08, 0); },
   flower: (o, t) => { o.userData.body.rotation.z = Math.sin(t * 1.3) * 0.08; },
   leaves: (o, t) => { o.userData.body.rotation.y = Math.sin(t * 0.4) * 0.15; },
-  lizard: (o, t) => { const b = o.userData.body; b.rotation.y = Math.sin(t * 0.3) * 2; },
+  lizard: (o, t) => { const b = o.userData.body; b.rotation.y = Math.sin(t * 0.15) * 0.5; },
 };
 anims.bigfish = anims.fish;
 for (const k in anims) FOOD[k].anim = anims[k];

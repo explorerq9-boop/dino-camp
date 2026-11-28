@@ -4,6 +4,7 @@ import {SPECIES, GOB, prepDino, prepGob, makeDino, measureGait, locomote, bite, 
 import {createLife} from './life.js';
 import {createEnv} from './env.js';
 import {createHome, DECOR} from './home.js';
+import {createKid} from './kid.js';
 import {SEASONS, SEASON, createFlakes} from './season.js';
 import {RNG, WATER_Y, H, biomeAt, BIOMES, CH, createWorld, makeKind, buildWater, buildSky, WIND, NEAR} from './world.js';
 import {FOOD, FOOD_KEYS, makeFood} from './food.js';
@@ -30,8 +31,9 @@ if (!(SV.stage >= 0 && SV.stage < STAGES.length) || SV.path.length !== SV.stage 
 let actx = null;
 function tone(fs, vol = 0.05, gap = 0.12) { if (!SV.sound) return; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const t0 = actx.currentTime;
   fs.forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0, t0 + i * gap); g.gain.linearRampToValueAtTime(vol, t0 + i * gap + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + i * gap + 0.35); o.connect(g).connect(actx.destination); o.start(t0 + i * gap); o.stop(t0 + i * gap + 0.4); }); } catch (e) {} }
-function say(t) { if (!SV.sound || !window.speechSynthesis) return; try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'zh-CN'; u.rate = 0.9; speechSynthesis.speak(u); } catch (e) {} }
-let tipT = 0; function tip(t, ms = 3000) { const e = $('tip'); e.innerHTML = t; e.classList.add('show'); clearTimeout(tipT); tipT = setTimeout(() => e.classList.remove('show'), ms); }
+function say(t) { if (!SV.sound || !window.speechSynthesis) return; try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'zh-CN'; u.rate = SV.simple ? 0.8 : 0.9; u.pitch = 1.15; speechSynthesis.speak(u); } catch (e) {} }
+let tipT = 0; function tip(t, ms = 3000) {
+  if (SV.simple && KID) { const k = KID.simplify(t); KID.card(k.icon, k.line, Math.max(2400, Math.min(ms, 3500))); return; } const e = $('tip'); e.innerHTML = t; e.classList.add('show'); clearTimeout(tipT); tipT = setTimeout(() => e.classList.remove('show'), ms); }
 
 /* ---------- 渲染器 ---------- */
 // 手机/平板：触屏操作 + 省电画质
@@ -64,17 +66,18 @@ async function loadGLB(path) {
   return loader.loadAsync((window.ASSET_BASE || 'assets/') + path.split('/').map(encodeURIComponent).join('/'));
 }
 
-const G = {t: 0, paused: true, items: [], npcs: [], prey: [], parts: [], curBiome: null};
+const G = {t: 0, paused: true, dance: false, items: [], npcs: [], prey: [], parts: [], curBiome: null};
 const PL = {x: -40, z: -40, dir: 0, vx: 0, vz: 0, D: null, len: 2, tx: null, tz: null, bump: 0, eatT: 0, scaleAnim: 1};
 
-let WORLD = null, LIFE = null, ENV = null, HOME = null, FLAKES = null;
+let WORLD = null, LIFE = null, ENV = null, HOME = null, FLAKES = null, KID = null;
 async function init() {
   const prog = (t) => { $('loadTxt').textContent = t; };
   prog('正在搭建世界…');
   WORLD = createWorld(scene, {mobile: MOB}); G.water = buildWater(scene); G.skyo = buildSky(scene);
   prog('正在请恐龙们过来…');
   for (const id of Object.keys(SPECIES)) { prepDino(id, await loadGLB('dino/' + SPECIES[id].file + '.glb')); measureGait(id); }
-  for (const id of Object.keys(GOB)) { prepGob(id, await loadGLB('gob/' + GOB[id].file + '.glb')); measureGait(id); }
+  DINO.ptero = {proc: true, gait: {Walk: 0.5, Run: 1}};
+  for (const id of Object.keys(GOB)) { if (id === 'ptero') continue; prepGob(id, await loadGLB('gob/' + GOB[id].file + '.glb')); measureGait(id); }
   await loadKinds();
   makeThumbs();
   // 出生点：第一次来就找一块离原点近的绿地
@@ -89,8 +92,9 @@ async function init() {
   const plan = MOB ? ['raptor', 'para', 'para', 'tri', 'steg', 'apato', 'trex', 'anky', 'pachy', 'ovi', 'spino', 'tri'] : ['raptor', 'raptor', 'para', 'para', 'tri', 'steg', 'apato', 'apato', 'trex', 'tri', 'para', 'steg', 'anky', 'anky', 'pachy', 'pachy', 'ovi', 'ovi', 'spino'];
   for (const id of plan) { const D = makeDino(id, NPC_LEN[id], (Math.random() - 0.5) * 2); scene.add(D.holder); const n = {D, id, x: 0, z: 0, dir: Math.random() * 6, st: 'idle', timer: Math.random() * 4, tx: 0, tz: 0}; placeNear(n, 25, 110); G.npcs.push(n); LIFE.addBabies(n, NPC_LEN[id]); }
   for (let i = 0; i < FOOD_N; i++) spawnFood(false);
+  KID = createKid({SV, G, PL, say, tone, burstAt, floatText, gainXP, save, H, bite, notesAt, questEvent, playerD: () => PL.D, nearDinos: r => G.npcs.filter(n => n.D.holder.visible && Math.hypot(n.x - PL.x, n.z - PL.z) < r)});
   HOME = createHome({world: WORLD, scene, PL, G, SV, MOB, tip, burstAt, floatText, tone, save, questEvent, findLand, blocked, glowTex: glowTex()});
-  makeButterflies(); updHud(); newQuest(true);
+  makeButterflies(); updHud(); applyMode(); newQuest(true);
   prog('正在准备画面…'); await new Promise(r => setTimeout(r, 30)); try { camera.position.set(PL.x, H(PL.x, PL.z) + 6, PL.z - 10); camera.lookAt(PL.x, 0, PL.z); renderer.compile(scene, camera); } catch (e) {}
   $('loading').style.display = 'none';
   intro();
@@ -178,6 +182,8 @@ addEventListener('keydown', e => { const k = keyName(e); keys[k] = true; if (e.k
 addEventListener('keyup', e => { keys[keyName(e)] = false; });
 $('callBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (G.fly) G.flyDown = 1; else callOut(); });
 $('callBtn').addEventListener('pointerup', () => { G.flyDown = 0; }); $('callBtn').addEventListener('pointerleave', () => { G.flyDown = 0; });
+$('danceBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (G.paused || G.fly) return; KID.dancing() ? KID.stopDance() : KID.startDance(); });
+$('mathBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (G.paused) return; if (KID.dancing()) KID.stopDance(); KID.openMath(); });
 $('flyBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (G.paused) return; G.fly ? endFly() : startFly(); });
 $('homeBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); G.paused = true; $('overlay').classList.add('show'); HOME.ui($('box'), () => { $('overlay').classList.remove('show'); G.paused = false; }); });
 addEventListener('keydown', e => { if (keyName(e) === 'c' && !e.repeat && !G.fly) callOut(); if (keyName(e) === 'f' && !e.repeat && !G.paused) G.fly ? endFly() : startFly(); });
@@ -206,7 +212,7 @@ addEventListener('pointermove', e => { if (touches.has(e.pointerId)) touches.set
   const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y; ptr.x = e.clientX; ptr.y = e.clientY;
   if (!ptr.drag && Math.hypot(ptr.x - ptr.sx, ptr.y - ptr.sy) > 8) ptr.drag = true;
   const sens = MOB ? 0.009 : 0.006; if (ptr.drag) { CAM.yaw -= dx * sens; CAM.pitch = Math.max(0.12, Math.min(0.95, CAM.pitch + dy * sens * 0.7)); CAM.manualT = G.t; } });
-const endPtr = e => { if (ptr.down && !ptr.drag && !ptr.pinch && !G.paused) setTarget(); ptr.down = false; ptr.drag = false; };
+const endPtr = e => { if (ptr.down && !ptr.drag && !ptr.pinch && !G.paused && !tapDino()) setTarget(); ptr.down = false; ptr.drag = false; };
 addEventListener('pointerup', endPtr); addEventListener('pointercancel', () => { ptr.down = false; ptr.drag = false; });
 function setTarget() { const p = groundPoint(ptr.x, ptr.y); if (p) { PL.tx = p.x; PL.tz = p.z; marker.position.set(PL.tx, Math.max(H(PL.tx, PL.tz), WATER_Y) + 0.08, PL.tz); marker.visible = true; marker.userData.t = 0; } }
 renderer.domElement.addEventListener('wheel', e => { G.zoom = Math.max(0.55, Math.min(1.7, (G.zoom || 1) * (e.deltaY > 0 ? 1.08 : 0.93))); e.preventDefault(); }, {passive: false});
@@ -342,6 +348,7 @@ function eat(it, i) {
   const cb = combo(); if (cb >= 3) xp += 1;
   floatText(`+${xp}${bonus ? ' ⭐' : ''}${it.gold ? ' ✨' : ''}${cb >= 3 ? ` 连吃×${cb}` : ''}`, it.x, it.y + f.r + 1, it.z);
   tone(it.gold ? [784, 988, 1175] : bonus ? [660, 880] : [587], 0.045, 0.07);
+  if (SV.simple && G.t - (G.yumT || -9) > 5) { G.yumT = G.t; say(['好吃！', '啊呜！', '真好吃！', '吃饱饱！'][Math.floor(Math.random() * 4)]); }
   if (it.gold) tip('✨ 金色食物！成长 ×3');
   else if (!SV.firstEat) { SV.firstEat = 1; tip('吃到啦！⭐ 表示这是你最擅长吃的食物，长得更快'); }
   questEvent('eat', it.type); if (it.gold) questEvent('gold'); questEvent('combo', cb);
@@ -435,14 +442,15 @@ function updateNPCs(dt) {
     let dPl = Math.hypot(n.x - PL.x, n.z - PL.z); if (dPl > 160 && !n.keep) { placeNear(n, 70, 130); dPl = Math.hypot(n.x - PL.x, n.z - PL.z); } const far = dPl > 140, g = DINO[n.id].gait, walkV = g.Walk * NPC_LEN[n.id] * 1.25;
     let v = 0;
     if (n.st === 'walk') { const dx = n.tx - n.x, dz = n.tz - n.z, l = Math.hypot(dx, dz);
-      if (l < 1) { n.st = 'idle'; n.timer = 3 + Math.random() * 6; }
-      else { const da = wrapA(Math.atan2(dx, dz) - n.dir); n.dir = wrapA(n.dir + Math.max(-1, Math.min(1, da * 2)) * dt * 0.9);
-        v = walkV * (Math.abs(da) < 1 ? 1 : 0.3); const nx = n.x + Math.sin(n.dir) * v * dt, nz = n.z + Math.cos(n.dir) * v * dt;
+      if (l < 1.5) { n.st = 'idle'; n.timer = 3 + Math.random() * 6; n.wt = 0; }
+      else { const da = wrapA(Math.atan2(dx, dz) - n.dir); n.dir = wrapA(n.dir + Math.max(-1, Math.min(1, da * 1.5)) * dt * 0.7);
+        n.wt = (n.wt || 0) + dt; if (n.wt > 25) { n.st = 'idle'; n.timer = 3; n.wt = 0; }
+        v = Math.abs(da) < 0.6 ? walkV : 0; const nx = n.x + Math.sin(n.dir) * v * dt, nz = n.z + Math.cos(n.dir) * v * dt;
         if (H(nx, nz) < -0.6 || WORLD.solidsNear(nx, nz).some(s => s.big && Math.hypot(s.x - nx, s.z - nz) < s.r + NPC_LEN[n.id] * 0.3)) { n.st = 'idle'; n.timer = 1; v = 0; }
         else { n.x = nx; n.z = nz; } } }
     else { n.timer -= dt; if (n.timer <= 0) { const p = randomSpotNear(n); n.tx = p.x; n.tz = p.z; n.st = 'walk'; }
       // 吃植物的恐龙停下来时会低头啃几口叶子
-      if (!far && dPl < 70 && (SPECIES[n.id] || GOB[n.id]).diet === 'plant' && (n.grazeT = (n.grazeT ?? Math.random() * 4) - dt) < 0) { n.grazeT = 2.5 + Math.random() * 4; bite(n.D); const hx = n.x + Math.sin(n.dir) * NPC_LEN[n.id] * 0.45, hz = n.z + Math.cos(n.dir) * NPC_LEN[n.id] * 0.45; setTimeout(() => burstAt(hx, H(hx, hz) + 0.4, hz, '#7ccf52', 4, 0.5), 300); } }
+      if (!far && dPl < 70 && (SPECIES[n.id] || GOB[n.id]).diet === 'plant' && (n.grazeT = (n.grazeT ?? Math.random() * 4) - dt) < 0) { n.grazeT = 6 + Math.random() * 6; n.dip = 2.4; const hx = n.x + Math.sin(n.dir) * NPC_LEN[n.id] * 0.45, hz = n.z + Math.cos(n.dir) * NPC_LEN[n.id] * 0.45; setTimeout(() => burstAt(hx, H(hx, hz) + 0.4, hz, '#7ccf52', 4, 0.5), 300); } }
     if (n.reply !== undefined && (n.reply -= dt) < 0) { n.reply = undefined; bite(n.D); notesAt(n.x, H(n.x, n.z) + NPC_LEN[n.id] * 0.55, n.z, 2); n.lookT = 3; if (SV.sound) tone([180 + 600 / NPC_LEN[n.id] * 3, 140 + 600 / NPC_LEN[n.id] * 3], 0.035, 0.16); }
     n.v = (n.v || 0) + (v - (n.v || 0)) * Math.min(1, dt * 4);
     n.D.holder.position.set(n.x, H(n.x, n.z), n.z); n.D.holder.rotation.y = n.dir;
@@ -450,7 +458,8 @@ function updateNPCs(dt) {
     if (!far) { locomote(n.D, n.v, dt); n.D.mixer.update(dt);
       // 玩家走近时，扭头看看你
       let la = 0; if ((n.lookT = (n.lookT || 0) - dt) > 0 || dPl < NPC_LEN[n.id] * 2.5 + 6) la = wrapA(Math.atan2(PL.x - n.x, PL.z - n.z) - n.dir); if (Math.abs(la) > 1.8) la = 0;
-      n.look = (n.look || 0) + (Math.max(-0.8, Math.min(0.8, la)) - (n.look || 0)) * Math.min(1, dt * 3); if (Math.abs(n.look) > 0.01) headTurn(n.D, n.look); }
+      n.look = (n.look || 0) + (Math.max(-0.8, Math.min(0.8, la)) - (n.look || 0)) * Math.min(1, dt * 3); n.dip = Math.max(0, (n.dip || 0) - dt); const dp = n.dip > 0 ? Math.sin(Math.min(1, (2.4 - n.dip) / 2.4) * Math.PI) * 0.45 : 0;
+      if (Math.abs(n.look) > 0.01 || dp > 0.005) headTurn(n.D, n.look, dp); }
   }
 }
 function randomSpotNear(n) { for (let i = 0; i < 30; i++) { const a = Math.random() * 6.28, d = 8 + Math.random() * 25, x = n.x + Math.cos(a) * d, z = n.z + Math.sin(a) * d;
@@ -525,6 +534,28 @@ function updateFly(dt) {
   if (PL.fy - floor < 1.8 && floor <= WATER_Y + 0.01 && (G.splT = (G.splT || 0) - dt) < 0) { G.splT = 0.25; LIFE.ripple(PL.x, PL.z, 1.2); }
 }
 
+/* ---------- 点一点恐龙：它会转过来打招呼 ---------- */
+function tapDino() {
+  ndc.set(ptr.x / innerWidth * 2 - 1, -(ptr.y / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+  let best = null, bd = 1e9; const v = new THREE.Vector3();
+  const cands = [...G.npcs.map(n => ({n, x: n.x, z: n.z, len: NPC_LEN[n.id], id: n.id, D: n.D})), ...LIFE.babies.map(b => ({x: b.x, z: b.z, len: b.len, id: b.id, D: b.D, baby: 1})), ...LIFE.followers.map(b => ({x: b.x, z: b.z, len: b.len, id: b.id, D: b.D, baby: 1})), ...HOME.babies.map(b => ({x: b.x, z: b.z, len: b.len, id: b.id, D: b.D, baby: 1}))];
+  for (const c of cands) { if (!c.D.holder.visible) continue; v.set(c.x, H(c.x, c.z) + c.len * 0.3, c.z); const along = v.clone().sub(ray.ray.origin).dot(ray.ray.direction); if (along < 0) continue;
+    const d = ray.ray.distanceToPoint(v); if (d < Math.max(1.2, c.len * 0.38) && along < bd) { bd = along; best = c; } }
+  if (!best) return false;
+  greet(best); return true;
+}
+const BABY_BASE = {gtri: 'tri', gsteg: 'steg', gtrex: 'trex'};
+function greet(c) {
+  const base = BABY_BASE[c.id] || c.id, I = SPECIES[base] || GOB[base], name = (c.baby ? '小' : '') + I.name;
+  if (c.n) { c.n.dir = Math.atan2(PL.x - c.n.x, PL.z - c.n.z); c.n.st = 'idle'; c.n.timer = 4; c.n.lookT = 3; }
+  if (c.D.loco) bite(c.D); notesAt(c.x, H(c.x, c.z) + c.len * 0.6, c.z, 2);
+  PL.look = 0; discover(base);
+  const lines = [`你好，${name}！`, `${name}，你好！`, `我是${name}！`];
+  if (KID) KID.card('👋', lines[Math.floor(Math.random() * 3)], 2600, SV.sound); else tip(`👋 ${lines[0]}`);
+  if (!SV.simple && !c.baby) setTimeout(() => tip(`👋 ${name}<br><span class="small">${I.facts[Math.floor(Math.random() * I.facts.length)]}</span>`, 4000), 2000);
+  questEvent('greet');
+}
+
 /* ---------- 叫一声：附近的恐龙会回应你 ---------- */
 let noteTex = null;
 function notesAt(x, y, z, n) {
@@ -546,7 +577,7 @@ function callOut() {
 /* ---------- 捕猎：吃肉的恐龙可以追比自己小的恐龙 ---------- */
 const PREY_KINDS = ['para', 'steg', 'tri', 'raptor', 'pachy', 'ovi', 'anky'];
 const PREY_N = MOB ? 3 : 5;
-const canHunt = () => SV.hunt && !G.fly && spInfo(curId()).diet === 'meat';
+const canHunt = () => SV.hunt && !SV.simple && !G.fly && spInfo(curId()).diet === 'meat';
 function spawnPrey() {
   const id = PREY_KINDS[Math.floor(Math.random() * PREY_KINDS.length)], len = Math.max(0.9, PL.len * (0.4 + Math.random() * 0.25));
   const D = makeDino(id, len); const n = {D, id, len, x: 0, z: 0, dir: Math.random() * 6, st: 'idle', timer: 1, tx: 0, tz: 0, v: 0, stamina: 4, tired: 0, prey: true};
@@ -602,16 +633,23 @@ function newQuest(first) {
   pool.push({kind: 'collect', need: 2, text: n => `捡 ${n} 个装饰品（闪着光的东西）`});
   if (Math.hypot(PL.x - SV.home.x, PL.z - SV.home.z) > 60) pool.push({kind: 'home', need: 1, text: () => '回 🏠 小窝看看（菜单里也能直接回家）'});
   if (!G.fly) pool.push({kind: 'fly', need: 1, text: () => '变成翼龙，在天上飞一会儿 🪽'});
+  pool.push({kind: 'dance', need: 1, text: () => '和恐龙们跳一次舞 💃', pic: '💃'});
+  pool.push({kind: 'greet', need: 2, text: n => `点一点别的恐龙，跟它们打招呼 👋（${n} 次）`, pic: '👋'});
+  if (SV.simple) pool.push({kind: 'math', need: 1, text: () => '玩一次「数一数」🔢', pic: '🔢'});
   pool.push({kind: 'call', need: 1, text: () => `对着别的恐龙「叫一声」🎵`});
   if (LIFE && LIFE.lost) pool.push({kind: 'lost', need: 1, text: () => '带迷路的恐龙宝宝找到妈妈 💗'});
   pool.push({kind: 'nest', need: 1, text: () => '找到一个 🥚 恐龙蛋窝（看小地图）'});
   if (Object.keys(SV.book).length < BOOK.length) pool.push({kind: 'book', need: 1, text: () => '发现一种新的恐龙 📖'});
-  Q = pool[Math.floor(Math.random() * pool.length)]; Q.have = 0;
+  const pool2 = SV.simple ? pool.filter(q => !['combo', 'prey', 'book', 'call'].includes(q.kind)) : pool;
+  Q = pool2[Math.floor(Math.random() * pool2.length)]; Q.have = 0; if (SV.simple) say({eat: '找' + (Q.type ? FOOD[Q.type].name : '吃的'), eatany: '吃东西', gold: '找金色的食物', nest: '找恐龙蛋', lost: '帮宝宝找妈妈', collect: '找宝贝', home: '回家', fly: '飞一飞', dance: '跳舞', greet: '打招呼', math: '数一数', visit: '去' + (Q.biome ? BIOMES[Q.biome].name : '')}[Q.kind] || '');
   if (Q.kind === 'visit') Q.target = searchBiome(Q.biome);
   showQuest();
 }
 function searchBiome(b) { for (let r = 40; r < 900; r += 25) for (let a = 0; a < 6.28; a += 0.25) { const x = PL.x + Math.sin(a) * r, z = PL.z + Math.cos(a) * r; if (biomeAt(x, z) === b && H(x, z) > -0.1) return {x, z}; } return null; }
-function showQuest() { if (!Q) return; $('questTxt').textContent = `🎯 ${Q.text(Q.need)}` + (Q.need > 1 ? `（${Q.have}/${Q.need}）` : ''); }
+function questPic() { if (Q.pic) return Q.pic; if (Q.kind === 'eat') return FOOD[Q.type].icon; if (Q.kind === 'visit') return BIOMES[Q.biome].icon; return {eatany: '😋', combo: '😋', gold: '✨', nest: '🥚', book: '📖', call: '🎵', lost: '💗', collect: '💎', home: '🏠', fly: '🪽', prey: '🦖'}[Q.kind] || '🎯'; }
+function showQuest() { if (!Q) return;
+  if (SV.simple) { $('questTxt').innerHTML = `<span class="qpic">${questPic()}</span>` + Array.from({length: Math.min(Q.need, 10)}, (_, i) => `<i class="qdot${i < Q.have ? ' on' : ''}"></i>`).join(''); return; }
+  $('questTxt').textContent = `🎯 ${Q.text(Q.need)}` + (Q.need > 1 ? `（${Q.have}/${Q.need}）` : ''); }
 function questEvent(kind, arg) {
   if (!Q || G.evoPending) return;
   let hit = false;
@@ -621,6 +659,7 @@ function questEvent(kind, arg) {
   if (Q.kind === 'gold' && kind === 'gold') hit = true;
   if (Q.kind === 'nest' && kind === 'nest') hit = true;
   if (Q.kind === 'lost' && kind === 'lost') hit = true;
+  if (['dance', 'greet', 'math'].includes(Q.kind) && kind === Q.kind) hit = true;
   if ((Q.kind === 'collect' && kind === 'collect') || (Q.kind === 'home' && kind === 'home') || (Q.kind === 'fly' && kind === 'fly')) hit = true;
   if (Q.kind === 'call' && kind === 'call' && arg > 0) hit = true;
   if (Q.kind === 'book' && kind === 'book') hit = true;
@@ -732,14 +771,30 @@ function showBook() {
 /* ---------- 菜单 / 开场 ---------- */
 function intro() {
   G.paused = true;
+  if (SV.simple !== false && !G.introFull) return introKid();
   $('box').innerHTML = `<h1>🥚 恐龙长大记</h1><p>你是一只刚出生的小恐龙。在大陆上走来走去，<b>吃东西长大</b>，吃饱了就能<b>进化</b>成更大的恐龙！</p>
    <div class="legend">${MOB ? '<span>🕹️ 左下角摇杆 = 走路，推到底会跑</span><span>👆 轻点地面 = 走过去</span><span>☝️ 单指滑动 = 转视角</span><span>🤏 双指捏合 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>💨 冲刺按钮 = 跑得更快</span><span>🎵 叫一声按钮</span>' : `<span>🖱️ 点地面 = 走过去</span><span>🖱️ 按住拖动 = 转动视角</span><span>⌨️ ↑ 往前走（走久了会跑）← → 转身</span><span>⌨️ Q / E 转视角</span><span>🔍 滚轮 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span><span>💨 空格 = 冲刺</span><span>🎵 C 键 = 叫一声</span>`}</div>
    <p>这片大陆<b>没有边界</b>，可以一直走下去：🌿蕨类森林、🌼开花草原、💧大河湿地、🌴苏铁海岸、🏜️红岩台地会一片接一片出现。</p><p>🎯 左上角有小任务；✨金色食物成长 ×3；连续吃会有“连吃”奖励；吃肉的恐龙还可以追小恐龙。</p><p>🥚 小地图上的蛋是恐龙蛋窝，走过去会孵出恐龙宝宝跟着你；❓ 是迷路的恐龙宝宝，带它去找 💗 妈妈；📖 遇到新恐龙会记进菜单里的图鉴。</p><p>🏠 你有自己的小窝（小地图上的 🏠）：路上捡到闪着光的装饰品可以带回家摆，孵出来的宝宝也会住在家里。🪽 右边的按钮可以变成翼龙在天上飞。一年四季会慢慢变化。</p><p>🎵 「叫一声」附近的恐龙会回应你。天会慢慢变黑再变亮，偶尔下小雨，雨后有彩虹（菜单里可以关掉）。</p>
    <p style="color:#6c7563">这里没有时间限制，也不会输。碰到大恐龙只会被轻轻推开。</p>
-   <button class="btn" id="startBtn">${SV.seen ? '继续冒险' : '出发！'}</button>`;
+   <button class="btn" id="startBtn">${SV.seen ? '继续冒险' : '出发！'}</button> <button class="btn light" id="toKid">🦕 简单模式</button>`;
   $('overlay').classList.add('show');
-  $('startBtn').onclick = () => { SV.seen = true; save(); $('overlay').classList.remove('show'); G.paused = false; G.curBiome = null; };
+  $('toKid').onclick = () => { SV.simple = true; save(); applyMode(); introKid(); };
+  $('startBtn').onclick = () => { SV.seen = true; SV.simple = false; save(); applyMode(); $('overlay').classList.remove('show'); G.paused = false; G.curBiome = null; };
 }
+function introKid() {
+  document.body.classList.add('simple');
+  $('box').innerHTML = `<div class="kidIntro"><h1>🦕 恐龙长大记</h1>
+    <div class="kpics"><div><span>👆</span><b>点一点</b></div><div><span>🦖</span><b>走过去</b></div><div><span>😋</span><b>吃东西</b></div><div><span>🌱</span><b>长大</b></div></div>
+    <div class="ksound"><button class="kbig${SV.sound ? ' on' : ''}" id="kSnd1">🔊<small>有声音</small></button><button class="kbig${SV.sound ? '' : ' on'}" id="kSnd0">🔇<small>没声音</small></button></div>
+    <button class="kgo" id="startBtn">▶️ 开始</button>
+    <p class="kfull"><button class="btn light" id="toFull">🧭 完整模式（哥哥玩）</button></p></div>`;
+  $('overlay').classList.add('show');
+  const ss = v => { SV.sound = v; save(); updHud(); $('kSnd1').classList.toggle('on', v); $('kSnd0').classList.toggle('on', !v); if (v) say('点一点，走过去。吃东西，长大！'); };
+  $('kSnd1').onclick = () => ss(true); $('kSnd0').onclick = () => ss(false);
+  $('startBtn').onclick = () => { SV.simple = true; SV.seen = true; save(); applyMode(); $('overlay').classList.remove('show'); G.paused = false; G.curBiome = null; say('出发！'); };
+  $('toFull').onclick = () => { SV.simple = false; save(); applyMode(); G.introFull = true; intro(); G.introFull = false; };
+}
+function applyMode() { document.body.classList.toggle('simple', !!SV.simple); showQuest(); if (SV.simple) { G.zoom = G.zoom || 1; } }
 $('menuBtn').onclick = () => {
   if (G.evoPending) return;
   G.paused = true;
@@ -747,6 +802,7 @@ $('menuBtn').onclick = () => {
    <p>我的进化路线：${SV.path.map(id => spInfo(id).name).join(' → ')}</p>
    <p class="credits">素材来源（全部是 CC0 公共领域授权，可以免费使用）：恐龙模型 — Quaternius「Animated Dinosaur Pack」和 Gobkit「Free Dinosaur Pack」；树、棕榈、松树、花、石头 — Quaternius「Ultimate Nature Pack」「Ultimate Stylized Nature」和「Stylized Nature MegaKit」。鳞片质感、配色、地形、河流、红岩、天空、食物都是程序里原创画的。</p>
    <p><button class="btn light" id="bookBtn">📖 恐龙图鉴（${Object.keys(SV.book).length}/${BOOK.length}）</button></p>
+   <p><button class="btn light" id="modeBtn">${SV.simple ? '🧭 换成完整模式' : '🦕 换成简单模式'}</button> <button class="btn light" id="quietBtn">🤫 安静模式：${SV.quiet ? '开' : '关'}</button></p>
    <p><button class="btn light" id="goHome">🏠 回家</button> <button class="btn light" id="setHome">📍 在这里安家</button> <button class="btn light" id="flyMenu">${G.fly ? '🦖 变回恐龙' : '🪽 变成翼龙飞'}</button></p>
    <p>🍃 季节：${['auto', ...SEASONS.map(x => x.id)].map(id => `<button class="sbtn${(SV.seasonMode || 'auto') === id ? ' on' : ''}" data-s="${id}">${id === 'auto' ? '🔄 会变化' : SEASONS.find(x => x.id === id).icon + ' 一直' + SEASONS.find(x => x.id === id).name}</button>`).join('')}</p>
    <p><button class="btn light" id="dayBtn">🌗 白天黑夜：${SV.daynight !== false ? '会变化' : '一直白天'}</button> <button class="btn light" id="wxBtn">🌧️ 下雨：${SV.weather !== false ? '会下' : '不下'}</button></p>
@@ -756,6 +812,8 @@ $('menuBtn').onclick = () => {
   $('resume').onclick = () => { $('overlay').classList.remove('show'); G.paused = false; };
   $('howBtn').onclick = intro;
   $('bookBtn').onclick = showBook;
+  $('modeBtn').onclick = () => { SV.simple = !SV.simple; save(); applyMode(); $('overlay').classList.remove('show'); G.paused = false; newQuest(); };
+  $('quietBtn').onclick = e => { SV.quiet = !SV.quiet; if (SV.quiet) { SV.sound = false; SV.weather = false; SV.daynight = false; try { speechSynthesis.cancel(); } catch (x) {} } else { SV.weather = true; SV.daynight = true; } save(); updHud(); e.target.textContent = `🤫 安静模式：${SV.quiet ? '开' : '关'}`; };
   $('goHome').onclick = () => { $('overlay').classList.remove('show'); G.paused = false; goHome(); };
   let armH = false; $('setHome').onclick = e => { if (!armH) { armH = true; e.target.textContent = '再按一次：搬到这里'; return; } const p = findLand(PL.x + Math.sin(PL.dir) * 6, PL.z + Math.cos(PL.dir) * 6, null, 0, 20); HOME.setHome(p.x, p.z); $('overlay').classList.remove('show'); G.paused = false; tip('📍 新家安好啦！装饰和宝宝都搬过来了。'); };
   $('flyMenu').onclick = () => { $('overlay').classList.remove('show'); G.paused = false; G.fly ? endFly() : startFly(); };
@@ -776,7 +834,7 @@ function frame(ts) {
   const dt = Math.min(0.1, (ts - (last || ts)) / 1000); last = ts;
   if (G.paused && G.drawnPaused) return; // 弹窗时不重画，省电
   G.t += dt;
-  if (!G.paused) { if (G.fly) updateFly(dt); else updatePlayer(dt); updateNPCs(dt); updatePrey(dt); updateItems(dt); updateQuestArrow(); LIFE.update(dt); if ((G.bookT = (G.bookT || 0) - dt) < 0) { G.bookT = 0.5; checkBook(); } }
+  if (!G.paused) { if (G.fly) updateFly(dt); else if (!G.dance) updatePlayer(dt); else { PL.spd = 0; PL.animV = 0; locomote(PL.D, 0, dt); } updateNPCs(dt); updatePrey(dt); updateItems(dt); updateQuestArrow(); LIFE.update(dt); if ((G.bookT = (G.bookT || 0) - dt) < 0) { G.bookT = 0.5; checkBook(); } }
   WORLD.update(PL.x, PL.z);
   if (!G.paused) { ENV.update(dt); seasonUpdate(dt); HOME.update(dt, LIFE.followers); $('homeBtn').style.display = HOME.near ? '' : 'none'; }
   PL.D.mixer.update(G.paused ? 0 : dt); if (Math.abs(PL.look) > 0.01) headTurn(PL.D, PL.look);
@@ -799,6 +857,7 @@ function frame(ts) {
   // 阴影跟着玩家
   const sr = 18 + PL.len * 2.5; const sc = sun.shadow.camera; if (sc.right !== sr) { sc.left = -sr; sc.right = sr; sc.top = sr; sc.bottom = -sr; sc.near = 1; sc.far = 220; sc.updateProjectionMatrix(); }
   sun.target.position.set(PL.x, y0, PL.z); sun.position.copy(sun.target.position).addScaledVector(SUN_DIR, 100);
+  if (!G.paused) KID.updateDance(dt);
   G.skyo.sky.position.copy(camera.position); G.skyo.clouds.position.set(PL.x, 0, PL.z);
   if (PL.dashCD !== G.lastCD) { G.lastCD = PL.dashCD; const b = $('dashBtn'); b.classList.toggle('cd', PL.dashCD > 0); }
   renderer.render(scene, camera);
@@ -809,7 +868,7 @@ function frame(ts) {
   if (dt > 0.034) { slowT += dt; fastT = 0; } else { fastT += dt; slowT = Math.max(0, slowT - dt * 0.5); }
   if (slowT > 2) { slowT = 0; if (PR > 1) { PR = 1; renderer.setPixelRatio(PR); } else if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => m.needsUpdate = true); }); } else if (PR > 0.7) { PR = 0.7; renderer.setPixelRatio(PR); } }
 }
-window.__G = {get HOME() { return HOME; }, startFly, endFly, goHome, SEASON, get FLAKES() { return FLAKES; }, get LIFE() { return LIFE; }, get ENV() { return ENV; }, callOut, discover, showBook, G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene, CAM, keys, get WORLD() { return WORLD; }, get Q() { return Q; }, biomeAt, spawnPrey, newQuest, camera};
+window.__G = {get KID() { return KID; }, makeDino, tip, tapDino, greet, ptr, applyMode, get HOME() { return HOME; }, startFly, endFly, goHome, SEASON, get FLAKES() { return FLAKES; }, get LIFE() { return LIFE; }, get ENV() { return ENV; }, callOut, discover, showBook, G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene, CAM, keys, get WORLD() { return WORLD; }, get Q() { return Q; }, biomeAt, spawnPrey, newQuest, camera};
 const unpause = () => { G.drawnPaused = false; };
 new MutationObserver(unpause).observe($('overlay'), {attributes: true});
 init().catch(e => { $('loadTxt').textContent = '加载出错了：' + e.message; console.error(e); });

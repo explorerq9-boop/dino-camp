@@ -87,6 +87,10 @@ export function createEnv(E) {
     const night = THREE.MathUtils.clamp((V.t - 0.68) / 0.1, 0, 1) * THREE.MathUtils.clamp((1.0 - V.t) / 0.06, 0, 1);
     if (night > 0.5 && V.night <= 0.5 && dayOn) E.tip('🌙 天黑了，萤火虫出来了。<br><span class="small">科学家在 9900 万年前的琥珀里发现过会发光的小甲虫，恐龙可能也见过这样的光。</span>', 5000);
     if (night < 0.5 && V.night >= 0.5 && dayOn) E.tip('🌅 天亮啦，新的一天！', 3000);
+    if (dayOn && V.t >= 0.635 && (V.prevT ?? V.t) < 0.635) E.tip('🌇 天快黑了。<br><span class="small">一会儿天会慢慢变黑，萤火虫会出来，不可怕哦。</span>', 4500);
+    if (rainOK && !V.rainOn && V.rainT < 18 && !V.warned) { V.warned = true; E.tip(E.snowy && E.snowy() ? '☁️ 要下雪了。<br><span class="small">雪花会慢慢飘下来。</span>' : '☁️ 要下雨了。<br><span class="small">小雨会轻轻地下，不可怕哦。</span>', 4500); }
+    if (V.rainOn) V.warned = false;
+    V.prevT = V.t;
     V.night = night;
     const R = V.rain;
     // 光和雾

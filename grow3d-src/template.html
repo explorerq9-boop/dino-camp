@@ -107,6 +107,46 @@ body.mob #flyBtn{right:30px;bottom:200px;width:56px;height:56px;font-size:16px}
 body.mob #seasonTag{font-size:13px;padding:0 8px}
 @media (max-height:520px){ body.mob #flyBtn{right:178px;bottom:16px;width:58px;height:58px} body.mob #homeBtn{bottom:auto;top:12px;padding:6px 14px;font-size:16px} }
 @media (max-width:560px){ .choices{grid-template-columns:1fr 1fr!important;gap:8px} .choice{padding:8px 6px 10px} .choice .tag{display:none} .choice b{font-size:19px} }
+
+#kidCard{position:fixed;left:50%;top:18%;transform:translate(-50%,-10px);z-index:6;display:flex;align-items:center;gap:14px;background:rgba(255,253,245,.96);border-radius:28px;padding:14px 26px;box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;transition:opacity .5s,transform .5s;pointer-events:none;max-width:90vw}
+#kidCard.show{opacity:1;transform:translate(-50%,0)} #kidCard.low{top:auto;bottom:18%}
+#kidCard span{font-size:64px;line-height:1} #kidCard b{font-size:34px;color:#3d4a2c;letter-spacing:2px}
+#danceBox{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:5;display:none;flex-direction:column;align-items:center;background:rgba(255,253,245,.94);border-radius:28px;padding:10px 30px 12px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+#danceBox.show{display:flex}
+#danceIcon{font-size:84px;line-height:1.05;transition:transform .25s} #danceIcon.beat{animation:beat .5s ease-out}
+@keyframes beat{0%{transform:scale(1.12)}100%{transform:scale(1)}}
+#danceWord{font-size:38px;font-weight:800;color:#3d4a2c;letter-spacing:4px} #danceNext{font-size:18px;color:#7a7a6a}
+#danceDots{display:flex;gap:8px;margin-top:6px} #danceDots i{width:16px;height:16px;border-radius:50%;background:#ddd6c2} #danceDots i.on{background:#f2a541}
+.kbtn{position:fixed;z-index:3;width:84px;height:84px;border-radius:50%;border:5px solid #fff;color:#fff;font-size:38px;box-shadow:0 6px 16px rgba(0,0,0,.25);touch-action:none;display:none;line-height:1}
+.kbtn small{display:block;font-size:15px;font-weight:700}
+#danceBtn{right:24px;bottom:24px;background:#e98fb5} #mathBtn{right:24px;bottom:124px;background:#f0a948}
+body.simple .kbtn{display:block}
+body.simple #joy,body.simple #dashBtn,body.simple #callBtn,body.simple #mapBox,body.simple #seasonTag{display:none!important}
+body.simple #flyBtn{right:24px;bottom:224px;width:84px;height:84px;font-size:34px}
+body.simple #flyBtn small{font-size:15px}
+body.simple #who small,body.simple .stages{display:none}
+body.simple #quest{font-size:22px} .qpic{font-size:38px;vertical-align:middle;margin-right:8px}
+.qdot{display:inline-block;width:18px;height:18px;border-radius:50%;background:#e2dcc8;margin:0 3px;vertical-align:middle} .qdot.on{background:#7cc35e}
+body.simple #tip{display:none!important}
+#overlay.mathMode #box{max-width:760px;width:96vw}
+.math{text-align:center;position:relative} .math h2{font-size:30px;margin:8px 40px 12px;color:#3d4a2c} .math h1{font-size:40px}
+.mx{position:absolute;right:0;top:0;width:52px;height:52px;border-radius:50%;background:#eee6d2;font-size:24px}
+.mstars{min-height:30px;font-size:26px} .mstars.big{font-size:46px}
+.mrow{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:6px 0}
+.mrow .it{font-size:46px;position:relative;line-height:1.1;transition:transform .3s}
+.mrow .it.b{filter:hue-rotate(40deg)} .mrow .it.gone{opacity:.22;filter:grayscale(1)}
+.mrow .it.lit{transform:scale(1.15)} .mrow .it small{position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-size:18px;font-weight:800;color:#e07a2a;background:#fff;border-radius:10px;padding:0 6px}
+.gap{width:18px} .mop{font-size:34px} .mtip{font-size:22px;color:#7a7a6a}
+.mans{display:flex;justify-content:center;gap:18px;margin:16px 0 8px}
+.mn{width:110px;height:110px;border-radius:26px;font-size:56px;font-weight:800;background:#fff;color:#3d4a2c;box-shadow:0 5px 0 #c9bfa3;border:4px solid #e8dfc6}
+.mn.ok{background:#bfe8a8;border-color:#7cc35e} .mn.try{opacity:.5} .mn.hint{border-color:#f2a541;box-shadow:0 0 0 6px rgba(242,165,65,.35)}
+.kidIntro{text-align:center} .kidIntro h1{font-size:40px}
+.kpics{display:flex;justify-content:center;gap:14px;margin:14px 0;flex-wrap:wrap} .kpics div{background:#fff8e6;border-radius:22px;padding:10px 14px;min-width:100px} .kpics span{font-size:56px;display:block} .kpics b{font-size:24px}
+.ksound{display:flex;justify-content:center;gap:16px;margin:10px 0}
+.kbig{width:130px;height:110px;border-radius:24px;font-size:48px;background:#f3eee0;border:4px solid transparent;line-height:1.1} .kbig small{display:block;font-size:20px} .kbig.on{border-color:#6fa45f;background:#e4f3d8}
+.kgo{font-size:40px;font-weight:800;padding:18px 60px;border-radius:40px;background:#6fa45f;color:#fff;box-shadow:0 6px 0 #4f8341;margin-top:8px}
+.kfull{margin-top:18px}
+@media (max-height:520px){ .kbtn{width:70px;height:70px;font-size:30px} #danceBtn{bottom:14px;right:16px} #mathBtn{bottom:14px;right:96px} body.simple #flyBtn{bottom:14px;right:176px;width:70px;height:70px} #kidCard span{font-size:46px} #kidCard b{font-size:26px} #danceIcon{font-size:56px} #danceWord{font-size:28px} .kpics span{font-size:40px} .mrow .it{font-size:34px} .mn{width:86px;height:86px;font-size:44px} .kbig{height:84px;font-size:36px} .kgo{font-size:30px;padding:10px 44px} }
 </style></head><body>
 <div id="game"></div>
 <div id="fx"></div>
@@ -119,6 +159,10 @@ body.mob #seasonTag{font-size:13px;padding:0 8px}
 </div>
 <div class="panel" id="mapBox"><canvas id="map" width="150" height="150"></canvas></div>
 <div id="tip" class="panel"></div>
+<div id="kidCard"></div>
+<div id="danceBox"><div id="danceIcon">💃</div><div id="danceWord"></div><div id="danceNext"></div><div id="danceDots"></div></div>
+<button class="kbtn" id="danceBtn">💃<small>跳舞</small></button>
+<button class="kbtn" id="mathBtn">🔢<small>数一数</small></button>
 <button id="flyBtn">🪽<small>飞</small></button>
 <button id="homeBtn" style="display:none">🏠<small>装饰小窝</small></button>
 <div id="fade"></div>

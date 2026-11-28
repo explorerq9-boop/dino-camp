@@ -8,46 +8,50 @@ import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 // 每种恐龙：名字、真实资料、配色（按模型材质名）、体长（游戏单位≈米的缩小版）
 export const SPECIES = {
   raptor: {file:'Velociraptor', name:'迅猛龙', diet:'meat', dietTxt:'吃小动物和虫子', period:'白垩纪晚期', len:'约 2 米',
-    colors:{LightBrown:'#f0d2a0', Brown:'#d0702f', Black:'#2b1d16'}, pattern:'stripe', patCol:'#7a3418', size:2.6, speed:7.5,
+    colors:{LightBrown:'#d8c6a4', Brown:'#8b6040', Black:'#1e1510'}, pattern:'stripe', patCol:'#3e2818', size:2.6, speed:7.5,
     facts:['迅猛龙只有火鸡那么大，身上其实长着羽毛。','迅猛龙生活在今天的蒙古，后脚上有一个特别弯的大爪子。','迅猛龙跑得很快，脑子在恐龙里算比较大的。']},
   para: {file:'Parasaurolophus', name:'副栉龙', diet:'plant', dietTxt:'吃树叶和果子', period:'白垩纪晚期', len:'约 9 米',
-    colors:{LightYellow:'#f6e7b0', Green:'#3f9d63', LightGreen:'#9ad46e', Red:'#ef6b3a'}, pattern:'spot', patCol:'#1f6b47', size:3.6, speed:6.8,
+    colors:{LightYellow:'#d6cba6', Green:'#6b7650', LightGreen:'#8f9268', Red:'#9c5636'}, pattern:'spot', patCol:'#3b4129', size:3.6, speed:6.8,
     facts:['副栉龙头上有一根长长的空心头冠，可以像号角一样发出低沉的声音。','副栉龙可以用两条腿走，也可以四条腿走。','副栉龙是鸭嘴龙的一种，嘴巴扁扁的，有几百颗磨牙。']},
   steg: {file:'Stegosaurus', name:'剑龙', diet:'plant', dietTxt:'吃低矮的植物', period:'侏罗纪晚期', len:'约 9 米',
-    colors:{LightBrown:'#f2d58e', DarkBrown:'#86a83e', Brown:'#e8673a'}, pattern:'spot', patCol:'#4d6b22', size:4.6, speed:5.6,
+    colors:{LightBrown:'#d2c49e', DarkBrown:'#757049', Brown:'#9b6038'}, pattern:'spot', patCol:'#3e3b26', size:4.6, speed:5.6,
     facts:['剑龙背上有两排骨板，尾巴上有四根尖刺。','剑龙身体有公交车那么长，脑子却只有核桃大小。','剑龙生活在侏罗纪晚期，比霸王龙早了大约 8000 万年。']},
   tri: {file:'Triceratops', name:'三角龙', diet:'plant', dietTxt:'吃低矮的植物', period:'白垩纪晚期', len:'约 9 米',
-    colors:{LightBrown:'#f3dcae', Purple:'#3f86c9', Brown:'#9a6a3c'}, pattern:'stripe', patCol:'#5c3a1e', size:4.8, speed:5.6,
+    colors:{LightBrown:'#d8c9a6', Purple:'#80705a', Brown:'#5f4934'}, pattern:'stripe', patCol:'#463626', size:4.8, speed:5.6,
     facts:['三角龙有三只角和一个大大的颈盾。','三角龙的头骨是陆地动物里最大的之一，有 2 米多长。','三角龙和霸王龙生活在同一个时代。']},
   trex: {file:'Trex', name:'霸王龙', diet:'meat', dietTxt:'吃大型动物', period:'白垩纪晚期', len:'约 12 米',
-    colors:{LightYellow:'#f2dcae', LightGreen:'#c98a4a', Green:'#7a5634', Black:'#1e1612', Red:'#d4565c'}, pattern:'stripe', patCol:'#d0561f', size:6.6, speed:6.4,
+    colors:{LightYellow:'#d4c4a2', LightGreen:'#86704f', Green:'#564634', Black:'#1a1410', Red:'#a8484c'}, pattern:'stripe', patCol:'#3a2c1e', size:6.6, speed:6.4,
     facts:['霸王龙的咬合力是陆地动物里最强的之一。','霸王龙的小前肢只有两根手指，但很有力气。','霸王龙的嗅觉特别好，能闻到很远的气味。']},
   apato: {file:'Apatosaurus', name:'迷惑龙', diet:'plant', dietTxt:'吃高处的树叶', period:'侏罗纪晚期', len:'约 22 米',
-    colors:{Material:'#e7d39a', Brown:'#6aa07a'}, pattern:'spot', patCol:'#3f6e53', size:9.5, speed:5.2,
+    colors:{Material:'#cdc09e', Brown:'#727565'}, pattern:'spot', patCol:'#4a4d40', size:9.5, speed:5.2,
     facts:['迷惑龙以前也被叫做“雷龙”。','迷惑龙的脖子和尾巴都特别长，身体有好几头大象那么重。','迷惑龙的尾巴尖细细的，可能能像鞭子一样甩出声音。']},
 };
 
-const scaleShader = (mat, freq, patCol, pattern) => {
+export const scaleShader = (mat, freq, patCol, pattern, nat = null) => {
   mat.onBeforeCompile = sh => {
-    sh.uniforms.uSeason = SEASON; sh.uniforms.uFreq = {value:freq}; sh.uniforms.uPat = {value:new THREE.Color(patCol)}; sh.uniforms.uMode = {value:pattern==='stripe'?1:0};
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vOP;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvOP = position;');
+    sh.uniforms.uSeason = SEASON; sh.uniforms.uFreq = {value:freq}; sh.uniforms.uPat = {value:new THREE.Color(patCol)}; sh.uniforms.uMode = {value:pattern==='stripe'?1:0}; sh.uniforms.uNat = {value:new THREE.Color(nat || '#ffffff')}; sh.uniforms.uDes = {value: nat ? 0.78 : 0};
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vOP; varying vec3 vON;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvOP = position; vON = objectNormal;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
-varying vec3 vOP; uniform float uFreq; uniform vec3 uPat; uniform float uMode; uniform vec3 uSeason;
+varying vec3 vOP; varying vec3 vON; uniform float uFreq; uniform vec3 uPat; uniform float uMode; uniform vec3 uSeason; uniform vec3 uNat; uniform float uDes;
 vec3 h3(vec3 p){p=vec3(dot(p,vec3(127.1,311.7,74.7)),dot(p,vec3(269.5,183.3,246.1)),dot(p,vec3(113.5,271.9,124.6)));return fract(sin(p)*43758.5453);}
 vec2 cell(vec3 p){vec3 i=floor(p),f=fract(p);float d1=8.,d2=8.;for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++){vec3 g=vec3(x,y,z);vec3 o=h3(i+g);float d=length(g+o-f);if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;}return vec2(d1,d2);}
 float vn(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);float a=h3(i).x,b=h3(i+vec3(1,0,0)).x,c=h3(i+vec3(0,1,0)).x,d=h3(i+vec3(1,1,0)).x,e=h3(i+vec3(0,0,1)).x,f2=h3(i+vec3(1,0,1)).x,g=h3(i+vec3(0,1,1)).x,h=h3(i+vec3(1,1,1)).x;return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),mix(mix(e,f2,f.x),mix(g,h,f.x),f.y),f.z);}
 `).replace('#include <color_fragment>', `#include <color_fragment>
-{ vec3 q=vOP*uFreq; vec2 c=cell(q); float edge=smoothstep(0.0,0.16,c.y-c.x);
+{ float lu=dot(diffuseColor.rgb,vec3(0.3,0.59,0.11)); float mx=max(diffuseColor.r,max(diffuseColor.g,diffuseColor.b)), mn=min(diffuseColor.r,min(diffuseColor.g,diffuseColor.b));
+  float wh = uDes * smoothstep(0.7,0.85,lu) * (1.0-smoothstep(0.06,0.16,mx-mn)); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.42,0.36,0.22), wh*0.8); lu = mix(lu, 0.35, wh);
+  diffuseColor.rgb=mix(diffuseColor.rgb, uNat*(0.35+lu*0.95), uDes);
+  vec3 q=vOP*uFreq; vec2 c=cell(q); float edge=smoothstep(0.0,0.16,c.y-c.x);
   float big = uMode>0.5 ? smoothstep(0.55,0.7, sin(vOP.z*uFreq*0.18 + vn(vOP*uFreq*0.08)*3.0)*0.5+0.5) : smoothstep(0.62,0.72, vn(vOP*uFreq*0.22));
-  float top = smoothstep(-0.1,0.5,normalize(vOP).y);
+  float top = smoothstep(-0.35,0.65,normalize(vON).y);
   diffuseColor.rgb = mix(diffuseColor.rgb, uPat, big*0.55*top*step(0.25,length(diffuseColor.rgb-uPat)));
-  diffuseColor.rgb *= mix(0.72,1.06,edge) * (0.94+0.12*h3(floor(q)).x); }
+  diffuseColor.rgb *= mix(0.74,1.05,edge) * (0.93+0.14*h3(floor(q)).x) * (0.9+0.2*vn(vOP*uFreq*0.5));
+  diffuseColor.rgb *= mix(1.1, 0.8, top); }
 ${DINO_GLSL}`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-{ float rim = pow(1.0 - max(dot(normalize(vNormal), vec3(0.,0.,1.)),0.0), 2.5); totalEmissiveRadiance += diffuseColor.rgb*rim*0.35; }`);
+{ float rim = pow(1.0 - max(dot(normalize(vNormal), vec3(0.,0.,1.)),0.0), 3.0); totalEmissiveRadiance += diffuseColor.rgb*rim*0.12; }`);
   };
-  mat.customProgramCacheKey = () => 'dino'+pattern;
+  mat.customProgramCacheKey = () => 'dino'+pattern+(nat?'n':'');
 };
 
 export const DINO = {}; // id -> {gltf, base, clips, len}
@@ -72,14 +76,18 @@ export function prepDino(id, gltf) {
 }
 
 // 生成一只恐龙实例；scale 让身长 = len 单位
+import {makePtero} from './ptero.js';
 export function makeDino(id, len, tint = 0) {
+  if (id === 'ptero') return makePtero(len, tint);
   const d = DINO[id], obj = skClone(d.root), k = len / d.rawLen;
   if (tint) { const cache = new Map(); obj.traverse(m => { if (!m.isMesh) return; let n = cache.get(m.material); if (!n) { n = m.material.clone(); n.onBeforeCompile = m.material.onBeforeCompile; n.customProgramCacheKey = m.material.customProgramCacheKey; if (!d.gob && !/Black/.test(n.name)) n.color.offsetHSL(tint * 0.06, tint * 0.08, tint * 0.03); else if (d.gob) n.color.offsetHSL(tint * 0.05, 0, 0); n.userData.own = true; cache.set(m.material, n); } m.material = n; }); }
   const holder = new THREE.Group(); obj.scale.multiplyScalar(k); obj.position.set(0, -d.rawMinY * k, -d.rawCz * k);
   holder.add(obj);
   const mixer = new THREE.AnimationMixer(obj), acts = {};
   for (const n of ['Idle', 'Walk', 'Run', 'Attack', 'Jump']) if (d.clips[n]) { acts[n] = mixer.clipAction(d.clips[n]); }
-  if (d.gob) obj.rotation.y = 0;
+  if (d.gob) { obj.rotation.y = 0; const baby = !!GOB[id].baby;
+    // 卡通模型的大眼睛和大头缩小，比例更接近真实的恐龙
+    obj.traverse(o => { if (!o.isBone) return; if (/Eye$/.test(o.name)) o.scale.setScalar(0.42); if (o.name === 'Head') o.scale.setScalar(baby ? 0.9 : 0.8); }); }
   acts.Idle.play();
   return {holder, obj, mixer, acts, cur: 'Idle', id, len};
 }
@@ -125,7 +133,8 @@ export function locomote(D, v, dt) {
   const k = Math.min(1, dt * 8), L = D.loco;
   const att = D.acts.Attack;
   if (L.att > 0) L.att = Math.max(0, L.att - dt);
-  const aw = L.att > 0 ? Math.min(1, L.att * 6, (L.attDur - L.att) * 8 + 0.2) : 0;
+  // 张嘴动作只轻轻混进去一半，慢慢进慢慢出，不会猛甩头
+  const aw = L.att > 0 ? 0.5 * Math.min(1, L.att * 3, (L.attDur - L.att) * 3 + 0.1) : 0;
   for (const n of ['Idle', 'Walk', 'Run']) { L.w[n] += (tw[n] - L.w[n]) * k; A[n].setEffectiveWeight(L.w[n] * (1 - aw)); }
   const sgn = v < 0 ? -1 : 1;
   A.Walk.timeScale = sgn * Math.max(0.35, Math.min(2.2, av / walkV));
@@ -135,18 +144,21 @@ export function locomote(D, v, dt) {
 }
 export function bite(D) {
   const a = D.acts.Attack; if (!a || !D.loco) return; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true; a.play();
-  D.loco.attDur = Math.min(1.0, a.getClip().duration); D.loco.att = D.loco.attDur; a.timeScale = a.getClip().duration / D.loco.attDur;
+  D.loco.attDur = 1.3; D.loco.att = D.loco.attDur; a.timeScale = a.getClip().duration / D.loco.attDur;
 }
 
 // 扭头：把脖子和头绕竖直方向转一个角度（看食物、看玩家）
 const _q = new THREE.Quaternion(), _pq = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0);
+const _rt = new THREE.Vector3();
 export function headTurn(D, angle, pitch = 0) {
   if (D.neck === undefined) { D.neck = null; D.head = null; D.obj.traverse(o => { if (o.isBone && o.name === 'Neck') D.neck = o; if (o.isBone && o.name === 'Head') D.head = o; }); }
   if (!D.neck && !D.head) return;
   D.holder.updateMatrixWorld(true);
   for (const [b, share] of D.neck ? [[D.neck, 0.45], [D.head, 0.55]] : [[D.head, 0.8]]) {
     if (!b) continue; b.parent.getWorldQuaternion(_pq);
-    _q.setFromAxisAngle(_up, angle * share); const loc = _pq.clone().invert().multiply(_q).multiply(_pq); b.quaternion.premultiply(loc);
+    _q.setFromAxisAngle(_up, angle * share);
+    if (pitch) { _rt.set(1, 0, 0).applyQuaternion(D.holder.quaternion); _pq.setFromAxisAngle(_rt, pitch * share); _q.premultiply(_pq); b.parent.getWorldQuaternion(_pq); }
+    const loc = _pq.clone().invert().multiply(_q).multiply(_pq); b.quaternion.premultiply(loc);
     b.updateMatrixWorld(true);
   }
 }
@@ -162,21 +174,36 @@ export const GOB = {
     facts: ['窃蛋龙的化石被发现趴在一窝蛋上，后来才知道那是它自己的蛋，它在孵蛋，不是偷蛋。', '窃蛋龙没有牙齿，只有一张像鹦鹉一样的硬嘴。', '窃蛋龙身上长着羽毛，生活在今天的蒙古。']},
   spino: {file: 'Spinosaurus', name: '棘龙', diet: 'fish', period: '白垩纪中期', len: '约 14 米', where: 'river',
     facts: ['棘龙背上有一面像帆一样的大骨板。', '棘龙特别爱吃鱼，大部分时间待在河边和水里。', '棘龙比霸王龙还要长，是已知最长的肉食恐龙之一。']},
-  ptero: {file: 'Pterodactylus', name: '翼龙', diet: 'fish', period: '侏罗纪到白垩纪', len: '翅膀展开约 1～7 米', where: 'sky', notDino: true,
+  ptero: {file: '', name: '翼龙', diet: 'fish', period: '侏罗纪到白垩纪', len: '翅膀展开约 1～7 米', where: 'sky', notDino: true,
     facts: ['翼龙不是恐龙，是和恐龙同时代、会飞的爬行动物。', '翼龙的翅膀是一层皮膜，用特别长的第四根手指撑开。', '翼龙是第一种会飞的脊椎动物，比鸟类还早。']},
   plesio: {file: 'Plesiosaurus', name: '蛇颈龙', diet: 'fish', period: '侏罗纪早期', len: '约 3.5 米', where: 'water', notDino: true,
     facts: ['蛇颈龙不是恐龙，是生活在海里的爬行动物。', '蛇颈龙用四只像船桨一样的鳍游泳。', '蛇颈龙的脖子很长，要浮到水面上呼吸空气。']},
   gtri: {file: 'Triceratops', baby: true}, gsteg: {file: 'Stegosaurus', baby: true}, gtrex: {file: 'Trex', baby: true},
 };
+// Gobkit 的卡通大眼睛：所有模型的眼白和眼珠都用贴图上同样的两个色块，
+// 找到这些顶点，左右各自向中心收缩，眼睛变小，更像真的爬行动物
+function shrinkEyes(m) {
+  const P = m.geometry.attributes.position, UV = m.geometry.attributes.uv; if (!UV) return;
+  const isEye = i => { const u = Math.floor(UV.getX(i) * 16), w = Math.floor(UV.getY(i) * 16); return (u === 10 && w === 11) || (u === 12 && w === 12); };
+  for (const side of [-1, 1]) {
+    const ids = []; const c = new THREE.Vector3(), v = new THREE.Vector3();
+    for (let i = 0; i < P.count; i++) if (isEye(i) && Math.sign(P.getX(i)) === side) { ids.push(i); c.add(v.fromBufferAttribute(P, i)); }
+    if (ids.length < 6) continue; c.divideScalar(ids.length);
+    for (const i of ids) { v.fromBufferAttribute(P, i).sub(c).multiplyScalar(0.45).add(c); P.setXYZ(i, v.x, v.y, v.z); }
+  }
+  P.needsUpdate = true;
+}
 export function prepGob(id, gltf) {
   const root = gltf.scene; root.updateMatrixWorld(true);
   const b = new THREE.Box3(); root.traverse(m => { if (m.isBone) b.expandByPoint(m.getWorldPosition(new THREE.Vector3())); });
   root.traverse(m => {
     if (!m.isMesh) return;
-    const old = m.material, nm = new THREE.MeshStandardMaterial({map: old.map, roughness: 0.55, metalness: 0});
-    nm.onBeforeCompile = sh => { sh.uniforms.uSeason = SEASON; sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform vec3 uSeason;').replace('#include <color_fragment>', '#include <color_fragment>\n' + DINO_GLSL).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-{ float rim = pow(1.0 - max(dot(normalize(vNormal), vec3(0.,0.,1.)),0.0), 2.5); totalEmissiveRadiance += diffuseColor.rgb*rim*0.4; }`); };
-    nm.customProgramCacheKey = () => 'gob'; m.material = nm; m.castShadow = true; m.frustumCulled = false;
+    const old = m.material, nm = new THREE.MeshStandardMaterial({map: old.map, roughness: 0.7, metalness: 0});
+    if (m.isSkinnedMesh) shrinkEyes(m);
+    m.geometry.computeBoundingBox(); const gs = m.geometry.boundingBox.getSize(new THREE.Vector3()), glen = Math.max(gs.x, gs.y, gs.z);
+    const NAT = {anky: ['#a08a68', '#43382a'], pachy: ['#a89276', '#4f3e2c'], ovi: ['#9a8670', '#3a2e22'], spino: ['#8f8c72', '#3c3a2c'], plesio: ['#7f8f94', '#2c383c'], gtri: ['#a09078', '#463626'], gsteg: ['#8f8a66', '#3e3b26'], gtrex: ['#9a8464', '#3a2c1e']}[id] || ['#9a8a70', '#3e3428'];
+    scaleShader(nm, 38 / glen, NAT[1], 'spot', NAT[0]);
+    m.material = nm; m.castShadow = true; m.frustumCulled = false;
   });
   // 包围盒用蒙皮后的真实顶点算（骨架被缩放过，直接用骨头位置不准）
   const mix0 = new THREE.AnimationMixer(root); mix0.clipAction(gltf.animations[0]).play(); mix0.setTime(0.2); root.updateMatrixWorld(true);

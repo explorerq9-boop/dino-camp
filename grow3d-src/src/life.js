@@ -59,7 +59,7 @@ export function createLife(C) {
     for (const s of L.swimmers) {
       if (!s.on || Math.hypot(s.x - PL.x, s.z - PL.z) > 140) { s.retry -= dt; s.D.holder.visible = false; s.on = false; if (s.retry > 0) continue; s.retry = 3; const p = findDeep(20, 110); if (!p) continue; s.x = p.x; s.z = p.z; s.on = true; }
       const sp = 1.4, nx = s.x + Math.sin(s.dir) * sp * dt * 3, nz = s.z + Math.cos(s.dir) * sp * dt * 3;
-      if (!deepAt(nx, nz)) s.dir += dt * 1.5; else { s.x += Math.sin(s.dir) * sp * dt; s.z += Math.cos(s.dir) * sp * dt; s.dir += Math.sin(C.G.t * 0.3 + s.x) * dt * 0.2; }
+      if (!deepAt(nx, nz)) s.dir += dt * 0.5; else { s.x += Math.sin(s.dir) * sp * dt; s.z += Math.cos(s.dir) * sp * dt; s.dir += Math.sin(C.G.t * 0.3 + s.x) * dt * 0.2; }
       s.D.holder.visible = true; s.D.holder.position.set(s.x, WATER_Y - s.D.len * 0.17 + Math.sin(C.G.t * 1.2) * 0.05, s.z); s.D.holder.rotation.y = s.dir; s.D.mixer.update(dt);
       if ((s.rip -= dt) < 0) { s.rip = 0.7; ripple(s.x + Math.sin(s.dir) * s.D.len * 0.3, s.z + Math.cos(s.dir) * s.D.len * 0.3, 1.2); }
     }
@@ -220,7 +220,7 @@ export function createLife(C) {
     const dP = Math.hypot(B.x - PL.x, B.z - PL.z), m = B.mom;
     if (dP > 190) { scene.remove(B.D.holder); endLost(B); L.lostCD = 30; return; }
     let v = 0;
-    if (B.st === 'wait') { B.dir += Math.sin(C.G.t * 0.7) * dt * 0.8; if (dP < 3 + PL.len * 0.5) { B.st = 'follow'; C.tip(`小${B.name}迷路了，带它去找妈妈吧！<br><span class="small">妈妈在小地图上 💗 的地方，头上也有一颗 💗。</span>`, 5000); C.questEvent('lostfound'); } }
+    if (B.st === 'wait') { B.dir += Math.sin(C.G.t * 0.25) * dt * 0.15; if (dP < 3 + PL.len * 0.5) { B.st = 'follow'; C.tip(`小${B.name}迷路了，带它去找妈妈吧！<br><span class="small">妈妈在小地图上 💗 的地方，头上也有一颗 💗。</span>`, 5000); C.questEvent('lostfound'); } }
     else {
       const back = PL.len * 0.4 + 1.0, tx = PL.x - Math.sin(PL.dir) * back, tz = PL.z - Math.cos(PL.dir) * back, dx = tx - B.x, dz = tz - B.z, d = Math.hypot(dx, dz);
       if (d > 60) { B.x = tx; B.z = tz; }
