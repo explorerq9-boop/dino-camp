@@ -194,7 +194,53 @@ export function createLife(C) {
     }
   }
 
-  L.update = dt => { updBabies(dt); updFliers(dt); updSwimmers(dt); updNest(dt); updFollowers(dt); updFlies(dt); updPollen(dt); updMarks(dt); };
+
+  /* ----- 8. 迷路的恐龙宝宝：带它回家找妈妈 ----- */
+  const emojiTex = (e) => canvasTex(64, 64, (x) => { x.font = '48px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(e, 32, 36); });
+  const qTex = emojiTex('❓'), heartTex = emojiTex('💗');
+  const BNAME = {gtri: '三角龙', gsteg: '剑龙', gtrex: '霸王龙', anky: '甲龙', pachy: '肿头龙'};
+  L.lost = null; L.lostCD = 40;
+  function spawnLost() {
+    const moms = C.G.npcs.filter(n => BABY_OF[n.id] && DINO[BABY_OF[n.id]] && !n.keep);
+    if (!moms.length) return;
+    const mom = moms[Math.floor(Math.random() * moms.length)];
+    if (!C.placeNear(mom, 70, 115)) return; mom.keep = true;
+    let p = null; for (let i = 0; i < 40 && !p; i++) { const a = PL.dir + (Math.random() - 0.5) * 2.2, d = 22 + Math.random() * 22, x = PL.x + Math.sin(a) * d, z = PL.z + Math.cos(a) * d; if (H(x, z) > 0.05 && !C.blocked(x, z, 2)) p = {x, z}; }
+    if (!p) { mom.keep = false; return; }
+    const id = BABY_OF[mom.id], len = Math.max(0.9, Math.min(PL.len * 0.5, mom.D.len * 0.26)), D = makeDino(id, len); scene.add(D.holder);
+    const q = new THREE.Sprite(new THREE.SpriteMaterial({map: qTex, transparent: true, depthWrite: false})); q.scale.setScalar(0.9); scene.add(q);
+    const h = new THREE.Sprite(new THREE.SpriteMaterial({map: heartTex, transparent: true, depthWrite: false})); h.scale.setScalar(2.4); scene.add(h);
+    L.lost = {D, id, len, mom, x: p.x, z: p.z, dir: Math.random() * 6, v: 0, st: 'wait', q, h, name: BNAME[id]};
+  }
+  function endLost(L0) { scene.remove(L0.q, L0.h); L0.q.material.dispose(); L0.h.material.dispose(); L0.mom.keep = false; L.lost = null; }
+  L.heard = () => { const B = L.lost; if (B && B.st === 'wait' && Math.hypot(B.x - PL.x, B.z - PL.z) < 70) { B.st = 'follow'; C.tip(`小${B.name}听到你的叫声，跑过来啦！带它去找妈妈 💗`, 4000); C.questEvent('lostfound'); return true; } return false; };
+  function updLost(dt) {
+    const B = L.lost;
+    if (!B) { if ((L.lostCD -= dt) < 0) { L.lostCD = 20; spawnLost(); if (L.lost && !C.SV.lostTip) { C.SV.lostTip = 1; C.tip('❓ 有一只恐龙宝宝迷路了！小地图上的 ❓ 就是它。', 4500); } } return; }
+    const dP = Math.hypot(B.x - PL.x, B.z - PL.z), m = B.mom;
+    if (dP > 190) { scene.remove(B.D.holder); endLost(B); L.lostCD = 30; return; }
+    let v = 0;
+    if (B.st === 'wait') { B.dir += Math.sin(C.G.t * 0.7) * dt * 0.8; if (dP < 3 + PL.len * 0.5) { B.st = 'follow'; C.tip(`小${B.name}迷路了，带它去找妈妈吧！<br><span class="small">妈妈在小地图上 💗 的地方，头上也有一颗 💗。</span>`, 5000); C.questEvent('lostfound'); } }
+    else {
+      const back = PL.len * 0.4 + 1.0, tx = PL.x - Math.sin(PL.dir) * back, tz = PL.z - Math.cos(PL.dir) * back, dx = tx - B.x, dz = tz - B.z, d = Math.hypot(dx, dz);
+      if (d > 60) { B.x = tx; B.z = tz; }
+      const walkV = DINO[B.id].gait.Walk * B.len * 1.3;
+      if (d > 0.7) { B.dir = wrapA(B.dir + wrapA(Math.atan2(dx, dz) - B.dir) * Math.min(1, dt * 5)); v = Math.min(Math.max(walkV * 3, Math.abs(PL.spd) * 1.15), d * 1.8); }
+      B.x += Math.sin(B.dir) * v * dt; B.z += Math.cos(B.dir) * v * dt;
+      if (Math.hypot(B.x - m.x, B.z - m.z) < m.D.len * 0.8 + 4) { // 找到妈妈了
+        const y = H(B.x, B.z); C.burstAt(B.x, y + 1, B.z, '#ff8fb8', 18, 1.2); C.burstAt(m.x, y + m.D.len * 0.4, m.z, '#ffd1e3', 14, 1.4);
+        const xp = 6 + C.SV.stage * 3; C.floatText(`+${xp} 💗 小${B.name}找到妈妈啦!`, B.x, y + 2, B.z); C.gainXP(xp); C.tone([523, 659, 784, 1046], 0.05, 0.12);
+        C.tip(`💗 小${B.name}找到妈妈啦！谢谢你！<br><span class="small">科学家发现过很多恐龙一起筑巢的地方，有些恐龙会成群生活、照顾宝宝。</span>`, 5000);
+        L.babies.push({D: B.D, id: B.id, len: B.len, mom: m, side: Math.random() < 0.5 ? 1 : -1, x: B.x, z: B.z, dir: B.dir, v: 0, ph: 0});
+        C.questEvent('lost'); endLost(B); L.lostCD = 60; return; }
+    }
+    B.v += (v - B.v) * Math.min(1, dt * 6);
+    B.D.holder.position.set(B.x, Math.max(H(B.x, B.z), WATER_Y - 0.1), B.z); B.D.holder.rotation.y = B.dir; locomote(B.D, B.v, dt); B.D.mixer.update(dt);
+    B.q.visible = B.st === 'wait'; B.q.position.set(B.x, H(B.x, B.z) + B.len * 0.9 + 0.6 + Math.sin(C.G.t * 2) * 0.1, B.z);
+    B.h.visible = B.st === 'follow' && m.D.holder.visible; B.h.position.set(m.x, H(m.x, m.z) + m.D.len * 0.75 + 1.5 + Math.sin(C.G.t * 1.5) * 0.2, m.z);
+  }
+
+  L.update = dt => { updLost(dt); updBabies(dt); updFliers(dt); updSwimmers(dt); updNest(dt); updFollowers(dt); updFlies(dt); updPollen(dt); updMarks(dt); };
   L.resetNest = () => { dropNest(); L.nestCD = 5; };
   return L;
 }

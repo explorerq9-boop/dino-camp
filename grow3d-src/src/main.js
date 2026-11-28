@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {SPECIES, GOB, prepDino, prepGob, makeDino, measureGait, locomote, bite, headTurn, DINO} from './dinos.js';
 import {createLife} from './life.js';
+import {createEnv} from './env.js';
 import {RNG, WATER_Y, H, biomeAt, BIOMES, CH, createWorld, makeKind, buildWater, buildSky, WIND, NEAR} from './world.js';
 import {FOOD, FOOD_KEYS, makeFood} from './food.js';
 
@@ -64,7 +65,7 @@ async function loadGLB(path) {
 const G = {t: 0, paused: true, items: [], npcs: [], prey: [], parts: [], curBiome: null};
 const PL = {x: -40, z: -40, dir: 0, vx: 0, vz: 0, D: null, len: 2, tx: null, tz: null, bump: 0, eatT: 0, scaleAnim: 1};
 
-let WORLD = null, LIFE = null;
+let WORLD = null, LIFE = null, ENV = null;
 async function init() {
   const prog = (t) => { $('loadTxt').textContent = t; };
   prog('正在搭建世界…');
@@ -80,7 +81,8 @@ async function init() {
   WORLD.update(PL.x, PL.z, true);
   spawnPlayer(true);
   // 其他恐龙：散布在你周围，走远了会在前方重新遇到新的
-  LIFE = createLife({scene, PL, G, MOB, SV, tip, burstAt, floatText, gainXP, questEvent, tone, blocked, onDiscover: discover});
+  LIFE = createLife({scene, PL, G, MOB, SV, tip, burstAt, floatText, gainXP, questEvent, tone, blocked, placeNear, onDiscover: discover});
+  ENV = createEnv({scene, renderer, hemi, sun, SUN_DIR, sky: G.skyo.sky, clouds: G.skyo.clouds, PL, G, SV, MOB, tip, ripple: LIFE.ripple});
   const plan = MOB ? ['raptor', 'para', 'para', 'tri', 'steg', 'apato', 'trex', 'anky', 'pachy', 'ovi', 'spino', 'tri'] : ['raptor', 'raptor', 'para', 'para', 'tri', 'steg', 'apato', 'apato', 'trex', 'tri', 'para', 'steg', 'anky', 'anky', 'pachy', 'pachy', 'ovi', 'ovi', 'spino'];
   for (const id of plan) { const D = makeDino(id, NPC_LEN[id], (Math.random() - 0.5) * 2); scene.add(D.holder); const n = {D, id, x: 0, z: 0, dir: Math.random() * 6, st: 'idle', timer: Math.random() * 4, tx: 0, tz: 0}; placeNear(n, 25, 110); G.npcs.push(n); LIFE.addBabies(n, NPC_LEN[id]); }
   for (let i = 0; i < FOOD_N; i++) spawnFood(false);
@@ -170,6 +172,8 @@ const keys = {};
 const keyName = e => (e.key || '').length === 1 ? e.key.toLowerCase() : e.key;
 addEventListener('keydown', e => { const k = keyName(e); keys[k] = true; if (e.key.startsWith('Arrow') || k === ' ') e.preventDefault(); if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(k)) { PL.tx = null; marker.visible = false; } });
 addEventListener('keyup', e => { keys[keyName(e)] = false; });
+$('callBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); callOut(); });
+addEventListener('keydown', e => { if (keyName(e) === 'c' && !e.repeat) callOut(); });
 $('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (!G.paused) G.dashReq = true; });
 const clearInput = () => { for (const k in keys) keys[k] = false; ptr.down = false; ptr.drag = false; if (typeof JOY !== 'undefined') { JOY.on = false; JOY.x = JOY.y = 0; const k = document.querySelector('#joy i'); if (k) k.style.transform = ''; } };
 addEventListener('blur', clearInput); document.addEventListener('visibilitychange', clearInput);
@@ -370,7 +374,7 @@ function floatText(t, x, y, z) {
 function updateParts(dt) {
   const v = new THREE.Vector3();
   for (let i = G.parts.length - 1; i >= 0; i--) { const p = G.parts[i]; p.life -= dt;
-    if (p.sp) { p.sp.position.y += p.vy * dt; p.k += dt * 1.2; p.sp.scale.setScalar(p.k); p.sp.material.opacity = Math.max(0, p.life * 0.65); }
+    if (p.sp) { p.sp.position.y += p.vy * dt; p.k += dt * (p.note ? 0.15 : 1.2); if (p.note) p.sp.position.x += Math.sin(p.life * 4) * dt * 0.6; p.sp.scale.setScalar(p.k); p.sp.material.opacity = Math.max(0, p.life * 0.65); }
     else if (p.m) { p.vy -= 6 * dt; p.m.position.x += p.vx * dt; p.m.position.y += p.vy * dt; p.m.position.z += p.vz * dt; p.m.material.opacity = Math.min(1, p.life * 2); }
     else { p.y += dt * 1.2; v.set(p.x, p.y, p.z).project(camera); p.el.style.transform = `translate(${(v.x * 0.5 + 0.5) * innerWidth}px,${(-v.y * 0.5 + 0.5) * innerHeight}px) translate(-50%,-50%)`; p.el.style.opacity = Math.min(1, p.life * 1.5); }
     if (p.life <= 0) { if (p.sp) { scene.remove(p.sp); p.sp.material.dispose(); } else if (p.m) { scene.remove(p.m); p.m.material.dispose(); } else p.el.remove(); G.parts.splice(i, 1); } }
@@ -420,7 +424,7 @@ function updateLife(dt) {
 /* ---------- 其他恐龙 ---------- */
 function updateNPCs(dt) {
   for (const n of G.npcs) {
-    let dPl = Math.hypot(n.x - PL.x, n.z - PL.z); if (dPl > 160) { placeNear(n, 70, 130); dPl = Math.hypot(n.x - PL.x, n.z - PL.z); } const far = dPl > 140, g = DINO[n.id].gait, walkV = g.Walk * NPC_LEN[n.id] * 1.25;
+    let dPl = Math.hypot(n.x - PL.x, n.z - PL.z); if (dPl > 160 && !n.keep) { placeNear(n, 70, 130); dPl = Math.hypot(n.x - PL.x, n.z - PL.z); } const far = dPl > 140, g = DINO[n.id].gait, walkV = g.Walk * NPC_LEN[n.id] * 1.25;
     let v = 0;
     if (n.st === 'walk') { const dx = n.tx - n.x, dz = n.tz - n.z, l = Math.hypot(dx, dz);
       if (l < 1) { n.st = 'idle'; n.timer = 3 + Math.random() * 6; }
@@ -428,18 +432,39 @@ function updateNPCs(dt) {
         v = walkV * (Math.abs(da) < 1 ? 1 : 0.3); const nx = n.x + Math.sin(n.dir) * v * dt, nz = n.z + Math.cos(n.dir) * v * dt;
         if (H(nx, nz) < -0.6 || WORLD.solidsNear(nx, nz).some(s => s.big && Math.hypot(s.x - nx, s.z - nz) < s.r + NPC_LEN[n.id] * 0.3)) { n.st = 'idle'; n.timer = 1; v = 0; }
         else { n.x = nx; n.z = nz; } } }
-    else { n.timer -= dt; if (n.timer <= 0) { const p = randomSpotNear(n); n.tx = p.x; n.tz = p.z; n.st = 'walk'; } }
+    else { n.timer -= dt; if (n.timer <= 0) { const p = randomSpotNear(n); n.tx = p.x; n.tz = p.z; n.st = 'walk'; }
+      // 吃植物的恐龙停下来时会低头啃几口叶子
+      if (!far && dPl < 70 && (SPECIES[n.id] || GOB[n.id]).diet === 'plant' && (n.grazeT = (n.grazeT ?? Math.random() * 4) - dt) < 0) { n.grazeT = 2.5 + Math.random() * 4; bite(n.D); const hx = n.x + Math.sin(n.dir) * NPC_LEN[n.id] * 0.45, hz = n.z + Math.cos(n.dir) * NPC_LEN[n.id] * 0.45; setTimeout(() => burstAt(hx, H(hx, hz) + 0.4, hz, '#7ccf52', 4, 0.5), 300); } }
+    if (n.reply !== undefined && (n.reply -= dt) < 0) { n.reply = undefined; bite(n.D); notesAt(n.x, H(n.x, n.z) + NPC_LEN[n.id] * 0.55, n.z, 2); n.lookT = 3; if (SV.sound) tone([180 + 600 / NPC_LEN[n.id] * 3, 140 + 600 / NPC_LEN[n.id] * 3], 0.035, 0.16); }
     n.v = (n.v || 0) + (v - (n.v || 0)) * Math.min(1, dt * 4);
     n.D.holder.position.set(n.x, H(n.x, n.z), n.z); n.D.holder.rotation.y = n.dir;
     n.D.holder.visible = !far;
     if (!far) { locomote(n.D, n.v, dt); n.D.mixer.update(dt);
       // 玩家走近时，扭头看看你
-      let la = 0; if (dPl < NPC_LEN[n.id] * 2.5 + 6) la = wrapA(Math.atan2(PL.x - n.x, PL.z - n.z) - n.dir); if (Math.abs(la) > 1.8) la = 0;
+      let la = 0; if ((n.lookT = (n.lookT || 0) - dt) > 0 || dPl < NPC_LEN[n.id] * 2.5 + 6) la = wrapA(Math.atan2(PL.x - n.x, PL.z - n.z) - n.dir); if (Math.abs(la) > 1.8) la = 0;
       n.look = (n.look || 0) + (Math.max(-0.8, Math.min(0.8, la)) - (n.look || 0)) * Math.min(1, dt * 3); if (Math.abs(n.look) > 0.01) headTurn(n.D, n.look); }
   }
 }
 function randomSpotNear(n) { for (let i = 0; i < 30; i++) { const a = Math.random() * 6.28, d = 8 + Math.random() * 25, x = n.x + Math.cos(a) * d, z = n.z + Math.sin(a) * d;
   if (H(x, z) > -0.3 && !WORLD.solidsNear(x, z).some(s => s.big && Math.hypot(s.x - x, s.z - z) < s.r + 3)) return {x, z}; } return {x: n.x, z: n.z}; }
+
+/* ---------- 叫一声：附近的恐龙会回应你 ---------- */
+let noteTex = null;
+function notesAt(x, y, z, n) {
+  if (!noteTex) { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.font = 'bold 50px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff'; g.strokeStyle = '#7a4fd0'; g.lineWidth = 6; g.strokeText('♪', 32, 34); g.fillText('♪', 32, 34); noteTex = new THREE.CanvasTexture(c); }
+  for (let i = 0; i < n; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: noteTex, transparent: true, depthWrite: false})); sp.position.set(x + (Math.random() - 0.5) * 1.2, y + i * 0.5, z + (Math.random() - 0.5) * 1.2); scene.add(sp); G.parts.push({sp, life: 1.6 + i * 0.2, k: 0.8, vy: 1.3, note: 1}); }
+}
+const CALL_TONE = {baby: [880, 1046], raptor: [660, 880], para: [196, 262, 330], steg: [247, 294], tri: [220, 277], trex: [147, 196], apato: [110, 147, 196]};
+function callOut() {
+  if (G.paused || G.evoPending || G.t - (G.callT || -9) < 2) return; G.callT = G.t;
+  bite(PL.D); const y = H(PL.x, PL.z) + PL.len * 0.6; notesAt(PL.x + Math.sin(PL.dir) * PL.len * 0.4, y, PL.z + Math.cos(PL.dir) * PL.len * 0.4, 3);
+  tone(CALL_TONE[curId()] || [440, 660], 0.05, 0.14);
+  let k = 0; for (const n of G.npcs) { const d = Math.hypot(n.x - PL.x, n.z - PL.z); if (d < 45 && n.D.holder.visible) { n.reply = 0.5 + d / 30 + Math.random() * 0.5; k++; } }
+  for (const b of LIFE.followers) notesAt(b.x, H(b.x, b.z) + b.len * 0.7, b.z, 1);
+  const heard = LIFE.heard();
+  if (!SV.callTip) { SV.callTip = 1; if (!heard) tip(k ? '🎵 你叫了一声，附近的恐龙也回应你了！' : '🎵 你叫了一声。走到别的恐龙旁边再叫，它们会回应你。', 3500); }
+  questEvent('call', k);
+}
 
 /* ---------- 捕猎：吃肉的恐龙可以追比自己小的恐龙 ---------- */
 const PREY_KINDS = ['para', 'steg', 'tri', 'raptor', 'pachy', 'ovi', 'anky'];
@@ -497,6 +522,8 @@ function newQuest(first) {
   const b = others[Math.floor(Math.random() * others.length)]; pool.push({kind: 'visit', biome: b, need: 1, text: () => `去找 ${BIOMES[b].icon}${BIOMES[b].name}`});
   if (canHunt()) pool.push({kind: 'prey', need: 2, text: n => `抓到 ${n} 只小恐龙`});
   if (!first) pool.push({kind: 'gold', need: 1, text: () => '找到一个 ✨金色食物'});
+  pool.push({kind: 'call', need: 1, text: () => `对着别的恐龙「叫一声」🎵`});
+  if (LIFE && LIFE.lost) pool.push({kind: 'lost', need: 1, text: () => '带迷路的恐龙宝宝找到妈妈 💗'});
   pool.push({kind: 'nest', need: 1, text: () => '找到一个 🥚 恐龙蛋窝（看小地图）'});
   if (Object.keys(SV.book).length < BOOK.length) pool.push({kind: 'book', need: 1, text: () => '发现一种新的恐龙 📖'});
   Q = pool[Math.floor(Math.random() * pool.length)]; Q.have = 0;
@@ -513,6 +540,8 @@ function questEvent(kind, arg) {
   if (Q.kind === 'prey' && kind === 'prey') hit = true;
   if (Q.kind === 'gold' && kind === 'gold') hit = true;
   if (Q.kind === 'nest' && kind === 'nest') hit = true;
+  if (Q.kind === 'lost' && kind === 'lost') hit = true;
+  if (Q.kind === 'call' && kind === 'call' && arg > 0) hit = true;
   if (Q.kind === 'book' && kind === 'book') hit = true;
   if (Q.kind === 'visit' && kind === 'visit' && arg === Q.biome) hit = true;
   if (Q.kind === 'combo' && kind === 'combo') { Q.have = Math.max(Q.have, arg); if (Q.have >= Q.need) { Q.have = Q.need; done(); } else showQuest(); return; }
@@ -581,6 +610,7 @@ function drawMinimap() {
   x.fillStyle = '#ffd23f'; for (const it of G.items) { if (it.eaten || FOOD[it.type].tier > SV.stage + 1) continue; x.fillRect(toX(it.x) - 1.5, toY(it.z) - 1.5, 3, 3); }
   x.fillStyle = 'rgba(255,255,255,.85)'; for (const n of G.npcs) { x.beginPath(); x.arc(toX(n.x), toY(n.z), 2.4, 0, 7); x.fill(); }
   if (canHunt()) { x.fillStyle = '#ff7a59'; for (const n of G.prey) { x.beginPath(); x.arc(toX(n.x), toY(n.z), 2.6, 0, 7); x.fill(); } }
+  if (LIFE.lost) { const B = LIFE.lost, T = B.st === 'wait' ? B : B.mom, a = Math.atan2(T.x - PL.x, T.z - PL.z), d = Math.min(S / 2 - 9, Math.hypot(T.x - PL.x, T.z - PL.z) * k); x.font = '14px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(B.st === 'wait' ? '❓' : '💗', S / 2 + Math.sin(a) * d, S / 2 + Math.cos(a) * d); }
   if (LIFE.nest) { const a = Math.atan2(LIFE.nest.x - PL.x, LIFE.nest.z - PL.z), d = Math.min(S / 2 - 9, Math.hypot(LIFE.nest.x - PL.x, LIFE.nest.z - PL.z) * k); x.font = '14px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('🥚', S / 2 + Math.sin(a) * d, S / 2 + Math.cos(a) * d); }
   if (Q && Q.kind === 'visit' && Q.target) { const a = Math.atan2(Q.target.x - PL.x, Q.target.z - PL.z); x.fillStyle = '#ffe066'; x.font = '16px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; const d = Math.min(S / 2 - 10, Math.hypot(Q.target.x - PL.x, Q.target.z - PL.z) * k); x.fillText('🎯', S / 2 + Math.sin(a) * d, S / 2 + Math.cos(a) * d); }
   x.save(); x.translate(S / 2, S / 2); x.fillStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, 22, -Math.PI / 2 - CAM.yaw - 0.5, -Math.PI / 2 - CAM.yaw + 0.5); x.closePath(); x.fill(); x.rotate(-PL.dir + Math.PI); x.fillStyle = '#ff5a3c'; x.strokeStyle = '#fff'; x.lineWidth = 2; x.beginPath(); x.moveTo(0, -7); x.lineTo(5, 5); x.lineTo(-5, 5); x.closePath(); x.stroke(); x.fill(); x.restore();
@@ -619,8 +649,8 @@ function showBook() {
 function intro() {
   G.paused = true;
   $('box').innerHTML = `<h1>🥚 恐龙长大记</h1><p>你是一只刚出生的小恐龙。在大陆上走来走去，<b>吃东西长大</b>，吃饱了就能<b>进化</b>成更大的恐龙！</p>
-   <div class="legend">${MOB ? '<span>🕹️ 左下角摇杆 = 走路，推到底会跑</span><span>👆 轻点地面 = 走过去</span><span>☝️ 单指滑动 = 转视角</span><span>🤏 双指捏合 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>💨 冲刺按钮 = 跑得更快</span>' : `<span>🖱️ 点地面 = 走过去</span><span>🖱️ 按住拖动 = 转动视角</span><span>⌨️ ↑ 往前走（走久了会跑）← → 转身</span><span>⌨️ Q / E 转视角</span><span>🔍 滚轮 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span><span>💨 空格 = 冲刺</span>`}</div>
-   <p>这片大陆<b>没有边界</b>，可以一直走下去：🌿蕨类森林、🌼开花草原、💧大河湿地、🌴苏铁海岸、🏜️红岩台地会一片接一片出现。</p><p>🎯 左上角有小任务；✨金色食物成长 ×3；连续吃会有“连吃”奖励；吃肉的恐龙还可以追小恐龙。</p><p>🥚 小地图上的蛋是恐龙蛋窝，走过去会孵出恐龙宝宝跟着你；📖 遇到新恐龙会记进菜单里的图鉴。</p>
+   <div class="legend">${MOB ? '<span>🕹️ 左下角摇杆 = 走路，推到底会跑</span><span>👆 轻点地面 = 走过去</span><span>☝️ 单指滑动 = 转视角</span><span>🤏 双指捏合 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>💨 冲刺按钮 = 跑得更快</span><span>🎵 叫一声按钮</span>' : `<span>🖱️ 点地面 = 走过去</span><span>🖱️ 按住拖动 = 转动视角</span><span>⌨️ ↑ 往前走（走久了会跑）← → 转身</span><span>⌨️ Q / E 转视角</span><span>🔍 滚轮 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span><span>💨 空格 = 冲刺</span><span>🎵 C 键 = 叫一声</span>`}</div>
+   <p>这片大陆<b>没有边界</b>，可以一直走下去：🌿蕨类森林、🌼开花草原、💧大河湿地、🌴苏铁海岸、🏜️红岩台地会一片接一片出现。</p><p>🎯 左上角有小任务；✨金色食物成长 ×3；连续吃会有“连吃”奖励；吃肉的恐龙还可以追小恐龙。</p><p>🥚 小地图上的蛋是恐龙蛋窝，走过去会孵出恐龙宝宝跟着你；❓ 是迷路的恐龙宝宝，带它去找 💗 妈妈；📖 遇到新恐龙会记进菜单里的图鉴。</p><p>🎵 「叫一声」附近的恐龙会回应你。天会慢慢变黑再变亮，偶尔下小雨，雨后有彩虹（菜单里可以关掉）。</p>
    <p style="color:#6c7563">这里没有时间限制，也不会输。碰到大恐龙只会被轻轻推开。</p>
    <button class="btn" id="startBtn">${SV.seen ? '继续冒险' : '出发！'}</button>`;
   $('overlay').classList.add('show');
@@ -633,12 +663,15 @@ $('menuBtn').onclick = () => {
    <p>我的进化路线：${SV.path.map(id => spInfo(id).name).join(' → ')}</p>
    <p class="credits">素材来源（全部是 CC0 公共领域授权，可以免费使用）：恐龙模型 — Quaternius「Animated Dinosaur Pack」和 Gobkit「Free Dinosaur Pack」；树、棕榈、松树、花、石头 — Quaternius「Ultimate Nature Pack」「Ultimate Stylized Nature」和「Stylized Nature MegaKit」。鳞片质感、配色、地形、河流、红岩、天空、食物都是程序里原创画的。</p>
    <p><button class="btn light" id="bookBtn">📖 恐龙图鉴（${Object.keys(SV.book).length}/${BOOK.length}）</button></p>
+   <p><button class="btn light" id="dayBtn">🌗 白天黑夜：${SV.daynight !== false ? '会变化' : '一直白天'}</button> <button class="btn light" id="wxBtn">🌧️ 下雨：${SV.weather !== false ? '会下' : '不下'}</button></p>
    <p><button class="btn light" id="huntBtn">🦖 捕猎小恐龙：${SV.hunt ? '开' : '关'}</button></p>
    <button class="btn" id="resume">继续</button><button class="btn light" id="howBtn">怎么玩</button><button class="btn light" id="restart">重新长大</button>`;
   $('overlay').classList.add('show');
   $('resume').onclick = () => { $('overlay').classList.remove('show'); G.paused = false; };
   $('howBtn').onclick = intro;
   $('bookBtn').onclick = showBook;
+  $('dayBtn').onclick = e => { SV.daynight = SV.daynight === false; save(); e.target.textContent = `🌗 白天黑夜：${SV.daynight !== false ? '会变化' : '一直白天'}`; };
+  $('wxBtn').onclick = e => { SV.weather = SV.weather === false; save(); e.target.textContent = `🌧️ 下雨：${SV.weather !== false ? '会下' : '不下'}`; };
   $('huntBtn').onclick = e => { SV.hunt = !SV.hunt; save(); e.target.textContent = `🦖 捕猎小恐龙：${SV.hunt ? '开' : '关'}`; if (Q && Q.kind === 'prey' && !SV.hunt) newQuest(); };
   let armed = false; $('restart').onclick = e => { if (!armed) { armed = true; e.target.textContent = '再按一次确认'; return; }
     SV.stage = 0; SV.path = ['baby']; SV.xp = 0; save(); spawnPlayer(false); PL.scaleAnim = 1; updHud(); $('overlay').classList.remove('show'); G.paused = false; tip('又变回恐龙宝宝啦，这次试试另一条路线吧！'); };
@@ -655,6 +688,7 @@ function frame(ts) {
   G.t += dt;
   if (!G.paused) { updatePlayer(dt); updateNPCs(dt); updatePrey(dt); updateItems(dt); updateQuestArrow(); LIFE.update(dt); if ((G.bookT = (G.bookT || 0) - dt) < 0) { G.bookT = 0.5; checkBook(); } }
   WORLD.update(PL.x, PL.z);
+  if (!G.paused) ENV.update(dt);
   PL.D.mixer.update(G.paused ? 0 : dt); if (Math.abs(PL.look) > 0.01) headTurn(PL.D, PL.look);
   updateLife(dt);
   updateParts(dt);
@@ -685,7 +719,7 @@ function frame(ts) {
   if (dt > 0.034) { slowT += dt; fastT = 0; } else { fastT += dt; slowT = Math.max(0, slowT - dt * 0.5); }
   if (slowT > 2) { slowT = 0; if (PR > 1) { PR = 1; renderer.setPixelRatio(PR); } else if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => m.needsUpdate = true); }); } else if (PR > 0.7) { PR = 0.7; renderer.setPixelRatio(PR); } }
 }
-window.__G = {get LIFE() { return LIFE; }, discover, showBook, G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene, CAM, keys, get WORLD() { return WORLD; }, get Q() { return Q; }, biomeAt, spawnPrey, newQuest, camera};
+window.__G = {get LIFE() { return LIFE; }, get ENV() { return ENV; }, callOut, discover, showBook, G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene, CAM, keys, get WORLD() { return WORLD; }, get Q() { return Q; }, biomeAt, spawnPrey, newQuest, camera};
 const unpause = () => { G.drawnPaused = false; };
 new MutationObserver(unpause).observe($('overlay'), {attributes: true});
 init().catch(e => { $('loadTxt').textContent = '加载出错了：' + e.message; console.error(e); });
