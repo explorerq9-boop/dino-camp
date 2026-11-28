@@ -80,8 +80,9 @@ function groundColor(x, z, h, out) {
 const groundMat = new THREE.MeshStandardMaterial({vertexColors: true, roughness: 0.95});
 groundMat.onBeforeCompile = sh => {
   sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWP=(modelMatrix*vec4(transformed,1.0)).xyz;');
-  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;\nfloat hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}')
-    .replace('#include <color_fragment>', '#include <color_fragment>\n{ vec2 wp=mod(vWP.xz,1000.0); vec2 q=wp*0.35; vec2 i=floor(q), f=fract(q); f=f*f*(3.0-2.0*f); float n=mix(mix(hh(i),hh(i+vec2(1,0)),f.x),mix(hh(i+vec2(0,1)),hh(i+vec2(1,1)),f.x),f.y); float g=hh(floor(wp*6.0)); diffuseColor.rgb*=0.9+0.14*n+0.04*g; }');
+  sh.uniforms.uT = WIND;
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP; uniform float uT;\nfloat hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\nfloat vn2(vec2 q){vec2 i=floor(q),f=fract(q);f=f*f*(3.0-2.0*f);return mix(mix(hh(i),hh(i+vec2(1,0)),f.x),mix(hh(i+vec2(0,1)),hh(i+vec2(1,1)),f.x),f.y);}')
+    .replace('#include <color_fragment>', '#include <color_fragment>\n{ vec2 wp=mod(vWP.xz,1000.0); vec2 q=wp*0.35; vec2 i=floor(q), f=fract(q); f=f*f*(3.0-2.0*f); float n=mix(mix(hh(i),hh(i+vec2(1,0)),f.x),mix(hh(i+vec2(0,1)),hh(i+vec2(1,1)),f.x),f.y); float g=hh(floor(wp*6.0)); diffuseColor.rgb*=0.9+0.14*n+0.04*g;   vec2 cq=mod(vWP.xz,2000.0)*0.012+vec2(uT*0.018,uT*0.01); float cl=vn2(cq)*0.65+vn2(cq*2.3)*0.35; diffuseColor.rgb*=1.0-0.16*smoothstep(0.55,0.72,cl);   float wl=vWP.y-(-0.35); float wet=1.0-smoothstep(0.0,0.35,wl); diffuseColor.rgb*=1.0-0.18*wet*step(-0.05,wl);   float fo=smoothstep(0.07,0.0,abs(wl-0.02-0.03*sin(uT*0.9+vWP.x*0.15+vWP.z*0.1))); diffuseColor.rgb=mix(diffuseColor.rgb,vec3(1.0),fo*0.7); }');
 };
 const mesaMat = new THREE.MeshStandardMaterial({vertexColors: true, roughness: 0.9, flatShading: true});
 
@@ -239,7 +240,8 @@ export function buildWater(scene) {
       .replace('#include <color_fragment>', `#include <color_fragment>
 { vec2 p = mod(vWP.xz, 2000.0); diffuseColor.rgb = vec3(0.05,0.60,0.66);
   float w = sin(p.x*0.9+uT*1.3)*sin(p.y*0.7-uT*1.1)+sin((p.x+p.y)*0.45+uT*0.8);
-  diffuseColor.rgb += smoothstep(1.2,1.9,w)*0.18; }`);
+  diffuseColor.rgb += smoothstep(1.2,1.9,w)*0.18;
+  float fr = pow(1.0 - abs(normalize(cameraPosition - vWP).y), 3.0); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.75,0.9,1.0), fr*0.55); }`);
   };
   const m = new THREE.Mesh(g, mat); m.position.y = WATER_Y; m.renderOrder = 1; scene.add(m);
   U.mesh = m; return U;

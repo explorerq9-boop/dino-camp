@@ -1,19 +1,22 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
-import {SPECIES, prepDino, makeDino, measureGait, locomote, bite, headTurn, DINO} from './dinos.js';
+import {SPECIES, GOB, prepDino, prepGob, makeDino, measureGait, locomote, bite, headTurn, DINO} from './dinos.js';
+import {createLife} from './life.js';
 import {RNG, WATER_Y, H, biomeAt, BIOMES, CH, createWorld, makeKind, buildWater, buildSky, WIND, NEAR} from './world.js';
 import {FOOD, FOOD_KEYS, makeFood} from './food.js';
 
 const $ = id => document.getElementById(id);
 const KEY = 'dinogrow3d_v1';
-const SV = Object.assign({stage: 0, path: ['baby'], xp: 0, sound: false, seen: false, done: [], hunt: true}, JSON.parse(localStorage.getItem(KEY) || '{}'));
+const SV = Object.assign({stage: 0, path: ['baby'], xp: 0, sound: false, seen: false, done: [], hunt: true, book: {}}, JSON.parse(localStorage.getItem(KEY) || '{}'));
 const save = () => localStorage.setItem(KEY, JSON.stringify(SV));
 
 // 阶段：0 宝宝 → 1 二选一 → 2 二选一 → 3 最终形态
 const STAGES = [{opts: ['baby']}, {opts: ['raptor', 'para']}, {opts: ['steg', 'tri']}, {opts: ['trex', 'apato']}];
 const NEED = [10, 18, 28, Infinity];
 const LEN = {baby: 1.9, raptor: 3.4, para: 4.6, steg: 6.4, tri: 6.4, trex: 9.5, apato: 13};
-const NPC_LEN = {raptor: 3.6, para: 7, steg: 7.5, tri: 7.5, trex: 10.5, apato: 17};
+const NPC_LEN = {raptor: 3.6, para: 7, steg: 7.5, tri: 7.5, trex: 10.5, apato: 17, anky: 6.5, pachy: 4.6, ovi: 2.6, spino: 12};
+const nameOf = id => (SPECIES[id] || GOB[id]).name;
+const BOOK = ['raptor', 'para', 'steg', 'tri', 'trex', 'apato', 'anky', 'pachy', 'ovi', 'spino', 'ptero', 'plesio'];
 const modelOf = id => id === 'baby' ? 'raptor' : id;
 const spInfo = id => id === 'baby' ? Object.assign({}, SPECIES.raptor, {name: '迅猛龙宝宝'}) : SPECIES[id];
 const curId = () => SV.path[SV.stage];
@@ -61,13 +64,14 @@ async function loadGLB(path) {
 const G = {t: 0, paused: true, items: [], npcs: [], prey: [], parts: [], curBiome: null};
 const PL = {x: -40, z: -40, dir: 0, vx: 0, vz: 0, D: null, len: 2, tx: null, tz: null, bump: 0, eatT: 0, scaleAnim: 1};
 
-let WORLD = null;
+let WORLD = null, LIFE = null;
 async function init() {
   const prog = (t) => { $('loadTxt').textContent = t; };
   prog('正在搭建世界…');
   WORLD = createWorld(scene, {mobile: MOB}); G.water = buildWater(scene); G.skyo = buildSky(scene);
   prog('正在请恐龙们过来…');
   for (const id of Object.keys(SPECIES)) { prepDino(id, await loadGLB('dino/' + SPECIES[id].file + '.glb')); measureGait(id); }
+  for (const id of Object.keys(GOB)) { prepGob(id, await loadGLB('gob/' + GOB[id].file + '.glb')); measureGait(id); }
   await loadKinds();
   makeThumbs();
   // 出生点：第一次来就找一块离原点近的绿地
@@ -76,10 +80,12 @@ async function init() {
   WORLD.update(PL.x, PL.z, true);
   spawnPlayer(true);
   // 其他恐龙：散布在你周围，走远了会在前方重新遇到新的
-  const plan = ['raptor', 'raptor', 'para', 'para', 'tri', 'steg', 'apato', 'apato', 'trex', 'tri', 'para', 'steg'];
-  for (const id of plan) { const D = makeDino(id, NPC_LEN[id]); scene.add(D.holder); const n = {D, id, x: 0, z: 0, dir: Math.random() * 6, st: 'idle', timer: Math.random() * 4, tx: 0, tz: 0}; placeNear(n, 25, 110); G.npcs.push(n); }
+  LIFE = createLife({scene, PL, G, MOB, SV, tip, burstAt, floatText, gainXP, questEvent, tone, blocked, onDiscover: discover});
+  const plan = MOB ? ['raptor', 'para', 'para', 'tri', 'steg', 'apato', 'trex', 'anky', 'pachy', 'ovi', 'spino', 'tri'] : ['raptor', 'raptor', 'para', 'para', 'tri', 'steg', 'apato', 'apato', 'trex', 'tri', 'para', 'steg', 'anky', 'anky', 'pachy', 'pachy', 'ovi', 'ovi', 'spino'];
+  for (const id of plan) { const D = makeDino(id, NPC_LEN[id], (Math.random() - 0.5) * 2); scene.add(D.holder); const n = {D, id, x: 0, z: 0, dir: Math.random() * 6, st: 'idle', timer: Math.random() * 4, tx: 0, tz: 0}; placeNear(n, 25, 110); G.npcs.push(n); LIFE.addBabies(n, NPC_LEN[id]); }
   for (let i = 0; i < FOOD_N; i++) spawnFood(false);
   makeButterflies(); updHud(); newQuest(true);
+  prog('正在准备画面…'); await new Promise(r => setTimeout(r, 30)); try { camera.position.set(PL.x, H(PL.x, PL.z) + 6, PL.z - 10); camera.lookAt(PL.x, 0, PL.z); renderer.compile(scene, camera); } catch (e) {}
   $('loading').style.display = 'none';
   intro();
   requestAnimationFrame(frame);
@@ -112,7 +118,12 @@ async function loadKinds() {
     ['nat/Bush_1.glb', 0.9, {saturate: 1.2, bright: 1.35, far: 110}, ['mesa', 'palm'], 20, 0.8], ['nat/BushBerries_1.glb', 1.6, {saturate: 1.3, far: 110}, ['fern', 'flower'], 20, 0.8],
     ['nat/Rock_Moss_2.glb', 1.4, {shadow: 1}, ['fern', 'river'], 20, 0.8, 0.7], ['nat/Rock_3.glb', 1.8, {shadow: 1, saturate: 0.6}, ['mesa', 'palm'], 20, 0.8, 0.8], ['nat/Rock_6.glb', 2.6, {shadow: 1}, ['mesa'], 13, 1, 1.2],
     ['nat/CactusFlowers_2.glb', 1.6, {saturate: 1.3, far: 90}, ['mesa'], 15, 0.6], ['nat/CactusFlowers_4.glb', 1.3, {saturate: 1.3, far: 90}, ['mesa'], 13, 0.6],
-    ['nat/WoodLog_Moss.glb', 0.9, {shadow: 1, far: 100}, ['fern'], 6, 1], ['nat/Grass_Short.glb', 0.6, {saturate: 1.3, far: 70, sway: 0.2}, ['fern', 'flower', 'river'], 150, 0.1],
+    ['nat/WoodLog_Moss.glb', 0.9, {shadow: 1, far: 100}, ['fern'], 6, 1],
+    ['usn/PineTree_1.glb', 14, {shadow: 1, saturate: 1.1, sway: 0.004, tall: 1}, ['fern', 'river'], 6, 2.5, 1.0], ['usn/PineTree_3.glb', 12, {shadow: 1, saturate: 1.1, sway: 0.004, tall: 1}, ['fern', 'mesa'], 5, 2.5, 1.0],
+    ['usn/Bush_Large.glb', 1.6, {far: 110, saturate: 1.2}, ['fern', 'river', 'palm'], 9, 0.8], ['usn/Bush_Flowers.glb', 1.5, {far: 100, saturate: 1.2}, ['flower', 'river'], 14, 0.6],
+    ['usn/Flower_1_Clump.glb', 0.8, {far: 75, sway: 0.12, saturate: 1.2}, ['flower', 'fern'], 26, 0.2], ['usn/Flower_2_Clump.glb', 0.7, {far: 75, sway: 0.12, saturate: 1.2}, ['flower', 'palm'], 24, 0.2],
+    ['nat/Rock_Moss_3.glb', 1.6, {shadow: 1}, ['river', 'fern'], 6, 0.8, 0.8], ['nat/TreeStump_Moss.glb', 1.0, {shadow: 1, far: 110}, ['fern', 'river'], 4, 0.8, 0.6],
+    ['nat/Plant_5.glb', 1.3, {saturate: 1.3, sway: 0.05, far: 100}, ['river', 'palm'], 20, 0.3], ['nat/CactusFlowers_3.glb', 1.4, {saturate: 1.3, far: 90}, ['mesa'], 10, 0.6], ['nat/Grass_Short.glb', 0.6, {saturate: 1.3, far: 70, sway: 0.2}, ['fern', 'flower', 'river'], 150, 0.1],
   ];
   let done = 0;
   for (const [p, h, opt, biomes, n, margin, solidR] of sets) {
@@ -134,6 +145,12 @@ function makeThumbs() {
     const D = makeDino(modelOf(id), id === 'apato' ? 8.5 : 6); D.holder.rotation.y = Math.PI * 0.42; D.mixer.update(0.5); s.add(D.holder);
     const hgt = {baby: 2.2, raptor: 2.2, para: 2.6, steg: 2.6, tri: 2.2, trex: 2.6, apato: 2.4}[id];
     cam.position.set(0.6, hgt + 1.6, 13.5); cam.lookAt(0, hgt * 0.62, 0);
+    r.render(s, cam); THUMB[id] = r.domElement.toDataURL(); s.remove(D.holder);
+  }
+  for (const id of ['anky', 'pachy', 'ovi', 'spino', 'ptero', 'plesio']) {
+    const D = makeDino(id, 6); D.holder.rotation.y = Math.PI * 0.42; D.mixer.update(0.3); s.add(D.holder); D.holder.updateMatrixWorld(true);
+    const bb = new THREE.Box3().setFromObject(D.holder, true), c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()), R0 = Math.max(sz.x, sz.y * 1.5, sz.z) * 0.75;
+    cam.position.set(c.x + 0.6, c.y + R0 * 0.35, c.z + R0 / Math.tan(14 * Math.PI / 180) * 0.62); cam.lookAt(c);
     r.render(s, cam); THUMB[id] = r.domElement.toDataURL(); s.remove(D.holder);
   }
   r.dispose(); r.forceContextLoss && r.forceContextLoss();
@@ -425,7 +442,7 @@ function randomSpotNear(n) { for (let i = 0; i < 30; i++) { const a = Math.rando
   if (H(x, z) > -0.3 && !WORLD.solidsNear(x, z).some(s => s.big && Math.hypot(s.x - x, s.z - z) < s.r + 3)) return {x, z}; } return {x: n.x, z: n.z}; }
 
 /* ---------- 捕猎：吃肉的恐龙可以追比自己小的恐龙 ---------- */
-const PREY_KINDS = ['para', 'steg', 'tri', 'raptor', 'para'];
+const PREY_KINDS = ['para', 'steg', 'tri', 'raptor', 'pachy', 'ovi', 'anky'];
 const PREY_N = MOB ? 3 : 5;
 const canHunt = () => SV.hunt && spInfo(curId()).diet === 'meat';
 function spawnPrey() {
@@ -445,7 +462,7 @@ function updatePrey(dt) {
     const scared = hunt && dPl < PL.len * 2.5 + 9 && n.tired <= 0;
     if (scared) { // 逃跑：跑一会儿会累，所以一定追得上
       wantDir = Math.atan2(n.x - PL.x, n.z - PL.z) + Math.sin(G.t * 1.3 + n.len * 7) * 0.5; v = runV; n.stamina -= dt; if (n.stamina <= 0) { n.tired = 1.8; n.stamina = 3.5; }
-      if (!n.told && dPl < PL.len * 2 + 6) { n.told = true; if (!SV.huntTip) { SV.huntTip = 1; tip(`小${SPECIES[n.id].name}比你小，追上它！${MOB ? '点「冲刺」' : '按空格'}可以冲刺 💨`, 4000); } } }
+      if (!n.told && dPl < PL.len * 2 + 6) { n.told = true; if (!SV.huntTip) { SV.huntTip = 1; tip(`小${nameOf(n.id)}比你小，追上它！${MOB ? '点「冲刺」' : '按空格'}可以冲刺 💨`, 4000); } } }
     else { if (n.tired > 0) n.tired -= dt;
       if (n.st === 'walk') { const dx = n.tx - n.x, dz = n.tz - n.z; if (Math.hypot(dx, dz) < 1) { n.st = 'idle'; n.timer = 2 + Math.random() * 4; } else { wantDir = Math.atan2(dx, dz); v = walkV * (n.tired > 0 ? 0.5 : 1); } }
       else { n.timer -= dt; if (n.timer <= 0) { const p = randomSpotNear(n); n.tx = p.x; n.tz = p.z; n.st = 'walk'; } } }
@@ -463,7 +480,7 @@ function catchPrey(n) {
   bite(PL.D); PL.eatT = 0.5; const y = H(n.x, n.z) + n.len * 0.25;
   burstAt(n.x, y, n.z, '#fff3a8', 18, 1.3); burstAt(n.x, y, n.z, '#ffffff', 10, 1.1);
   const cb = combo(); let xp = Math.round((3 + SV.stage * 2) * 1.5) + (cb >= 3 ? 1 : 0);
-  floatText(`+${xp} ⭐ 抓到小${SPECIES[n.id].name}!`, n.x, y + 1.2, n.z); tone([523, 784, 1046], 0.05, 0.08);
+  floatText(`+${xp} ⭐ 抓到小${nameOf(n.id)}!`, n.x, y + 1.2, n.z); tone([523, 784, 1046], 0.05, 0.08);
   if (!SV.firstCatch) { SV.firstCatch = 1; tip('抓到啦！吃肉的恐龙会捕猎比自己小的恐龙 🌟'); }
   dropPrey(n); questEvent('prey'); questEvent('combo', cb); gainXP(xp);
 }
@@ -480,6 +497,8 @@ function newQuest(first) {
   const b = others[Math.floor(Math.random() * others.length)]; pool.push({kind: 'visit', biome: b, need: 1, text: () => `去找 ${BIOMES[b].icon}${BIOMES[b].name}`});
   if (canHunt()) pool.push({kind: 'prey', need: 2, text: n => `抓到 ${n} 只小恐龙`});
   if (!first) pool.push({kind: 'gold', need: 1, text: () => '找到一个 ✨金色食物'});
+  pool.push({kind: 'nest', need: 1, text: () => '找到一个 🥚 恐龙蛋窝（看小地图）'});
+  if (Object.keys(SV.book).length < BOOK.length) pool.push({kind: 'book', need: 1, text: () => '发现一种新的恐龙 📖'});
   Q = pool[Math.floor(Math.random() * pool.length)]; Q.have = 0;
   if (Q.kind === 'visit') Q.target = searchBiome(Q.biome);
   showQuest();
@@ -493,6 +512,8 @@ function questEvent(kind, arg) {
   if (Q.kind === 'eatany' && kind === 'eat') hit = true;
   if (Q.kind === 'prey' && kind === 'prey') hit = true;
   if (Q.kind === 'gold' && kind === 'gold') hit = true;
+  if (Q.kind === 'nest' && kind === 'nest') hit = true;
+  if (Q.kind === 'book' && kind === 'book') hit = true;
   if (Q.kind === 'visit' && kind === 'visit' && arg === Q.biome) hit = true;
   if (Q.kind === 'combo' && kind === 'combo') { Q.have = Math.max(Q.have, arg); if (Q.have >= Q.need) { Q.have = Q.need; done(); } else showQuest(); return; }
   if (!hit) return; Q.have++; showQuest(); if (Q.have >= Q.need) done();
@@ -560,8 +581,38 @@ function drawMinimap() {
   x.fillStyle = '#ffd23f'; for (const it of G.items) { if (it.eaten || FOOD[it.type].tier > SV.stage + 1) continue; x.fillRect(toX(it.x) - 1.5, toY(it.z) - 1.5, 3, 3); }
   x.fillStyle = 'rgba(255,255,255,.85)'; for (const n of G.npcs) { x.beginPath(); x.arc(toX(n.x), toY(n.z), 2.4, 0, 7); x.fill(); }
   if (canHunt()) { x.fillStyle = '#ff7a59'; for (const n of G.prey) { x.beginPath(); x.arc(toX(n.x), toY(n.z), 2.6, 0, 7); x.fill(); } }
+  if (LIFE.nest) { const a = Math.atan2(LIFE.nest.x - PL.x, LIFE.nest.z - PL.z), d = Math.min(S / 2 - 9, Math.hypot(LIFE.nest.x - PL.x, LIFE.nest.z - PL.z) * k); x.font = '14px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('🥚', S / 2 + Math.sin(a) * d, S / 2 + Math.cos(a) * d); }
   if (Q && Q.kind === 'visit' && Q.target) { const a = Math.atan2(Q.target.x - PL.x, Q.target.z - PL.z); x.fillStyle = '#ffe066'; x.font = '16px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; const d = Math.min(S / 2 - 10, Math.hypot(Q.target.x - PL.x, Q.target.z - PL.z) * k); x.fillText('🎯', S / 2 + Math.sin(a) * d, S / 2 + Math.cos(a) * d); }
   x.save(); x.translate(S / 2, S / 2); x.fillStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, 22, -Math.PI / 2 - CAM.yaw - 0.5, -Math.PI / 2 - CAM.yaw + 0.5); x.closePath(); x.fill(); x.rotate(-PL.dir + Math.PI); x.fillStyle = '#ff5a3c'; x.strokeStyle = '#fff'; x.lineWidth = 2; x.beginPath(); x.moveTo(0, -7); x.lineTo(5, 5); x.lineTo(-5, 5); x.closePath(); x.stroke(); x.fill(); x.restore();
+}
+
+/* ---------- 恐龙图鉴：见过的恐龙都会记下来 ---------- */
+const infoOf = id => SPECIES[id] || GOB[id];
+function discover(id) {
+  if (!BOOK.includes(id) || SV.book[id]) return; SV.book[id] = 1; save(); G.bookQ = (G.bookQ || []).concat(id); questEvent('book'); $('menuBtn').classList.add('new');
+}
+function showDiscover() {
+  if (!G.bookQ || !G.bookQ.length || G.t - (G.bookTipT || -99) < 5.5) return; G.bookTipT = G.t; const id = G.bookQ.shift();
+  const I = infoOf(id), f = I.facts[Math.floor(Math.random() * I.facts.length)];
+  tip(`📖 新发现：<b>${I.name}</b>！（图鉴 ${Object.keys(SV.book).length}/${BOOK.length}）<br><span class="small">${f}</span>`, 5000); tone([659, 784, 988], 0.04, 0.1);
+}
+function checkBook() {
+  showDiscover();
+  discover(modelOf(curId()));
+  for (const n of G.npcs) if (n.D.holder.visible && Math.hypot(n.x - PL.x, n.z - PL.z) < 26 + NPC_LEN[n.id]) discover(n.id);
+  for (const f of LIFE.fliers) if (Math.hypot(f.D.holder.position.x - PL.x, f.D.holder.position.z - PL.z) < 50) discover('ptero');
+  for (const w of LIFE.swimmers) if (w.D.holder.visible && Math.hypot(w.x - PL.x, w.z - PL.z) < 40) discover('plesio');
+}
+function showBook() {
+  G.paused = true; $('menuBtn').classList.remove('new');
+  const n = Object.keys(SV.book).length;
+  $('box').innerHTML = `<h1>📖 恐龙图鉴 <small style="font-size:18px;color:#6c7563">${n}/${BOOK.length}</small></h1><p style="color:#6c7563">走近没见过的恐龙，它就会被记进图鉴。点卡片看资料。</p>
+   <div class="book">${BOOK.map(id => { const I = infoOf(id), got = SV.book[id]; return `<button class="bcard${got ? '' : ' lock'}" data-id="${id}"><img src="${THUMB[id] || ''}" alt=""><b>${got ? I.name : '？？？'}</b>${got && I.notDino ? '<small>不是恐龙哦</small>' : ''}</button>`; }).join('')}</div>
+   <div id="bookInfo"></div><button class="btn" id="resume">继续</button>`;
+  $('overlay').classList.add('show');
+  $('resume').onclick = () => { $('overlay').classList.remove('show'); G.paused = false; };
+  document.querySelectorAll('.bcard').forEach(b => b.onclick = () => { const id = b.dataset.id, I = infoOf(id);
+    $('bookInfo').innerHTML = SV.book[id] ? `<h2>${I.name}</h2><p class="tags"><span>🕰️ ${I.period}</span><span>📏 ${I.len}</span><span>🍽️ ${{meat: '吃肉', plant: '吃植物', fish: '吃鱼', all: '什么都吃一点'}[I.diet]}</span></p><ul>${I.facts.map(f => `<li>${f}</li>`).join('')}</ul>` : '<p>还没遇到过这种恐龙，到处走走找找看吧！</p>'; });
 }
 
 /* ---------- 菜单 / 开场 ---------- */
@@ -569,7 +620,7 @@ function intro() {
   G.paused = true;
   $('box').innerHTML = `<h1>🥚 恐龙长大记</h1><p>你是一只刚出生的小恐龙。在大陆上走来走去，<b>吃东西长大</b>，吃饱了就能<b>进化</b>成更大的恐龙！</p>
    <div class="legend">${MOB ? '<span>🕹️ 左下角摇杆 = 走路，推到底会跑</span><span>👆 轻点地面 = 走过去</span><span>☝️ 单指滑动 = 转视角</span><span>🤏 双指捏合 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>💨 冲刺按钮 = 跑得更快</span>' : `<span>🖱️ 点地面 = 走过去</span><span>🖱️ 按住拖动 = 转动视角</span><span>⌨️ ↑ 往前走（走久了会跑）← → 转身</span><span>⌨️ Q / E 转视角</span><span>🔍 滚轮 = 拉近拉远</span><span>➤ 屏幕边的箭头指向最近的食物</span><span>🔒 太大的食物，要长大才能吃</span><span>⭐ 选对擅长的食物长得更快</span><span>💨 空格 = 冲刺</span>`}</div>
-   <p>这片大陆<b>没有边界</b>，可以一直走下去：🌿蕨类森林、🌼开花草原、💧大河湿地、🌴苏铁海岸、🏜️红岩台地会一片接一片出现。</p><p>🎯 左上角有小任务；✨金色食物成长 ×3；连续吃会有“连吃”奖励；吃肉的恐龙还可以追小恐龙。</p>
+   <p>这片大陆<b>没有边界</b>，可以一直走下去：🌿蕨类森林、🌼开花草原、💧大河湿地、🌴苏铁海岸、🏜️红岩台地会一片接一片出现。</p><p>🎯 左上角有小任务；✨金色食物成长 ×3；连续吃会有“连吃”奖励；吃肉的恐龙还可以追小恐龙。</p><p>🥚 小地图上的蛋是恐龙蛋窝，走过去会孵出恐龙宝宝跟着你；📖 遇到新恐龙会记进菜单里的图鉴。</p>
    <p style="color:#6c7563">这里没有时间限制，也不会输。碰到大恐龙只会被轻轻推开。</p>
    <button class="btn" id="startBtn">${SV.seen ? '继续冒险' : '出发！'}</button>`;
   $('overlay').classList.add('show');
@@ -580,12 +631,14 @@ $('menuBtn').onclick = () => {
   G.paused = true;
   $('box').innerHTML = `<h1>☰ 菜单</h1>
    <p>我的进化路线：${SV.path.map(id => spInfo(id).name).join(' → ')}</p>
-   <p class="credits">素材来源（全部是 CC0 公共领域授权，可以免费使用）：恐龙模型 — Quaternius「Animated Dinosaur Pack」；树、棕榈、花、石头 — Quaternius「Ultimate Nature Pack」和「Stylized Nature MegaKit」。鳞片质感、配色、地形、河流、红岩、天空、食物都是程序里原创画的。</p>
+   <p class="credits">素材来源（全部是 CC0 公共领域授权，可以免费使用）：恐龙模型 — Quaternius「Animated Dinosaur Pack」和 Gobkit「Free Dinosaur Pack」；树、棕榈、松树、花、石头 — Quaternius「Ultimate Nature Pack」「Ultimate Stylized Nature」和「Stylized Nature MegaKit」。鳞片质感、配色、地形、河流、红岩、天空、食物都是程序里原创画的。</p>
+   <p><button class="btn light" id="bookBtn">📖 恐龙图鉴（${Object.keys(SV.book).length}/${BOOK.length}）</button></p>
    <p><button class="btn light" id="huntBtn">🦖 捕猎小恐龙：${SV.hunt ? '开' : '关'}</button></p>
    <button class="btn" id="resume">继续</button><button class="btn light" id="howBtn">怎么玩</button><button class="btn light" id="restart">重新长大</button>`;
   $('overlay').classList.add('show');
   $('resume').onclick = () => { $('overlay').classList.remove('show'); G.paused = false; };
   $('howBtn').onclick = intro;
+  $('bookBtn').onclick = showBook;
   $('huntBtn').onclick = e => { SV.hunt = !SV.hunt; save(); e.target.textContent = `🦖 捕猎小恐龙：${SV.hunt ? '开' : '关'}`; if (Q && Q.kind === 'prey' && !SV.hunt) newQuest(); };
   let armed = false; $('restart').onclick = e => { if (!armed) { armed = true; e.target.textContent = '再按一次确认'; return; }
     SV.stage = 0; SV.path = ['baby']; SV.xp = 0; save(); spawnPlayer(false); PL.scaleAnim = 1; updHud(); $('overlay').classList.remove('show'); G.paused = false; tip('又变回恐龙宝宝啦，这次试试另一条路线吧！'); };
@@ -600,7 +653,7 @@ function frame(ts) {
   const dt = Math.min(0.1, (ts - (last || ts)) / 1000); last = ts;
   if (G.paused && G.drawnPaused) return; // 弹窗时不重画，省电
   G.t += dt;
-  if (!G.paused) { updatePlayer(dt); updateNPCs(dt); updatePrey(dt); updateItems(dt); updateQuestArrow(); }
+  if (!G.paused) { updatePlayer(dt); updateNPCs(dt); updatePrey(dt); updateItems(dt); updateQuestArrow(); LIFE.update(dt); if ((G.bookT = (G.bookT || 0) - dt) < 0) { G.bookT = 0.5; checkBook(); } }
   WORLD.update(PL.x, PL.z);
   PL.D.mixer.update(G.paused ? 0 : dt); if (Math.abs(PL.look) > 0.01) headTurn(PL.D, PL.look);
   updateLife(dt);
@@ -632,7 +685,7 @@ function frame(ts) {
   if (dt > 0.034) { slowT += dt; fastT = 0; } else { fastT += dt; slowT = Math.max(0, slowT - dt * 0.5); }
   if (slowT > 2) { slowT = 0; if (PR > 1) { PR = 1; renderer.setPixelRatio(PR); } else if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => m.needsUpdate = true); }); } else if (PR > 0.7) { PR = 0.7; renderer.setPixelRatio(PR); } }
 }
-window.__G = {G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene, CAM, keys, get WORLD() { return WORLD; }, get Q() { return Q; }, biomeAt, spawnPrey, newQuest, camera};
+window.__G = {get LIFE() { return LIFE; }, discover, showBook, G, PL, SV, FOOD, NEED, STAGES, evolveTo, H, renderer, scene, CAM, keys, get WORLD() { return WORLD; }, get Q() { return Q; }, biomeAt, spawnPrey, newQuest, camera};
 const unpause = () => { G.drawnPaused = false; };
 new MutationObserver(unpause).observe($('overlay'), {attributes: true});
 init().catch(e => { $('loadTxt').textContent = '加载出错了：' + e.message; console.error(e); });

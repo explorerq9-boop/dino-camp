@@ -80,6 +80,15 @@ body.mob #quest{font-size:13px;padding:6px 10px;max-width:56vw} body.mob .lcol{g
 body.mob #dashBtn{right:18px;bottom:22px;width:88px;height:88px;font-size:17px}
 body.mob #comboTxt{top:auto;bottom:120px;font-size:24px}
 @media (max-height:520px){ body.mob #dashBtn{width:76px;height:76px;bottom:14px} }
+.book{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin:10px 0;max-height:46vh;overflow:auto;padding:4px}
+.bcard{background:#fff;border:3px solid #e8dcc0;border-radius:16px;padding:6px 4px 8px;cursor:pointer;font:inherit;display:flex;flex-direction:column;align-items:center}
+.bcard img{width:100%;aspect-ratio:360/230;object-fit:contain;background:linear-gradient(#eaf6fb,#f6f1df);border-radius:10px}
+.bcard b{font-size:17px;margin-top:4px} .bcard small{font-size:12px;color:#8a6a2a}
+.bcard.lock img{filter:brightness(0) opacity(.25)} .bcard.lock b{color:#999}
+#bookInfo h2{margin:6px 0} #bookInfo ul{text-align:left;font-size:17px;line-height:1.6;margin:6px auto;max-width:560px}
+.tags span{display:inline-block;background:#f3ead2;border-radius:10px;padding:2px 10px;margin:2px;font-size:15px}
+#menuBtn.new{box-shadow:0 0 0 4px #ffd23f}
+body.mob .book{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px} body.mob .bcard b{font-size:14px} body.mob #bookInfo ul{font-size:14px}
 @media (max-width:560px){ .choices{grid-template-columns:1fr 1fr!important;gap:8px} .choice{padding:8px 6px 10px} .choice .tag{display:none} .choice b{font-size:19px} }
 </style></head><body>
 <div id="game"></div>

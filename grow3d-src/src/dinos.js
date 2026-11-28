@@ -1,5 +1,6 @@
 // 恐龙模型：加载、上色、鳞片质感、动画
 import * as THREE from 'three';
+import {AnimationUtils} from 'three';
 import {clone as skClone} from 'three/examples/jsm/utils/SkeletonUtils.js';
 import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
@@ -69,12 +70,14 @@ export function prepDino(id, gltf) {
 }
 
 // 生成一只恐龙实例；scale 让身长 = len 单位
-export function makeDino(id, len) {
+export function makeDino(id, len, tint = 0) {
   const d = DINO[id], obj = skClone(d.root), k = len / d.rawLen;
+  if (tint) { const cache = new Map(); obj.traverse(m => { if (!m.isMesh) return; let n = cache.get(m.material); if (!n) { n = m.material.clone(); n.onBeforeCompile = m.material.onBeforeCompile; n.customProgramCacheKey = m.material.customProgramCacheKey; if (!d.gob && !/Black/.test(n.name)) n.color.offsetHSL(tint * 0.06, tint * 0.08, tint * 0.03); else if (d.gob) n.color.offsetHSL(tint * 0.05, 0, 0); n.userData.own = true; cache.set(m.material, n); } m.material = n; }); }
   const holder = new THREE.Group(); obj.scale.multiplyScalar(k); obj.position.set(0, -d.rawMinY * k, -d.rawCz * k);
   holder.add(obj);
   const mixer = new THREE.AnimationMixer(obj), acts = {};
   for (const n of ['Idle', 'Walk', 'Run', 'Attack', 'Jump']) if (d.clips[n]) { acts[n] = mixer.clipAction(d.clips[n]); }
+  if (d.gob) obj.rotation.y = 0;
   acts.Idle.play();
   return {holder, obj, mixer, acts, cur: 'Idle', id, len};
 }
@@ -94,7 +97,7 @@ export function playOnce(D, name, then = 'Idle') {
 // 这样就能让动画速度和真实移动速度一致，脚不会“打滑”
 export function measureGait(id) {
   const D = makeDino(id, 1), out = {};
-  const feet = []; D.obj.traverse(o => { if (o.isBone && /^BackFoot[RL]$/.test(o.name)) feet.push(o); });
+  const feet = []; D.obj.traverse(o => { if (o.isBone && (DINO[id].feet || /^BackFoot[RL]$/).test(o.name)) feet.push(o); });
   for (const name of ['Walk', 'Run']) {
     const a = D.acts[name]; if (!a) continue;
     D.mixer.stopAllAction(); a.reset().play(); const dur = a.getClip().duration, N = 90, samples = [];
@@ -136,11 +139,50 @@ export function bite(D) {
 // 扭头：把脖子和头绕竖直方向转一个角度（看食物、看玩家）
 const _q = new THREE.Quaternion(), _pq = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0);
 export function headTurn(D, angle, pitch = 0) {
-  if (!D.neck) { D.obj.traverse(o => { if (o.isBone && o.name === 'Neck') D.neck = o; if (o.isBone && o.name === 'Head') D.head = o; }); if (!D.neck) return; }
+  if (D.neck === undefined) { D.neck = null; D.head = null; D.obj.traverse(o => { if (o.isBone && o.name === 'Neck') D.neck = o; if (o.isBone && o.name === 'Head') D.head = o; }); }
+  if (!D.neck && !D.head) return;
   D.holder.updateMatrixWorld(true);
-  for (const [b, share] of [[D.neck, 0.45], [D.head, 0.55]]) {
+  for (const [b, share] of D.neck ? [[D.neck, 0.45], [D.head, 0.55]] : [[D.head, 0.8]]) {
     if (!b) continue; b.parent.getWorldQuaternion(_pq);
     _q.setFromAxisAngle(_up, angle * share); const loc = _pq.clone().invert().multiply(_q).multiply(_pq); b.quaternion.premultiply(loc);
     b.updateMatrixWorld(true);
   }
+}
+
+/* ---------- 第二套恐龙（Gobkit Free Dinosaur Pack，CC0）：圆滚滚的卡通造型 ---------- */
+// 一个模型只有一条动画轨道：0-29 帧待机，30-59 张嘴，60-89 倒下（不用），90-119 走路（24 帧/秒）
+export const GOB = {
+  anky: {file: 'Ankylosaurus', name: '甲龙', diet: 'plant', period: '白垩纪晚期', len: '约 7 米', where: 'land',
+    facts: ['甲龙全身披着骨板，像一辆小坦克。', '甲龙尾巴末端有一个骨头做的“尾锤”，用来保护自己。', '甲龙的腿很短，走得慢慢的，吃低矮的植物。']},
+  pachy: {file: 'Pachycephalosaurus', name: '肿头龙', diet: 'plant', period: '白垩纪晚期', len: '约 4.5 米', where: 'land',
+    facts: ['肿头龙头顶有一块圆圆的厚骨头，有 20 多厘米厚。', '肿头龙的名字意思是“厚头的蜥蜴”。', '肿头龙头顶周围还有一圈小小的骨刺。']},
+  ovi: {file: 'Oviraptor', name: '窃蛋龙', diet: 'all', period: '白垩纪晚期', len: '约 2 米', where: 'land',
+    facts: ['窃蛋龙的化石被发现趴在一窝蛋上，后来才知道那是它自己的蛋，它在孵蛋，不是偷蛋。', '窃蛋龙没有牙齿，只有一张像鹦鹉一样的硬嘴。', '窃蛋龙身上长着羽毛，生活在今天的蒙古。']},
+  spino: {file: 'Spinosaurus', name: '棘龙', diet: 'fish', period: '白垩纪中期', len: '约 14 米', where: 'river',
+    facts: ['棘龙背上有一面像帆一样的大骨板。', '棘龙特别爱吃鱼，大部分时间待在河边和水里。', '棘龙比霸王龙还要长，是已知最长的肉食恐龙之一。']},
+  ptero: {file: 'Pterodactylus', name: '翼龙', diet: 'fish', period: '侏罗纪到白垩纪', len: '翅膀展开约 1～7 米', where: 'sky', notDino: true,
+    facts: ['翼龙不是恐龙，是和恐龙同时代、会飞的爬行动物。', '翼龙的翅膀是一层皮膜，用特别长的第四根手指撑开。', '翼龙是第一种会飞的脊椎动物，比鸟类还早。']},
+  plesio: {file: 'Plesiosaurus', name: '蛇颈龙', diet: 'fish', period: '侏罗纪早期', len: '约 3.5 米', where: 'water', notDino: true,
+    facts: ['蛇颈龙不是恐龙，是生活在海里的爬行动物。', '蛇颈龙用四只像船桨一样的鳍游泳。', '蛇颈龙的脖子很长，要浮到水面上呼吸空气。']},
+  gtri: {file: 'Triceratops', baby: true}, gsteg: {file: 'Stegosaurus', baby: true}, gtrex: {file: 'Trex', baby: true},
+};
+export function prepGob(id, gltf) {
+  const root = gltf.scene; root.updateMatrixWorld(true);
+  const b = new THREE.Box3(); root.traverse(m => { if (m.isBone) b.expandByPoint(m.getWorldPosition(new THREE.Vector3())); });
+  root.traverse(m => {
+    if (!m.isMesh) return;
+    const old = m.material, nm = new THREE.MeshStandardMaterial({map: old.map, roughness: 0.55, metalness: 0});
+    nm.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+{ float rim = pow(1.0 - max(dot(normalize(vNormal), vec3(0.,0.,1.)),0.0), 2.5); totalEmissiveRadiance += diffuseColor.rgb*rim*0.4; }`); };
+    nm.customProgramCacheKey = () => 'gob'; m.material = nm; m.castShadow = true; m.frustumCulled = false;
+  });
+  // 包围盒用蒙皮后的真实顶点算（骨架被缩放过，直接用骨头位置不准）
+  const mix0 = new THREE.AnimationMixer(root); mix0.clipAction(gltf.animations[0]).play(); mix0.setTime(0.2); root.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(root, true); mix0.stopAllAction(); mix0.uncacheRoot(root);
+  const full = gltf.animations[0], F = 24;
+  const sub = (n, a, z) => { const c = AnimationUtils.subclip(full, n, a, z, F); return c; };
+  const clips = {Idle: sub('Idle', 0, 29), Attack: sub('Attack', 30, 59), Walk: sub('Walk', 90, 119)};
+  clips.Run = clips.Walk.clone(); clips.Run.name = 'Run';
+  const sz = bb.getSize(new THREE.Vector3());
+  DINO[id] = {root, clips, rawLen: Math.max(sz.z, sz.x * 0.8), rawMinY: bb.min.y, rawCz: (bb.min.z + bb.max.z) / 2, feet: /^(Left|Right)LegB$/, gob: true};
 }

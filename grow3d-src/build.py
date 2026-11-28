@@ -2,9 +2,18 @@ import base64,glob,os,subprocess,sys,json
 mode=sys.argv[1] if len(sys.argv)>1 else 'dev'
 subprocess.run(['npx','esbuild','src/main.js','--bundle','--format=iife','--minify','--target=es2020,safari15,chrome90','--outfile=game.js','--log-level=warning'],check=True,cwd='/tmp/g3')
 t=open('/tmp/g3/template.html').read(); js=open('/tmp/g3/game.js').read().replace('</script','<\\/script')
+def used(f):
+    rel=os.path.relpath(f,'/tmp/g3/assets'); base=os.path.basename(f)[:-4]
+    return rel in js or ("'"+base+"'" in js and rel.split('/')[0] in ('dino','gob')) or ('"'+base+'"' in js and rel.split('/')[0] in ('dino','gob'))
+if mode in ('dist','web'):
+    import shutil
+    if os.path.isdir('/tmp/g3/grow-assets'): shutil.rmtree('/tmp/g3/grow-assets')
+    for f in sorted(glob.glob('/tmp/g3/assets/*/*.glb')):
+        if used(f): d='/tmp/g3/grow-assets/'+os.path.relpath(f,'/tmp/g3/assets'); os.makedirs(os.path.dirname(d),exist_ok=True); shutil.copy(f,d)
 if mode=='dist':
     A={}
     for f in sorted(glob.glob('/tmp/g3/assets/*/*.glb')):
+        if not used(f): continue
         A[os.path.relpath(f,'/tmp/g3/assets')]=base64.b64encode(open(f,'rb').read()).decode()
     t=t.replace('<!--ASSETS-->','<script>window.ASSETS='+json.dumps(A)+';</script>')
     out='/tmp/g3/dist.html'
